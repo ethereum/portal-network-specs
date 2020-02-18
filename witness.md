@@ -517,7 +517,7 @@ The parts of the key that are encoded with CBOR are marked by the `CBOR` functio
 
 ##### Keys
 
-Keys are also using custom encryption to make them more compact.
+Keys are also using custom encoding to make them more compact.
 
 The nibbles of a key are encoded in a following way `[FLAGS NIBBLE1+NIBBLE2 NIBBLE3+NIBBLE4 NIBBLE5... ]`
 
@@ -596,4 +596,3 @@ encoded as `[ 0x05 CBOR(ENCODE_KEY(key))... flags /CBOR(nonce).../ /CBOR(balance
 format: `NEW_TRIE`
 
 encoded as `[ 0xBB ]`
-
