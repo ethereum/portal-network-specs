@@ -373,7 +373,7 @@ GUARD has_code == true
 GUARD has_storage == false
 
 CodeNode(code) ACCOUNT_LEAF(key, nonce, balance, has_code, has_storage) |=>
-LeafNode{key, AccountNode{nonce, balance, nil, nil, code}}
+LeafNode{key, AccountNode{nonce, balance, nil, code}}
 
 ---
 
