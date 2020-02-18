@@ -8,6 +8,8 @@ The key words "MUST", "MUST NOT", "REQUIRED", "SHALL", "SHALL NOT", "SHOULD", "S
 
 `nil` - an empty value.
 
+`Bool` -a boolean value.
+
 `Any` - any data type. MUST NOT be `nil`.
 
 `Int` - an integer value. We treat the domain of integers as infinite,
@@ -49,18 +51,29 @@ type Node = HashNode{raw_hash:Hash}
 
 ### Witness
 
-Witness MUST have at least 1 element.
+Instructions are defined in the following list. This spec capitalizes the names
+of INSTUCTIONS (i.e. `BRANCH`) to help distinguish them form the nodes (i.e. `BranchNode`).
+```
+type INSTRUCTION = LEAF{key:(Byte...) value:(Byte...)}
+                 | EXTENSION{key:(Byte...) nonce:Int balance:Int has_code:Bool has_storage:Bool}
+                 | HASH{raw_hash:Hash}
+                 | CODE{raw_code:(Byte...)}
+                 | ACCOUNT_LEAF{key:(Byte...)
+                 | BRANCH{mask:Int}
+                 | NEW_TRIE
+```
 
 ```
 type WitnessHeader = {version:Int}
-type Instruction = {code:Int parameter:Any...}
 type Witness = (Node|Instruction...)
 ```
 
 
-## Execution Enviroment
 
-The witness execution environment MUST contain the following 2 elements:
+
+## Rebuilding the Trie
+
+The witness execution environment MUST contain the following 3 elements:
 
 - **WitnessHeader** -- a header containing the version of the witness. The `version` MUST be 1.
 
@@ -74,7 +87,7 @@ The witness execution environment MUST contain the following 2 elements:
 Initially, the witness MUST BE an array of `Instruction`s.
 
 Then, as substitution rules are applied to the witness, some elements of the
-array are replaces with `Node`s.
+array are replaced with `Node`s.
 
 The execution continues until there are no substitution rules left to execute.
 
@@ -101,14 +114,14 @@ if len(witness) == 1 {
 And here is an example of the execution process (we will use the set of rules
 form the **Substitution Rules** section of this document):
 
-* **Step 1**. Witness: `(HASH h1 HASH h2 BRANCH 0b101 HASH h3 BRANCH 0b11)`
+* **Step 1**. Witness: `(HASH{h1} HASH{h2} BRANCH{0b101} HASH{h3} BRANCH{0b11})`
 
 * **Step 2**. Apply `HASH` substitution rules.
-Witness: `(HashNode{h1} HashNode{h2} BRANCH 0b101 HashNode{h3} BRANCH 0b11)`
+Witness: `(HashNode{h1} HashNode{h2} BRANCH{0b101} HashNode{h3} BRANCH{0b11})`
 
-* **Step 3**. Apply `BRANCH` substitution rules (only once, because `BRANCH 0b11`
+* **Step 3**. Apply `BRANCH` substitution rules (only once, because `BRANCH{0b11}`
 doesn't pass its `GUARD` statements just yet).
-Witness: `(BranchNode{0: HashNode{h1} 2:HashNode{h2}} HashNode{h3} BRANCH 0b11)`
+Witness: `(BranchNode{0: HashNode{h1} 2:HashNode{h2}} HashNode{h3} BRANCH{0b11})`
 
 * **Step 4**. Apply `BRANCH` substitution rules again.
 Witness: `(BranchNode{0: BranchNode{0: HashNode{h1} 2:HashNode{h2}} 1:HashNode{h3}})`
@@ -195,7 +208,7 @@ Example:
  GUARD NBITSET(mask) == 2
 |---- GUARD STATEMENT ---|
 
- Node(n0) Node(n1) BRANCH(mask) |=> 
+ Node(n0) Node(n1) BRANCH{mask} |=> 
  BranchNode{MAKE_VALUES_ARRAY(mask, n0, n1)}
 ```
 
@@ -226,17 +239,17 @@ parameters (if present).
 Match:
 
 ```
-HASH h0 HashNode{h1} HashNode{h2} BRANCH 0b11
-       |------------------- MATCH -----------|
+HASH{h0} HashNode{h1} HashNode{h2} BRANCH{0b11}
+        |------------------- MATCH ------------|
 
-HASH h0 BranchNode{0: HashNode{h1} 1: HashNode{h2}}
-       |----------- SUBSTITUTED -------------------|
+HASH{h0} BranchNode{0: HashNode{h1} 1: HashNode{h2}}
+        |----------- SUBSTITUTED -------------------|
 ```
 
 No match (not enough nodes to the left of the instruction):
 
 ```
-HASH h0 HASH h1 HashNode{h2} BRANCH 0b11
+HASH h0 HASH h1 HashNode{h2} BRANCH{0b11}
 ```
 
 ### Result
@@ -256,7 +269,7 @@ Example
 
 ```
                              
-Node(n0) Node(n1) BRANCH(mask) |=>
+Node(n0) Node(n1) BRANCH{mask} |=>
 BranchNode{MAKE_VALUES_ARRAY(mask, n0, n1)}
                              ^     ^-- ^--- BOUND NODES
                              |---- BOUND INSTRUCTION PARAM
@@ -271,7 +284,7 @@ BranchNode{MAKE_VALUES_ARRAY(mask, n0, n1)}
 So the full syntax is this:
 
 ```
-[GUARD <CONDITION> ...] [ NodeType(bound_variable1)... ] INSTRUCTION[(param1 ...)] |=>
+[GUARD <CONDITION> ...] [ NodeType(bound_variable1)... ] INSTRUCTION{(param1 ...)} |=>
 Node(<HELPER_FUNCTION_OR_COMPUTATION>)
 ```
 
@@ -284,7 +297,7 @@ be only one rule that is applicable to a certain position in the witness.
 
 So, the minimal substitution rule is the one for the `HASH` instruction that pushes one hash to the stack:
 ```
-HASH(hashValue) |=> HashNode{hashValue}
+HASH{hashValue} |=> HashNode{hashValue}
 ```
 
 
@@ -306,7 +319,7 @@ Helper functions MAY contain recursion.
 Replaces the instruction with a `ValueNode` wrapped with a `LeafNode`.
 
 ```
-LEAF(key, raw_value) |=> LeafNode{key, ValueNode(raw_value)}
+LEAF{key, raw_value} |=> LeafNode{key, ValueNode{raw_value}}
 ```
 
 ### `EXTENSION key`
@@ -316,7 +329,7 @@ Wraps a node to the left of the instruction with an `ExtensionNode`.
 **Substitution rules**
 
 ```
-Node(node) EXTENSION(key) |=> ExtensionNode{key, node}
+Node(node) EXTENSION{key} |=> ExtensionNode{key, node}
 ```
 
 ### `HASH raw_hash`
@@ -326,7 +339,7 @@ Replaces the instruction with a `HashNode`.
 **Substitution rules**
 
 ```
-HASH(hash_value) |=> HashNode{hash_value}
+HASH{hash_value} |=> HashNode{hash_value}
 ```
 
 ### `CODE raw_code`
@@ -334,7 +347,7 @@ HASH(hash_value) |=> HashNode{hash_value}
 Replaces the instruction with a `CodeNode`.
 
 ```
-CODE(raw_code) |=> CodeNode{raw_code}
+CODE{raw_code} |=> CodeNode{raw_code}
 ```
 
 ### `ACCOUNT_LEAF key nonce balance has_code has_storage`
@@ -348,7 +361,7 @@ instructon with a single `AccountNode` wrapped with a `LeafNode`.
 GUARD has_code == true
 GUARD has_storage == true
 
-CodeNode(code) Node(storage_hash_node) ACCOUNT_LEAF(key, nonce, balance, has_code, has_storage) |=>
+CodeNode(code) Node(storage_hash_node) ACCOUNT_LEAF{key, nonce, balance, has_code, has_storage} |=>
 LeafNode{key, AccountNode{nonce, balance, storage_root, code}}
 
 ---
@@ -356,7 +369,7 @@ LeafNode{key, AccountNode{nonce, balance, storage_root, code}}
 GUARD has_code == true
 GUARD has_storage == true
 
-HashNode(code) Node(storage_hash_node) ACCOUNT_LEAF(key, nonce, balance, has_code, has_storage) |=>
+HashNode(code) Node(storage_hash_node) ACCOUNT_LEAF{key, nonce, balance, has_code, has_storage} |=>
 LeafNode{key, AccountNode{nonce, balance, storage_root, code}}
 
 ---
@@ -364,7 +377,7 @@ LeafNode{key, AccountNode{nonce, balance, storage_root, code}}
 GUARD has_code == false
 GUARD has_storage == true
 
-Node(storage_root) ACCOUNT_LEAF(key, nonce, balance, has_code, has_storage) |=>
+Node(storage_root) ACCOUNT_LEAF{key, nonce, balance, has_code, has_storage} |=>
 LeafNode{key, AccountNode{nonce, balance, storage_root, nil}}
 
 ---
@@ -372,7 +385,7 @@ LeafNode{key, AccountNode{nonce, balance, storage_root, nil}}
 GUARD has_code == true
 GUARD has_storage == false
 
-CodeNode(code) ACCOUNT_LEAF(key, nonce, balance, has_code, has_storage) |=>
+CodeNode(code) ACCOUNT_LEAF{key, nonce, balance, has_code, has_storage} |=>
 LeafNode{key, AccountNode{nonce, balance, nil, code}}
 
 ---
@@ -380,7 +393,7 @@ LeafNode{key, AccountNode{nonce, balance, nil, code}}
 GUARD has_code == true
 GUARD has_storage == false
 
-HashNode(code) ACCOUNT_LEAF(key, nonce, balance, has_code, has_storage) |=>
+HashNode(code) ACCOUNT_LEAF{key, nonce, balance, has_code, has_storage} |=>
 LeafNode{key, AccountNode{nonce, balance, nil, nil, code}}
 
 ---
@@ -388,7 +401,7 @@ LeafNode{key, AccountNode{nonce, balance, nil, nil, code}}
 GUARD has_code == false
 GUARD has_storage == false
 
-ACCOUNT_LEAF(key, nonce, balance, has_code, has_storage) |=>
+ACCOUNT_LEAF{key, nonce, balance, has_code, has_storage} |=>
 LeafNode{key, AccountNode{nonce, balance, nil, nil, nil}}
 
 ```
@@ -408,14 +421,14 @@ Replaces `NBITSET(mask)` `Node`s to the left of the instruction with a single
 
 GUARD NBITSET(mask) == 2
 
-Node(n0) Node(n1) BRANCH(mask) |=> 
+Node(n0) Node(n1) BRANCH{mask} |=> 
 BranchNode{MAKE_VALUES_ARRAY(mask, n0, n1)}
 
 ---
 
 GUARD NBITSET(mask) == 3
 
-Node(n0) Node(n1) Node(n2) BRANCH(mask) |=> 
+Node(n0) Node(n1) Node(n2) BRANCH{mask} |=> 
 BranchNode{MAKE_VALUES_ARRAY(mask, n0, n1, n2)}
 
 ---
@@ -426,7 +439,7 @@ BranchNode{MAKE_VALUES_ARRAY(mask, n0, n1, n2)}
 
 GUARD NBITSET(mask) == 16
 
-Node(n0) Node(n1) ... Node(n15) BRANCH(mask) |=>
+Node(n0) Node(n1) ... Node(n15) BRANCH{mask} |=>
 BranchNode{MAKE_VALUES_ARRAY(mask, n0, n1, ..., n15)}
 ```
 
