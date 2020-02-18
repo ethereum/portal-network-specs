@@ -125,7 +125,7 @@ witness.
 ### Building a single trie from the witness
 
 If we are building a single trie from the witness, then the only SUCCESS
-executon is when the following are true:
+execution is when the following are true:
 
 - The execution state MUST match the End Criteria
 - There MUST be only one item left in the witness
