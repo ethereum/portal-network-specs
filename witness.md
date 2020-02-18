@@ -129,7 +129,7 @@ execution is when the following are true:
 
 - The execution state MUST match the End Criteria
 - There MUST be only one item left in the witness
-- This item MUST be of the type `Node`
+- This item MUST be one of these types: `LeafNode`, `ExtensionNode`, `BranchNode`
     
 In that case, this last item will be the root of the built trie.
 
@@ -142,9 +142,9 @@ We also can build a forest of tries with this approach, by adding a new
 Instruction `NEW_TRIE` and adjusting the success criteria a bit:
 
 - The execution state MUST match the End Criteria;
-- The items that are left in the witness MUST follow this pattern: `(Node
-    NEW_TRIE ... Node)`
-- Each `Node` element will be a root of a trie.
+- The items that are left in the witness MUST follow this pattern:
+    `(LeafNode|ExtensionNode|BranchNode NEW_TRIE ... LeafNode|ExtensionNode|BranchNode)`
+- Each `LeafNode|ExtensionNode|BranchNode` element root of a trie.
 
 Every other end state is considered a FAILURE.
 
@@ -457,11 +457,6 @@ MAKE_VALUES_ARRAY(mask, idx, values...) {
 ```
 
 
-### `RLP(value)`
-
-returns the RLP encoding of a value
-
-
 ### `NBITSET(number)`
 
 returns number of bits set in the binary representation of `number`.
@@ -487,10 +482,6 @@ returns the first value in the specified array
 ### `REST(array)`
 
 returns the array w/o the first item
-
-### `KECCAK(bytes)`
-
-returns a keccak-256 hash of `bytes`
 
 
 ## Serialization
@@ -519,7 +510,7 @@ The parts of the key that are encoded with CBOR are marked by the `CBOR` functio
 
 Keys are also using custom encoding to make them more compact.
 
-The nibbles of a key are encoded in a following way `[FLAGS NIBBLE1+NIBBLE2 NIBBLE3+NIBBLE4 NIBBLE5... ]`
+The nibbles of a key are encoded in a following way `(FLAGS NIBBLE1+NIBBLE2 NIBBLE3+NIBBLE4 NIBBLE5... )`
 
 *FLAGS*
 * bit 0 -- 1 if the number of nibbles were odd
@@ -531,7 +522,7 @@ This is shown later as `ENCODE_KEY` function.
 
 format: `version:byte`
 
-encoded as `[ version ]`
+encoded as `( version )`
 
 the current version is 1.
 
@@ -545,14 +536,14 @@ Then it might contain some data.
 
 format: `LEAF key:[]byte value:[]byte` 
 
-encoded as `[ 0x00 CBOR(ENCODE_KEY(key))... CBOR(value)... ]`
+encoded as `( 0x00 CBOR(ENCODE_KEY(key))... CBOR(value)... )`
 
 
 ##### `EXTENSION`
 
 format: `EXTENSION key:[]byte` 
 
-encoded as `[ 0x01 CBOR(ENCODE_KEY(key))... ]`
+encoded as `( 0x01 CBOR(ENCODE_KEY(key))... )`
 
 
 ##### `BRANCH`
@@ -562,30 +553,30 @@ format: `BRANCH mask:uint32`
 *mask* defines which children are present 
 (e.g. `0000000000001011` means that children 0, 1 and 3 are present and the other ones are not)
 
-encoded as `[ 0x02 CBOR(mask)...]`
+encoded as `( 0x02 CBOR(mask)... )`
 
 
 ##### `HASH` 
 
 format: `HASH hash:[32]byte`
 
-encoded as `[ 0x03 hash_byte_1 ... hash_byte_32 ]`
+encoded as `( 0x03 hash_byte_1 ... hash_byte_32 )`
 
 
 ##### `CODE`
 
 format: `CODE code:[]byte`
 
-encoded as `[ 0x04 CBOR(code)... ]`
+encoded as `( 0x04 CBOR(code)... )`
 
 
 ##### `ACCOUNT_LEAF`
 
 format: `ACCOUNT_LEAF key:[]byte flags [nonce:uint64] [balance:[]byte]` 
 
-encoded as `[ 0x05 CBOR(ENCODE_KEY(key))... flags /CBOR(nonce).../ /CBOR(balance).../ ]`
+encoded as `( 0x05 CBOR(ENCODE_KEY(key))... flags /CBOR(nonce).../ /CBOR(balance).../ )`
 
-*flags* is a bitset encoded in a single bit (see [`witness_operators_test.go`](../../trie/witness_operators_test.go) to see flags in action).
+*flags* is a bitset encoded in a single byte (bit endian):
 * bit 0 defines if **code** is present; if set to 1, then `has_code=true`;
 * bit 1 defines if **storage** is present; if set to 1, then `has_storage=true`;
 * bit 2 defines if **nonce** is not 0; if set to 0, *nonce* field is not encoded;
@@ -595,4 +586,4 @@ encoded as `[ 0x05 CBOR(ENCODE_KEY(key))... flags /CBOR(nonce).../ /CBOR(balance
 
 format: `NEW_TRIE`
 
-encoded as `[ 0xBB ]`
+encoded as `( 0xBB )`
