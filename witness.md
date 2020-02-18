@@ -71,7 +71,7 @@ The witness execution environment MUST contain the following 2 elements:
 
 ## Execution process
 
-Initially, the Witness MUST BE an array of `Instruction`s.
+Initially, the witness MUST BE an array of `Instruction`s.
 
 Then, as substitution rules are applied to the witness, some elements of the
 array are replaces with `Node`s.
