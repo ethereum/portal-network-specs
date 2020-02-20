@@ -544,6 +544,8 @@ These are all helper functions that we need to execute the rules.
 
 #### `MAKE_VALUES_ARRAY mask values...`
 
+`mask` should be at least 16 bits wide.
+
 returns an array of 16 elements, where values from `values` are set to the indices where `mask` has bits set to 1. Every other place has `nil` value there.
 
 **Example**: `MAKE_VALUES_ARRAY(5, [a, b])` returns `[a, nil, b, nil, nil, ..., nil]` (binary representation of 5 is `0000000000000101`)
@@ -572,8 +574,6 @@ MAKE_VALUES_ARRAY(mask, idx, values...) {
 returns number of bits set in the binary representation of `number`.
 
 #### `BIT_TEST(number, n)`
-
-`n` MUST NOT be negative.
 
 returns `true` if bit `n` in `number` is set, `false` otherwise.
 
