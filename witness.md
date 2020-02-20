@@ -5,7 +5,7 @@ The key words "MUST", "MUST NOT", "REQUIRED", "SHALL", "SHALL NOT", "SHOULD", "S
 ## Use Cases
 
 The format described in this document can be used to store and build
-partial Patricia Merkle Tries and forests in a linear way.
+partial hexary Patricia Merkle Tries and forests in a linear way.
 
 It can be used to store the whole or a partial trie (for executing the block
 w/o any trie), or a subtrie of that (can be used for semi-stateless initial
@@ -64,9 +64,9 @@ the previous one.
 the defined type `Node` can be used to pattern-match both `CodeNode` and
 `HashNode`.
 
-### The Witness Format
+## The Witness Format
 
-A block witness is a binary format that consists of the following logical
+A block witness is a binary data format that consists of the following logical
 elements:
 
 - witness header;
@@ -110,17 +110,15 @@ Each block witness consists of a header followed by a list of instructions.
 
 There is no length of witness specified anywhere, the code expects to just reach `EOF`.
 
-### Endianness
+#### Endianness
 
 All the data is interpreted as big-endian.
 
-#### Encoding
-
-##### CBOR
+#### CBOR
 
 The parts of the key that are encoded with CBOR are marked by the `CBOR` function.
 
-##### Keys
+#### Keys
 
 Keys are also using custom encoding to make them more compact.
 
@@ -131,6 +129,10 @@ The nibbles of a key are encoded in a following way `(FLAGS NIBBLE1+NIBBLE2 NIBB
 * bit 1 -- 1 if the nibbles end with 0x10 (the terminator byte)
 
 This is shown later as `ENCODE_KEY` function.
+
+#### Serialized Witness
+
+`(Header Instruction1 Instuction2... EOF)`
 
 #### Header
 
@@ -143,9 +145,13 @@ the current version MUST BE 1.
 #### Instructions 
 
 To distinguish between instuctions, they are serialized in the following way:
-`(opcode [parameters])`
+`(OpCode [parameters])`
 
-The `opcode` is a single byte that has a unique identifier of the instruction.
+```
+type OpCode = Byte
+```
+
+The `OpCode` is a single byte that has a unique identifier of the instruction.
 It defines how the next bytes are interpreted.
 
 For some data, like `Hash` or some kind of flags byte, we know the length in
@@ -155,27 +161,25 @@ For the other types of data the encoder defines how to interpret it.
 
 Here is how the instuctions are encoded:
 
-* `LEAF` -> `( 0x00 CBOR(ENCODE_KEY(key))... CBOR(value)... )`
+* **`LEAF`** -> `( 0x00 CBOR(ENCODE_KEY(key))... CBOR(value)... )`.
 
-* `EXTENSION` -> `( 0x01 CBOR(ENCODE_KEY(key))... )`
+* **`EXTENSION`** -> `( 0x01 CBOR(ENCODE_KEY(key))... )`.
 
-* `BRANCH` -> `( 0x02 CBOR(mask)... )`
-    *mask* defines which children are present 
+* **`BRANCH`** -> `( 0x02 CBOR(mask)... )`; `mask` defines which children are present 
     (e.g. `0000000000001011` means that children 0, 1 and 3 are present and the other ones are not)
 
-* `HASH` -> `( 0x03 hash_byte_1 ... hash_byte_32 )`
+* **`HASH`** -> `( 0x03 hash_byte_1 ... hash_byte_32 )`
 
-* `CODE` -> `( 0x04 CBOR(code)... )`
+* **`CODE`** -> `( 0x04 CBOR(code)... )`
 
-* `ACCOUNT_LEAF` -> `( 0x05 CBOR(ENCODE_KEY(key))... flags /CBOR(nonce).../ /CBOR(balance).../ )`
-
-  *flags* is a bitset encoded in a single byte (bit endian):
+* **`ACCOUNT_LEAF`** -> `( 0x05 CBOR(ENCODE_KEY(key))... flags /CBOR(nonce).../ /CBOR(balance).../ )`
+  `flags` is a bitset encoded in a single byte (bit endian):
     * bit 0 defines if **code** is present; if set to 1, then `has_code=true`;
     * bit 1 defines if **storage** is present; if set to 1, then `has_storage=true`;
     * bit 2 defines if **nonce** is not 0; if set to 0, *nonce* field is not encoded;
     * bit 3 defines if **balance** is not 0; if set to 0, *balance* field is not encoded;
 
-* `NEW_TRIE` -> `( 0xBB )`
+* **`NEW_TRIE`** -> `( 0xBB )`
 
 
 
@@ -297,7 +301,7 @@ Instruction `NEW_TRIE` and adjusting the success criteria a bit:
 Every other end state is considered a FAILURE.
 
 
-## Substitution rules in detail
+### Substitution rules in detail
 
 The full syntax of a substitution rule is the following:
 
@@ -323,7 +327,7 @@ A substitution rule consists of 3 parts:
 - result, to the right of the `|=>` sign.
 
 
-### `GUARD`s
+#### `GUARD`s
 
 Each substitution rule can have zero, one or multiple `GUARD` statements.
 Each `GUARD` statement looks like this:
@@ -357,7 +361,7 @@ For the example rule to be applicable both facts MUST be true:
 Fact (1) comes from the `GUARD` statement.
 
 
-### PATTERN
+#### PATTERN
 
 `[NodeType(boundVar1)... NodeType(boundVarN)] Instruction[(param1... paramN)]`
 
@@ -388,7 +392,7 @@ No match (not enough nodes to the left of the instruction):
 HASH h0 HASH h1 HashNode{h2} BRANCH{0b11}
 ```
 
-### Result
+#### Result
 
 `NodeType(HELPER_FUNCTION(arguments))`
 
@@ -414,7 +418,7 @@ BranchNode{MAKE_VALUES_ARRAY(mask, n0, n1)}
 
 ```
 
-## Helper functions
+#### Helper functions
 
 Helper functions are functions that are used in GUARDs or substitution rules.
 
@@ -428,7 +432,11 @@ Helper functions MAY contain recursion.
 Let's look at the full set of substitution rules that are enough to build
 a trie from a witness.
 
+Note, that there are no substitution rules for `NEW_TRIE`, and that makes it
+possible to use it as a divider between trie when building a forest.
+
 ```
+
 HASH{hash_value} |=> HashNode{hash_value}
 
 ---
@@ -521,7 +529,7 @@ BranchNode{MAKE_VALUES_ARRAY(mask, n0, n1, ..., n15)}
 
 These are all helper functions that we need to execute the rules.
 
-### `MAKE_VALUES_ARRAY mask values...`
+#### `MAKE_VALUES_ARRAY mask values...`
 
 returns an array of 16 elements, where values from `values` are set to the indices where `mask` has bits set to 1. Every other place has `nil` value there.
 
@@ -546,29 +554,29 @@ MAKE_VALUES_ARRAY(mask, idx, values...) {
 ```
 
 
-### `NBITSET(number)`
+#### `NBITSET(number)`
 
 returns number of bits set in the binary representation of `number`.
 
-### `BIT_TEST(number, n)`
+#### `BIT_TEST(number, n)`
 
 `n` MUST NOT be negative.
 
 returns `true` if bit `n` in `number` is set, `false` otherwise.
 
-### `PREPEND(value, array)`
+#### `PREPEND(value, array)`
 
 returns a new array with the `value` at index 0 and `array` values starting from index 1
 
-### `INC(value)`
+#### `INC(value)`
 
 increments `value` by 1
 
-### `FIRST(array)`
+#### `FIRST(array)`
 
 returns the first value in the specified array
 
-### `REST(array)`
+#### `REST(array)`
 
 returns the array w/o the first item
 
@@ -608,3 +616,5 @@ execute and validate the trie in the same pass.
 ## Alternatives considered
 
 ### GetNodeData
+
+TBD
