@@ -2,9 +2,18 @@
 
 The key words "MUST", "MUST NOT", "REQUIRED", "SHALL", "SHALL NOT", "SHOULD", "SHOULD NOT", "RECOMMENDED",  "MAY", and "OPTIONAL" in this document are to be interpreted as described in [RFC 2119](https://tools.ietf.org/html/rfc2119).
 
-## Data Types
+## Use Cases
 
-### Basic
+The format described in this document can be used to store and build
+partial Patricia Merkle Tries and forests in a linear way.
+
+It can be used to store the whole or a partial trie (for executing the block
+w/o any trie), or a subtrie of that (can be used for semi-stateless initial
+sync).
+
+## Notation & Data types
+
+### Basic data types
 
 `nil` - an empty value.
 
@@ -20,13 +29,13 @@ in this spec and should be up to implementation.
 
 `Hash` - 32 byte value, representing a result of Keccak256 hashing.
 
-### Composite
+### Composite data types
 
 `()` - an empty array of arbitrary type.
 
 `(Type...)` - an array of a type `Type`. MUST NOT be empty.
 
-`{field:Type}` - an object with a field `field` of type `Type`.
+`{field:Type}` - an dictionary with a field `field` of type `Type`.
 
   - full notation: `type T = {field:Type}`
 
@@ -37,7 +46,147 @@ in this spec and should be up to implementation.
 The type definitions are a bit similar to [Haskell](https://en.wikibooks.org/wiki/Haskell/Type_declarations).
 The key differences are how the arrays and type fields are defined.
 
-### Nodes
+**Full type definition**
+```
+type HashNode = {raw_hash:Hash}
+type CodeNode = {code:(Byte...)}
+type Node = HashNode|CodeNode
+```
+this definition defines 3 types: `Node`, `HashNode` and `CodeNode`.
+
+Inline type definition
+```
+type Node = HashNode{raw_hash:Hash}|CodeNode{code:(Byte...)}
+```
+this definition defines the exact 3 types (`Node`, `HashNode`, `CodeNode` as
+the previous one.
+
+the defined type `Node` can be used to pattern-match both `CodeNode` and
+`HashNode`.
+
+
+### The Witness Format
+
+A block witness is a binary format that consists of the following logical
+elements:
+
+- witness header;
+
+- list of instructions with parameters.
+
+### The Logical Structure
+
+Here, we will discuss a logical structure of the witness and its elements.
+
+Note, that the keys names in the dictionaries aren't encoded in the binary
+format and are serving the purpose to improve readability.
+
+The header at the moment contains the versioning information.
+```
+type WitnessHeader = {version:Int}
+```
+
+The list of instructions is the key element for pattern-matching when building
+a trie from the witness. 
+We will use a simple naming convention to make them more salient: `BRANCH`, etc
+
+The list of instructions is defined here.
+
+```
+type Instruction = LEAF{key:(Byte...) value:(Byte...)}
+                 | EXTENSION{key:(Byte...) nonce:Int balance:Int has_code:Bool has_storage:Bool}
+                 | HASH{raw_hash:Hash}
+                 | CODE{raw_code:(Byte...)}
+                 | ACCOUNT_LEAF{key:(Byte...)
+                 | BRANCH{mask:Int}
+                 | NEW_TRIE{}
+
+type Witness = (INSTRUCTION...)
+
+```
+
+### The Physical structure
+
+Each block witness consists of a header followed by a list of instructions.
+
+There is no length of witness specified anywhere, the code expects to just reach `EOF`.
+
+### Endianness
+
+All the data is interpreted as big-endian.
+
+#### Encoding
+
+##### CBOR
+
+The parts of the key that are encoded with CBOR are marked by the `CBOR` function.
+
+##### Keys
+
+Keys are also using custom encoding to make them more compact.
+
+The nibbles of a key are encoded in a following way `(FLAGS NIBBLE1+NIBBLE2 NIBBLE3+NIBBLE4 NIBBLE5... )`
+
+*FLAGS*
+* bit 0 -- 1 if the number of nibbles were odd
+* bit 1 -- 1 if the nibbles end with 0x10 (the terminator byte)
+
+This is shown later as `ENCODE_KEY` function.
+
+#### Header
+
+format: `version:byte`
+
+encoded as `( version )`
+
+the current version MUST BE 1.
+
+#### Instructions 
+
+To distinguish between instuctions, they are serialized in the following way:
+`(opcode [parameters])`
+
+The `opcode` is a single byte that has a unique identifier of the instruction.
+It defines how the next bytes are interpreted.
+
+For some data, like `Hash` or some kind of flags byte, we know the length in
+advance, so we can just read the known amount of bytes.
+
+For the other types of data the encoder defines how to interpret it.
+
+Here is how the instuctions are encoded:
+
+* `LEAF` -> `( 0x00 CBOR(ENCODE_KEY(key))... CBOR(value)... )`
+
+* `EXTENSION` -> `( 0x01 CBOR(ENCODE_KEY(key))... )`
+
+* `BRANCH` -> `( 0x02 CBOR(mask)... )`
+    *mask* defines which children are present 
+    (e.g. `0000000000001011` means that children 0, 1 and 3 are present and the other ones are not)
+
+* `HASH` -> `( 0x03 hash_byte_1 ... hash_byte_32 )`
+
+* `CODE` -> `( 0x04 CBOR(code)... )`
+
+* `ACCOUNT_LEAF` -> `( 0x05 CBOR(ENCODE_KEY(key))... flags /CBOR(nonce).../ /CBOR(balance).../ )`
+
+  *flags* is a bitset encoded in a single byte (bit endian):
+    * bit 0 defines if **code** is present; if set to 1, then `has_code=true`;
+    * bit 1 defines if **storage** is present; if set to 1, then `has_storage=true`;
+    * bit 2 defines if **nonce** is not 0; if set to 0, *nonce* field is not encoded;
+    * bit 3 defines if **balance** is not 0; if set to 0, *balance* field is not encoded;
+
+* `NEW_TRIE` -> `( 0xBB )`
+
+
+## Algorithms
+
+Let's take a look on how to build a witness from a trie and build a trie from
+the witness.
+
+### Rebuilding the trie
+
+### Trie Nodes
 
 ```
 type Node = HashNode{raw_hash:Hash}
@@ -49,29 +198,6 @@ type Node = HashNode{raw_hash:Hash}
           | CodeNode{code:(Byte... )}
 ```
 
-### Witness
-
-Instructions are defined in the following list. This spec capitalizes the names
-of INSTUCTIONS (i.e. `BRANCH`) to help distinguish them form the nodes (i.e. `BranchNode`).
-```
-type INSTRUCTION = LEAF{key:(Byte...) value:(Byte...)}
-                 | EXTENSION{key:(Byte...) nonce:Int balance:Int has_code:Bool has_storage:Bool}
-                 | HASH{raw_hash:Hash}
-                 | CODE{raw_code:(Byte...)}
-                 | ACCOUNT_LEAF{key:(Byte...)
-                 | BRANCH{mask:Int}
-                 | NEW_TRIE
-```
-
-```
-type WitnessHeader = {version:Int}
-type Witness = (Node|Instruction...)
-```
-
-
-
-
-## Rebuilding the Trie
 
 The witness execution environment MUST contain the following 3 elements:
 
@@ -170,6 +296,12 @@ Each instruction MAY have one or more parameters.
 The parameters values MUST be encoded in the witness.
 
 That makes it different from the helper function parameters that MAY come from the stack or MAY come from the witness.
+
+
+## Building a witness form a trie
+
+
+## Building a trie from the witness
 
 
 ## Substitution rules
@@ -497,6 +629,14 @@ returns the first value in the specified array
 returns the array w/o the first item
 
 
+## Validating The Witness
+
+There are a couple of times we can validate the witness corectness.
+
+(1) When reading the binary data:
+- if we meet an unknown opcode
+
+
 ## Serialization
 
 The format for serialization of everything except hashes (that we know the
@@ -505,98 +645,11 @@ length of) is [CBOR](https://cbor.io). It is RFC-specified and concise.
 For hashes we use the optimization of knowing the lengths, so we just read 32
 bytes
 
-### Block Witness Format
 
-Each block witness consists of a header followed by a list of instructions.
+## Implementer's guide
 
-There is no length of witness specified anywhere, the code expects to just reach `EOF`.
+1. Simple stack machine execution
 
-Serialized Witness: `(HEADER, OP1, OP2, ..., OPn-1, OPn, EOF)`
+2. Building hashes
 
-#### Encoding
-
-##### CBOR
-
-The parts of the key that are encoded with CBOR are marked by the `CBOR` function.
-
-##### Keys
-
-Keys are also using custom encoding to make them more compact.
-
-The nibbles of a key are encoded in a following way `(FLAGS NIBBLE1+NIBBLE2 NIBBLE3+NIBBLE4 NIBBLE5... )`
-
-*FLAGS*
-* bit 0 -- 1 if the number of nibbles were odd
-* bit 1 -- 1 if the nibbles end with 0x10 (the terminator byte)
-
-This is shown later as `ENCODE_KEY` function.
-
-#### Header
-
-format: `version:byte`
-
-encoded as `( version )`
-
-the current version is 1.
-
-#### Instructions 
-
-Each instruction starts with an opcode (`uint`).
-
-Then it might contain some data.
-
-##### `LEAF`
-
-format: `LEAF key:[]byte value:[]byte` 
-
-encoded as `( 0x00 CBOR(ENCODE_KEY(key))... CBOR(value)... )`
-
-
-##### `EXTENSION`
-
-format: `EXTENSION key:[]byte` 
-
-encoded as `( 0x01 CBOR(ENCODE_KEY(key))... )`
-
-
-##### `BRANCH`
-
-format: `BRANCH mask:uint32`
-
-*mask* defines which children are present 
-(e.g. `0000000000001011` means that children 0, 1 and 3 are present and the other ones are not)
-
-encoded as `( 0x02 CBOR(mask)... )`
-
-
-##### `HASH` 
-
-format: `HASH hash:[32]byte`
-
-encoded as `( 0x03 hash_byte_1 ... hash_byte_32 )`
-
-
-##### `CODE`
-
-format: `CODE code:[]byte`
-
-encoded as `( 0x04 CBOR(code)... )`
-
-
-##### `ACCOUNT_LEAF`
-
-format: `ACCOUNT_LEAF key:[]byte flags [nonce:uint64] [balance:[]byte]` 
-
-encoded as `( 0x05 CBOR(ENCODE_KEY(key))... flags /CBOR(nonce).../ /CBOR(balance).../ )`
-
-*flags* is a bitset encoded in a single byte (bit endian):
-* bit 0 defines if **code** is present; if set to 1, then `has_code=true`;
-* bit 1 defines if **storage** is present; if set to 1, then `has_storage=true`;
-* bit 2 defines if **nonce** is not 0; if set to 0, *nonce* field is not encoded;
-* bit 3 defines if **balance** is not 0; if set to 0, *balance* field is not encoded;
-
-##### `NEW_TRIE`
-
-format: `NEW_TRIE`
-
-encoded as `( 0xBB )`
+## Alternatives considered
