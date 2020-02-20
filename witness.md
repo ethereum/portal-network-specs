@@ -106,7 +106,7 @@ type Witness = (INSTRUCTION...)
 
 ```
 
-### The Physical structure
+### The Bytes Layout
 
 `(Header Instruction1 Instuction2... EOF)`
 
@@ -137,11 +137,9 @@ This is shown later as `ENCODE_KEY` function.
 
 #### Header
 
-format: `version:byte`
+A header is encoded in a single byte as `( version )`.
 
-encoded as `( version )`
-
-the current version MUST BE 1.
+The current version MUST BE 1.
 
 #### Instructions 
 
@@ -587,18 +585,25 @@ returns the array w/o the first item
 
 ## Validating The Witness
 
-There are a couple of times we can validate the witness corectness.
+The witness MUST be rejected as invalid if any of these rules are violated.
 
-(1) When reading the binary data:
-- if we meet an unknown opcode or an unexpected data type;
+1. When reading the binary data:
+    - The `version` in the witness header MUST be 1;
+    - The `opcode` MUST be one of `0x00`, `0x01`, `0x02`, `0x03`, `0x04`, `0x05`, `0xBB`;
+    - Every fixed-length parameter MUST be read fully (e.g. if we need to read
+        32-byte `Hash`, then there should be at least 32 bytes available to
+        read).
 
-(2) When building the trie:
-- when there are no applicable rules left, but the success criteria isn't
-    matched.
+2. When building a single trie/a forest:
+    - When there are no rules applicable, the success criteria for a trie/forst MUST be met. It
+        is important to add that on invalid inputs the situation when there are
+        no rules applicable can happen way before every `INSTRUCTION` is
+        replaced.
 
-(3) When checking the root hash:
-- when the trie is built, we can check it's root hash against a value we
-    expect.
+
+3. When checking the root hash:
+    - The root hash of the built trie MUST be equal to what we expect.
+
 
 ## Implementer's guide
 
