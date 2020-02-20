@@ -64,6 +64,17 @@ Both compact and full type definitons are equivalent to each other and
 can be used interchangeably.
 
 
+### Composite Types Destructuring
+
+Sometimes, it is useful to show the actual contents of a complex type, like an
+array or a dictionary. For that, a tecnique called [destructuring](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Operators/Destructuring_assignment) is used.
+
+So, if we have a byte array: `(Byte...)` but we want to demonstrate it's
+contents, we can show it as `(Header Instruction...)`.
+
+This technique is used mostly to show the bytes layout in a serialized witness.
+
+
 ## The Witness Format
 
 A block witness is a binary data format that consists of the following logical
