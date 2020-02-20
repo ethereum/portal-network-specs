@@ -7,11 +7,13 @@ The key words "MUST", "MUST NOT", "REQUIRED", "SHALL", "SHALL NOT", "SHOULD", "S
 The format described in this document can be used to store and build
 partial hexary Patricia Merkle Tries and forests in a linear way.
 
-It can be used to store the whole or a partial trie (for executing the block
-w/o any trie), or a subtrie of that (can be used for semi-stateless initial
-sync).
+It can be used to store full or sparse tries as well.
+It is also suitable to store subtries that can be used for semi-stateless
+initial sync and other semi-stateless operations.
+
 
 ## Notation & Data types
+
 
 ### Basic data types
 
@@ -35,16 +37,10 @@ in this spec and should be up to implementation.
 
 `(Type...)` - an array of a type `Type`. MUST NOT be empty.
 
-`{field:Type}` - an dictionary with a field `field` of type `Type`.
+`{field:Type}` - a typed dictionary with(`field` is of type `Type`).
 
-  - full notation: `type T = {field:Type}`
-
-  - inline `type TBase = T1{field:Type}|T2{field2:Type2}`
 
 ### Type Definitions
-
-The type definitions are a bit similar to [Haskell](https://en.wikibooks.org/wiki/Haskell/Type_declarations).
-The key differences are how the arrays and type fields are defined.
 
 **Full type definition**
 ```
@@ -54,15 +50,19 @@ type Node = HashNode|CodeNode
 ```
 this definition defines 3 types: `Node`, `HashNode` and `CodeNode`.
 
-Inline type definition
+The defined type `Node` can be used to pattern-match both `CodeNode` and
+`HashNode`.
+
+
+This definition can also be writen in more compact way.
+
 ```
 type Node = HashNode{raw_hash:Hash}|CodeNode{code:(Byte...)}
 ```
-this definition defines the exact 3 types (`Node`, `HashNode`, `CodeNode` as
-the previous one.
 
-the defined type `Node` can be used to pattern-match both `CodeNode` and
-`HashNode`.
+Both compact and full type definitons are equivalent to each other and
+can be used interchangeably.
+
 
 ## The Witness Format
 
@@ -73,9 +73,11 @@ elements:
 
 - list of instructions with parameters.
 
+
 ### The Logical Structure
 
-Here, we will discuss a logical structure of the witness and its elements.
+Here, we will discuss a logical structure of the witness and its elements in
+terms of types.
 
 Note, that the keys names in the dictionaries aren't encoded in the binary
 format and are serving the purpose to improve readability.
@@ -106,6 +108,8 @@ type Witness = (INSTRUCTION...)
 
 ### The Physical structure
 
+`(Header Instruction1 Instuction2... EOF)`
+
 Each block witness consists of a header followed by a list of instructions.
 
 There is no length of witness specified anywhere, the code expects to just reach `EOF`.
@@ -130,9 +134,6 @@ The nibbles of a key are encoded in a following way `(FLAGS NIBBLE1+NIBBLE2 NIBB
 
 This is shown later as `ENCODE_KEY` function.
 
-#### Serialized Witness
-
-`(Header Instruction1 Instuction2... EOF)`
 
 #### Header
 
@@ -154,10 +155,13 @@ type OpCode = Byte
 The `OpCode` is a single byte that has a unique identifier of the instruction.
 It defines how the next bytes are interpreted.
 
-For some data, like `Hash` or some kind of flags byte, we know the length in
-advance, so we can just read the known amount of bytes.
+The parameter's type and value are interpeted based on it's position (e.g. if
+`HASH` expects a 32-byte hash after the opcode, the parsing code should treat
+the next 32 bytes as a hash).
 
-For the other types of data the encoder defines how to interpret it.
+We don't store any extra meta information for the values that have fixed
+lengths. For the other types of data the length is encoded in one way or
+another.
 
 Here is how the instuctions are encoded:
 
