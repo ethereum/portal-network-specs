@@ -64,7 +64,6 @@ the previous one.
 the defined type `Node` can be used to pattern-match both `CodeNode` and
 `HashNode`.
 
-
 ### The Witness Format
 
 A block witness is a binary format that consists of the following logical
@@ -179,14 +178,16 @@ Here is how the instuctions are encoded:
 * `NEW_TRIE` -> `( 0xBB )`
 
 
-## Algorithms
 
-Let's take a look on how to build a witness from a trie and build a trie from
+### Witness -to-> Trie
+
+Let's take a look on how to build a Merkle Trie from the witness.
 the witness.
 
-### Rebuilding the trie
-
 ### Trie Nodes
+
+To make the spec self-contained, here are all the possible trie node types with
+their structure.
 
 ```
 type Node = HashNode{raw_hash:Hash}
@@ -198,26 +199,12 @@ type Node = HashNode{raw_hash:Hash}
           | CodeNode{code:(Byte... )}
 ```
 
-
-The witness execution environment MUST contain the following 3 elements:
-
-- **WitnessHeader** -- a header containing the version of the witness. The `version` MUST be 1.
-
-- **Witness** -- a witness to be executed;
-
-- **Substitution Rules** -- a list of all possible substitution rules.
-
-
 ## Execution process
 
-Initially, the witness MUST BE an array of `Instruction`s.
+The execution process is based on **Substitution Rules** that are applied
+repeatedly to a witness until there are no more applicable rules left.
 
-Then, as substitution rules are applied to the witness, some elements of the
-array are replaced with `Node`s.
-
-The execution continues until there are no substitution rules left to execute.
-
-Here is how the execution code might look like in Go for building a single trie.
+In Go, this high-level algorithm can be shown as this.
 
 ```go
 witness := GetInitialWitness()
@@ -236,32 +223,54 @@ if len(witness) == 1 {
 
 ```
 
+#### Example
 
-And here is an example of the execution process (we will use the set of rules
-form the **Substitution Rules** section of this document):
+Let's look at some toy example on how this process works. 
+After that, we define the set of rules that is enough to rebuild a proper sparse Patricia Merkle Trie.
 
-* **Step 1**. Witness: `(HASH{h1} HASH{h2} BRANCH{0b101} HASH{h3} BRANCH{0b11})`
+Here is an example of a rule: `HASH{h1} |=> HashNode{h1}`. It replaces a single
+`Instruction` with a single `Node`.
 
-* **Step 2**. Apply `HASH` substitution rules.
-Witness: `(HashNode{h1} HashNode{h2} BRANCH{0b101} HashNode{h3} BRANCH{0b11})`
+Applicability of a substitution rule is defined by a pattern to to the left of
+`|=>`. In our case it requires an instruction `HASH` to be present.
 
-* **Step 3**. Apply `BRANCH` substitution rules (only once, because `BRANCH{0b11}`
-doesn't pass its `GUARD` statements just yet).
-Witness: `(BranchNode{0: HashNode{h1} 2:HashNode{h2}} HashNode{h3} BRANCH{0b11})`
+Let's see the substitution rules in action.
 
-* **Step 4**. Apply `BRANCH` substitution rules again.
-Witness: `(BranchNode{0: BranchNode{0: HashNode{h1} 2:HashNode{h2}} 1:HashNode{h3}})`
+Witness: `(HASH{h1} HASH{h2} HASH{h3})`
 
-* **Step 5**. No more rules are applicable, the witness contains only one
-    element, the execution ends successfully.
+Let's apply this rule to the witness: `(HashNode{h1} HashNode{h2} HashNode{h3})`
 
+That doesn't really look like a trie, does it?
 
-## End Criteria
+Just a single rule is not enough to build a trie, we need some kind of rule to
+define branches: `Node(n0) Node(n1) BRANCH |=> BranchNode{0: n0, 1: n1}`
 
-The execution ends when there are no substitution rules applicable for this
-witness.
+This rule is a bit more complicated, not only it requires a `BRANCH`
+instruction to be present, but to also have at least 2 `Node` instance to the
+left of it.
 
-### Building a single trie from the witness
+Witness: `(HASH{h1} HASH{h2} BRANCH HASH{h3} BRANCH)`
+
+Let's apply the rules to the witness:
+1. Applying `HASH{h1} |=> HashNode{h1}` (the only applicable rule):
+    `(HashNode{h1} HashNode{h2} BRANCH HashNode{h3} BRANCH)`
+
+2. Applying `Node(n0) Node(n1) BRANCH |=> BranchNode{0: n0, 1: n1}`:
+    `(BranchNode{0: HashNode{h1} 1: HashNode{h2}} HashNode{h3} BRANCH)`
+
+3. Applying `Node(n0) Node(n1) BRANCH |=> BranchNode{0: n0, 1: n1}` again:
+    `(BranchNode{0: BranchNode{0: HashNode{h1} 1: HashNode{h2}} 1:HashNode{h3}})`
+
+4. No more rules can be applied, stop the execution.
+
+Now we only have one element and it is a root of the rebuilt trie.
+
+### Finiteness
+
+Every rule MUST replace one `Instruction` (and sometimes a couple elements to the
+left of it) with one and only one `Node`, so this process is always finite.
+
+### Success criteria: a single trie
 
 If we are building a single trie from the witness, then the only SUCCESS
 execution is when the following are true:
@@ -275,7 +284,7 @@ In that case, this last item will be the root of the built trie.
 Every other end state is considered a FAILURE.
 
 
-### Building a Forest 
+### Success criteria: a forest 
 
 We also can build a forest of tries with this approach, by adding a new
 Instruction `NEW_TRIE` and adjusting the success criteria a bit:
@@ -288,23 +297,18 @@ Instruction `NEW_TRIE` and adjusting the success criteria a bit:
 Every other end state is considered a FAILURE.
 
 
-## Instructions & Parameters
+## Substitution rules in detail
 
-A single instruction consists of substitution rules and parameters.
+The full syntax of a substitution rule is the following:
 
-Each instruction MAY have one or more parameters.
-The parameters values MUST be encoded in the witness.
+```
+[GUARD <CONDITION> ...] [ NodeType(bound_variable1)... ] INSTRUCTION{(param1 ...)} |=>
+Node(<HELPER_FUNCTION_OR_COMPUTATION>)
+```
 
-That makes it different from the helper function parameters that MAY come from the stack or MAY come from the witness.
+`NodeType` here can be either `Node` (if we want it to match any node) or
+a specific type of a node if we need a more strict type match.
 
-
-## Building a witness form a trie
-
-
-## Building a trie from the witness
-
-
-## Substitution rules
 
 A substitution rule consists of 3 parts: 
 
@@ -410,29 +414,6 @@ BranchNode{MAKE_VALUES_ARRAY(mask, n0, n1)}
 
 ```
 
-### Bringing it all together
-
-
-So the full syntax is this:
-
-```
-[GUARD <CONDITION> ...] [ NodeType(bound_variable1)... ] INSTRUCTION{(param1 ...)} |=>
-Node(<HELPER_FUNCTION_OR_COMPUTATION>)
-```
-
-`NodeType` is one of the types of nodes to match. Can also be `Node` to match
-any non-nil node.
-
-Substitution rules MUST be non-ambiguous. Even though, there can be multiple
-substitution rules applicable to the whole witness at the same time, there MUST
-be only one rule that is applicable to a certain position in the witness.
-
-So, the minimal substitution rule is the one for the `HASH` instruction that pushes one hash to the stack:
-```
-HASH{hashValue} |=> HashNode{hashValue}
-```
-
-
 ## Helper functions
 
 Helper functions are functions that are used in GUARDs or substitution rules.
@@ -442,54 +423,28 @@ Helper functions MUST have at least one argument.
 Helper functions MAY have variadic parameters: `HELPER_EXAMPLE(arg1, arg2, list...)`.
 Helper functions MAY contain recursion.
 
-## Instructions
+### Substitution rules
 
-### `LEAF key raw_value`
-
-**Substitution rules**
-
-Replaces the instruction with a `ValueNode` wrapped with a `LeafNode`.
-
-```
-LEAF{key, raw_value} |=> LeafNode{key, ValueNode{raw_value}}
-```
-
-### `EXTENSION key`
-
-Wraps a node to the left of the instruction with an `ExtensionNode`.
-
-**Substitution rules**
-
-```
-Node(node) EXTENSION{key} |=> ExtensionNode{key, node}
-```
-
-### `HASH raw_hash`
-
-Replaces the instruction with a `HashNode`.
-
-**Substitution rules**
+Let's look at the full set of substitution rules that are enough to build
+a trie from a witness.
 
 ```
 HASH{hash_value} |=> HashNode{hash_value}
-```
 
-### `CODE raw_code`
+---
 
-Replaces the instruction with a `CodeNode`.
-
-```
 CODE{raw_code} |=> CodeNode{raw_code}
-```
 
-### `ACCOUNT_LEAF key nonce balance has_code has_storage`
+---
 
-Replaces the instruction and, optionally, up to 2 nodes to the left of the
-instructon with a single `AccountNode` wrapped with a `LeafNode`.
+LEAF{key, raw_value} |=> LeafNode{key, ValueNode{raw_value}}
 
-**Substitution rules**
+---
 
-```
+Node(n) EXTENSION{key} |=> ExtensionNode{key, n}
+
+---
+
 GUARD has_code == true
 GUARD has_storage == true
 
@@ -536,20 +491,7 @@ GUARD has_storage == false
 ACCOUNT_LEAF{key, nonce, balance, has_code, has_storage} |=>
 LeafNode{key, AccountNode{nonce, balance, nil, nil, nil}}
 
-```
-
-### `NEW_TRIE`
-
-No substitution rules. This instruction is used as a "divider" when building
-a forest of tries.
-
-### `BRANCH mask`
-
-Replaces `NBITSET(mask)` `Node`s to the left of the instruction with a single
-`BranchNode` with these nodes as children according to `mask`.
-
-**Substitution rules**
-```
+---
 
 GUARD NBITSET(mask) == 2
 
@@ -575,9 +517,11 @@ Node(n0) Node(n1) ... Node(n15) BRANCH{mask} |=>
 BranchNode{MAKE_VALUES_ARRAY(mask, n0, n1, ..., n15)}
 ```
 
-## Helper functions
+### Helper functions
 
-### `MAKE_VALUES_ARRAY`
+These are all helper functions that we need to execute the rules.
+
+### `MAKE_VALUES_ARRAY mask values...`
 
 returns an array of 16 elements, where values from `values` are set to the indices where `mask` has bits set to 1. Every other place has `nil` value there.
 
@@ -634,22 +578,33 @@ returns the array w/o the first item
 There are a couple of times we can validate the witness corectness.
 
 (1) When reading the binary data:
-- if we meet an unknown opcode
+- if we meet an unknown opcode or an unexpected data type;
 
+(2) When building the trie:
+- when there are no applicable rules left, but the success criteria isn't
+    matched.
 
-## Serialization
-
-The format for serialization of everything except hashes (that we know the
-length of) is [CBOR](https://cbor.io). It is RFC-specified and concise.
-
-For hashes we use the optimization of knowing the lengths, so we just read 32
-bytes
-
+(3) When checking the root hash:
+- when the trie is built, we can check it's root hash against a value we
+    expect.
 
 ## Implementer's guide
 
-1. Simple stack machine execution
+This section contains a few tips on actually implementing this spec.
 
-2. Building hashes
+#### Simple stack machine execution
+
+One simpler implementation of these rules can be a stack machine, taking one
+instruction from the left of the witness and applying rules. That allows to
+rebuild a trie in a single pass.
+
+
+#### Building hashes.
+
+It might be useful to build hashes together with building the nodes so we can
+execute and validate the trie in the same pass.
+
 
 ## Alternatives considered
+
+### GetNodeData
