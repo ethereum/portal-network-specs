@@ -75,6 +75,13 @@ contents, we can show it as `(Header Instruction...)`.
 This technique is used mostly to show the bytes layout in a serialized witness.
 
 
+### Optional Values
+
+Optional values are specified in square brackets.
+`OpCode [parameters]` -- that mean that `parameters` might present and might
+be absent.
+
+
 ## The Witness Format
 
 A block witness is a binary data format that consists of the following logical
