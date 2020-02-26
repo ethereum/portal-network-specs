@@ -5,14 +5,11 @@
 Beam Sync is a new strategy to transition from an empty client node to a full-state, fully-validating
 node on the network. It borrows heavily from the current "Fast Sync" approach.
 
-#### Fast Sync
-
-This writeup assumes familiarity with Fast Sync and supporting devp2p protocols like `GetNodeData`.
+> This writeup assumes familiarity with Fast Sync and supporting devp2p protocols like `GetNodeData`.
 
 #### Beam Sync Benefits
 
-Beam Sync provides several important benefits, to both the syncing node, and the broader network health.
-For example:
+Beam Sync provides several important benefits, to both the syncing node, and the broader network health:
 
 - The "Fast" syncing experience is very slow, taking days before any queries
   or validation can be done on the new node. Beam Sync has the promise of syncing to a useable node in minutes.
