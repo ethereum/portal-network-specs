@@ -11,6 +11,14 @@ It should be possible to basically stream-as-you-encode the the trie on one node
 and recreate it at the same time by using a fixed allocated buffers. That helps
 efficiently transfer and encode/decode witnesses.
 
+The witness allows to walk through the trie and produce the witness as you go w/o buffering
+send it straight to a network socket. A peer can then receive it from the socket
+and it can start computing the hash of the state root straight away.
+
+Also, it means that the memory consumption of witness processing itself will be
+fixed and predictable, which helps for nodes with limited memory.
+
+
 **2. Building Forests**
 It should be possible to build a forest of tries from a single witness. It is
 needed for two use-cases: 
@@ -20,11 +28,15 @@ semi-stateless initial sync, when you already have some trie that you need to
 extend with more data);
 
 - splitting the witness into verifiable chunks (when we can build a trie piece
-    by piece and verify root hashes).
+    by piece and verify root hashes). That is possible by first constructing
+    a witness for the top of the trie (to verify the root hash) and then for
+    subtries from top level to the bottom. At all times you will be able to
+    verify a subtrie root hash.
 
 **3. Arbitrary chunk sizes**
-The witness format doesn't limit a chunk size, that makes it easy to experiment and find the most
-efficient distribution.
+The witness format doesn't limit a chunk size, that makes it easy to experiment and find
+the best size for efficient relaying properties.
+
 
 
 ## Use Cases
