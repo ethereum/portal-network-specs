@@ -2,6 +2,31 @@
 
 The key words "MUST", "MUST NOT", "REQUIRED", "SHALL", "SHALL NOT", "SHOULD", "SHOULD NOT", "RECOMMENDED",  "MAY", and "OPTIONAL" in this document are to be interpreted as described in [RFC 2119](https://tools.ietf.org/html/rfc2119).
 
+## Motivation
+
+The witness format was picked to satisfy the following criteria.
+
+**1. Witness Streaming w/o intermediate dynamic buffers**
+It should be possible to basically stream-as-you-encode the the trie on one node
+and recreate it at the same time by using a fixed allocated buffers. That helps
+efficiently transfer and encode/decode witnesses.
+
+**2. Building Forests**
+It should be possible to build a forest of tries from a single witness. It is
+needed for two use-cases: 
+
+- partial witnesses (like the ones that are used in
+semi-stateless initial sync, when you already have some trie that you need to
+extend with more data);
+
+- splitting the witness into verifiable chunks (when we can build a trie piece
+    by piece and verify root hashes).
+
+**3. Arbitrary chunk sizes**
+The witness format doesn't limit a chunk size, that makes it easy to experiment and find the most
+efficient distribution.
+
+
 ## Use Cases
 
 The format described in this document can be used to store and build
