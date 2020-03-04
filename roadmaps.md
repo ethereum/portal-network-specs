@@ -19,17 +19,22 @@ please take it into a separate document):
 
 ## Research roadmap
 
-1. Strategies for migrating from hexary to binary merkle tree for Ethereum state.
-2. Static jump analysis of deployed EVM code
-3. Efficient algorithms for validating static jumps
-4. Benefits of code merkelisation (with oblivius chunking)
-5. Visualisations of witnesses, and their reductions
-6. Further work on semi-stateless approach as an "average case" optimisation
-7. Make witness semantics executable in Z3
-8. One network vs "two networks" vs "three networks"
-9. Stategies for enabling gas charge for witnesses
-10. Witness chunking for more efficient relay
-11. Transaction format to include proof of balance and proof of nonce of sender
-12. Incentiviation of witness production and relay
+### 1. Strategies for migrating from hexary to binary merkle tree for Ethereum state.
+
+### 2. Static jump analysis of deployed EVM code
+
+### 3. Efficient algorithms for validating static jumps
+
+### 4. Benefits of code merkelisation (with oblivius chunking)
+
+### 5. Visualisations of witnesses, and their reductions
+
+### 6. Further work on semi-stateless approach as an "average case" optimisation
+### 7. Make witness semantics executable in Z3
+### 8. One network vs "two networks" vs "three networks"
+### 9. Stategies for enabling gas charge for witnesses
+### 10. Witness chunking for more efficient relay
+### 11. Transaction format to include proof of balance and proof of nonce of sender
+### 12. Incentiviation of witness production and relay
 
 ## Implementation roadmap
