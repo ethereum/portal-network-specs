@@ -25,7 +25,7 @@ please take it into a separate document):
 
 ### 3. Efficient algorithms for validating static jumps
 
-### 4. Benefits of code merkelisation (with oblivius chunking)
+### 4. Benefits of code merkelisation (with oblivious chunking)
 
 ### 5. Visualisations of witnesses, and their reductions
 
