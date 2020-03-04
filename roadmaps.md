@@ -36,5 +36,6 @@ please take it into a separate document):
 ### 10. Witness chunking for more efficient relay
 ### 11. Transaction format to include proof of balance and proof of nonce of sender
 ### 12. Incentiviation of witness production and relay
+### 13. Periodic state swarming
 
 ## Implementation roadmap
