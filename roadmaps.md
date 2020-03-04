@@ -14,8 +14,21 @@ please take it into a separate document):
 
  * Simulators of peer to peer networks to validate hypotheses on data propagation
  * Benchmarks that compute suitable parameters for the p2p simulators (latency of propagation, processing times, etc.)
- * Emulators of large state and various contract activity
+ * Emulators of large state, reorgs, and various contract activity
+ * EVM semantics for producting formalised proposals on the gas pricing changes. Secondary benefits are white-box fuzzing of smart contracts, creation of high-coverage "super-tests"
 
 ## Research roadmap
+
+1. Strategies for migrating from hexary to binary merkle tree for Ethereum state.
+2. Static jump analysis of deployed EVM code
+3. Efficient algorithms for validating static jumps
+4. Benefits of code merkelisation (with oblivius chunking)
+5. Visualisations of witnesses, and their reductions
+6. Further work on semi-stateless approach as an "average case" optimisation
+7. Make witness semantics executable in Z3
+8. One network vs "two networks" vs "three networks"
+9. Stategies for enabling gas charge for witnesses
+10. Witness chunking for more efficient relay
+11. Incentiviation of witness production and relay
 
 ## Implementation roadmap
