@@ -29,6 +29,7 @@ please take it into a separate document):
 8. One network vs "two networks" vs "three networks"
 9. Stategies for enabling gas charge for witnesses
 10. Witness chunking for more efficient relay
-11. Incentiviation of witness production and relay
+11. Transaction format to include proof of balance and proof of nonce of sender
+12. Incentiviation of witness production and relay
 
 ## Implementation roadmap
