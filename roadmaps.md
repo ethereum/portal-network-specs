@@ -12,10 +12,14 @@ branches of the speculative research.
 We recognise the lack of tools for our quantitative research. Here is a short list (when it becomes longer and more specific,
 please take it into a separate document):
 
- * Simulators of peer to peer networks to validate hypotheses on data propagation
- * Benchmarks that compute suitable parameters for the p2p simulators (latency of propagation, processing times, etc.)
- * Emulators of large state, reorgs, and various contract activity
- * EVM semantics for producting formalised proposals on the gas pricing changes. Secondary benefits are white-box fuzzing of smart contracts, creation of high-coverage "super-tests"
+### 1. Simulators of peer to peer networks to validate hypotheses on data propagation
+These simulators need to abstract away most of the implementation details, and only exhibit features required for the research tasks at hand. This is different from emulators where the real Ethereum implementations are used. Simulators need to be performant enough to explore long timelines and large networks. They also need to include means of generating network topologies that are either naturally occuring, or those that potentially break some desirable properties.
+### 2. Benchmarks that compute suitable parameters for the p2p simulators (latency of propagation, processing times, etc.)
+Various implementations (go-ethereum, parity, nethermind, besu, turbo-geth, etc.) have different performance characteristics when it comes to relaying blocks, transactions, and, in the future, block witnesses. These performance characteristics need to be taken into account when running network simulators.
+### 3. Emulators of large state, reorgs, and various contract activity
+In order to exercise functionality like block witnesses generation, witness propagation, transaction propagation, and others, without deploying implementations on the mainnet, emulators can be used. This could be programs that emulate peers and are capable of serving large states, and generating the blocks with various levels of activity. For example, these would be able to cause very large witnesses to be generated, or cause deep reorgs.
+
+### 4. EVM semantics for producting formalised proposals on the gas pricing changes. Secondary benefits are white-box fuzzing of smart contracts, creation of high-coverage "super-tests"
 
 ## Research roadmap
 
