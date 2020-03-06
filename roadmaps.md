@@ -1,5 +1,8 @@
 We are currently talking about three roadmaps for Eth1x, and, specifically, for Stateless Ethereum.
 
+## Problem statement
+Preserve the resilience of Ethereum 1 network despite the state growth. By making it easier to join the network and stay on it, and therefore increasing number and diversity of nodes.
+
 ## Tools roadmap
 We recognise two main types of research - quantitative and speculative. Both are important. Quantitative research usually
 requires some tools and equipment (in our case equipment is usually computers, but sometimes we need computers with certain
@@ -28,7 +31,19 @@ The benefits of such approachs are many. One can execute the semantics concretel
 
 ## Research roadmap
 
-### 1. Strategies for migrating from hexary to binary merkle tree for Ethereum state.
+### 1. Strategies for migrating from hexary to binary merkle tree for Ethereum state
+It has been found that binary merkle tries are more beneficial than hexary merkle tries. There are many migration paths for existing implementations. One proposal is described here: https://ethresear.ch/t/optimizing-sparse-merkle-trees/3751
+
+Theoretically, a minimally disruptive migration is to keep the patricia hex trie structure, but changing the hash function from
+````
+sha(rlp(x1 .... x16))
+````
+to
+````
+merkle_tree(x1 ... x16)
+````
+At DB level nothing would change.
+There are also ways of performing incremental (as opposed to "stop the world") migration. Rough idea is to introduce a flag/marker at each trie leaf. This flag/marker will be unset by default, and set for any leaf that has been updated after the migration block number.
 
 ### 2. Static jump analysis of deployed EVM code
 
@@ -39,12 +54,14 @@ The benefits of such approachs are many. One can execute the semantics concretel
 ### 5. Visualisations of witnesses, and their reductions
 
 ### 6. Further work on semi-stateless approach as an "average case" optimisation
-### 7. Make witness semantics executable in Z3
-### 8. One network vs "two networks" vs "three networks"
-### 9. Stategies for enabling gas charge for witnesses
-### 10. Witness chunking for more efficient relay
-### 11. Transaction format to include proof of balance and proof of nonce of sender
-### 12. Incentiviation of witness production and relay
-### 13. Periodic state swarming
+
+### 7. State analytics
+### 8. Make witness semantics executable in Z3
+### 9. One network vs "two networks" vs "three networks"
+### 10. Stategies for enabling gas charge for witnesses
+### 11. Witness chunking for more efficient relay
+### 12. Transaction format to include proof of balance and proof of nonce of sender
+### 13. Incentiviation of witness production and relay
+### 14. Periodic state swarming
 
 ## Implementation roadmap
