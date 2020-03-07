@@ -45,6 +45,8 @@ merkle_tree(x1 ... x16)
 At DB level nothing would change.
 There are also ways of performing incremental (as opposed to "stop the world") migration. Rough idea is to introduce a flag/marker at each trie leaf. This flag/marker will be unset by default, and set for any leaf that has been updated after the migration block number.
 
+There is a way of making transition using a new sync algorithm providing the state using the new state roots.
+
 ### 2. Static jump analysis of deployed EVM code
 
 ### 3. Efficient algorithms for validating static jumps
