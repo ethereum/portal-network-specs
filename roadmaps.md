@@ -49,6 +49,8 @@ There is a way of making transition using a new sync algorithm providing the sta
 
 ### 2. Static jump analysis of deployed EVM code
 
+We might not need this for code merkelisation, if we just include jump dest table into the code before merkelisation.
+
 ### 3. Efficient algorithms for validating static jumps
 
 ### 4. Benefits of code merkelisation (with oblivious chunking)
@@ -65,5 +67,11 @@ There is a way of making transition using a new sync algorithm providing the sta
 ### 12. Transaction format to include proof of balance and proof of nonce of sender
 ### 13. Incentiviation of witness production and relay
 ### 14. Periodic state swarming
+Coordination logic to deciding what is currently being swarmed. May be based on the enumeration of leaves. Enumeration of leaves does not have to be supported on the level of merkle hashing, only as implementation convention. Still the total number of items in the state changes.
 
 ## Implementation roadmap
+
+### 1. Turbo-Geth release (flat database layout)
+### 2. Supporting hexary and binary tries simultaneously
+### 3. State sync/swarming for binary trie
+### 4. Migration of the state to binary trie
