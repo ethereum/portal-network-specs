@@ -1,7 +1,7 @@
 We are currently talking about three roadmaps for Eth1x, and, specifically, for Stateless Ethereum.
 
 ## Problem statement
-Preserve the resilience of Ethereum 1 network despite the state growth. By making it easier to join the network and stay on it, and therefore increasing number and diversity of nodes.
+Preserve the resilience of Ethereum 1 network despite the state growth. By making it easier to join the network and stay on it, and therefore increasing number and diversity of nodes. The improvement in the User Experience is not in the scope.
 
 ## Tools roadmap
 We recognise two main types of research - quantitative and speculative. Both are important. Quantitative research usually
@@ -54,20 +54,23 @@ We might not need this for code merkelisation, if we just include jump dest tabl
 ### 3. Efficient algorithms for validating static jumps
 
 ### 4. Benefits of code merkelisation (with oblivious chunking)
-
+Initial data analysis was done, and the results look promising. However, more thourough analysis needs to be done, with different chunking strategy, with various chunk sizes (to see what is the current optimum), and on much larger set of blocks (to preclude the effects of time of the day, day of the week, or week of the months periodicity).
 ### 5. Visualisations of witnesses, and their reductions
 
 ### 6. Further work on semi-stateless approach as an "average case" optimisation
-
+The data analysis on the reduction of witness sizes by semi-stateless appoach has been done only for one specific cache size (1 million nodes). Other cache sizes need to be analysed. Contract code needs to be included into the prototype. Network simulation needs to be done to see if we can use semi-stateless delivery to adjust the network composition do the presence of high-bandwidth pockets and chokepoints.
 ### 7. State analytics
 ### 8. Make witness semantics executable in Z3
 ### 9. One network vs "two networks" vs "three networks"
 ### 10. Stategies for enabling gas charge for witnesses
+Make a change in the code to introduce the second gas counter (to be turned on optionally). Run it on the historical data to see how much extra gas the historical transactions would need to pay, and whether the results of the invocations would change with the second gas counter, given that there would be enough gas available.
 ### 11. Witness chunking for more efficient relay
+Create network simulation to study the relationship between prevailing bandwidth and latencies and the optimal witness chunk size.
 ### 12. Transaction format to include proof of balance and proof of nonce of sender
 ### 13. Incentiviation of witness production and relay
 ### 14. Periodic state swarming
 Coordination logic to deciding what is currently being swarmed. May be based on the enumeration of leaves. Enumeration of leaves does not have to be supported on the level of merkle hashing, only as implementation convention. Still the total number of items in the state changes.
+### 15. Modification of the state trie structure to support canonical witnesses without witness hash in the header
 
 ## Implementation roadmap
 
