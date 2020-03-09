@@ -64,11 +64,13 @@ The data analysis on the reduction of witness sizes by semi-stateless appoach ha
 ### 7. State analytics
 ### 8. Make witness semantics executable in Z3
 ### 9. One network vs "two networks" vs "three networks"
+In the three networks idea, first network is used to download past block, headers, and receipts.
 ### 10. Stategies for enabling gas charge for witnesses
 Make a change in the code to introduce the second gas counter (to be turned on optionally). Run it on the historical data to see how much extra gas the historical transactions would need to pay, and whether the results of the invocations would change with the second gas counter, given that there would be enough gas available.
 ### 11. Witness chunking for more efficient relay
 Create network simulation to study the relationship between prevailing bandwidth and latencies and the optimal witness chunk size.
 ### 12. Transaction format to include proof of balance and proof of nonce of sender
+Estimate how many bytes per transaction these extra proofs would add. Specify the way the transactions in a pool can be unpdated using information from the block witnesses.
 ### 13. Incentiviation of witness production and relay
 ### 14. Periodic state swarming
 Coordination logic to deciding what is currently being swarmed. May be based on the enumeration of leaves. Enumeration of leaves does not have to be supported on the level of merkle hashing, only as implementation convention. Still the total number of items in the state changes.
