@@ -29,6 +29,8 @@ Current idea for the formal EVM semantics to be the set of substitution rules wi
 
 The benefits of such approachs are many. One can execute the semantics concretely (with a help of a generic "driver" program) to test/fuzz it differentially against the concrete implementations of EVM. One can execute the semantics symbolically - this is useful for contract verification. One can use formal semantics for white-box fuzzing of smart contracts. One can use formal semantics for production of "super tests" - EVM conformance tests with very high coverage, effectively automating most of the work of preparing tests for new EVM changes.
 
+First step would be to try to formalise a very small subset of EVM, supporting 3 instructions - PUSH1, ADD, and STOP. And demonstrate all the primary and secondary benefits in that example. Then, extend such EVM bit by bit, adding more opcodes and resources (memory, state, etc.).
+
 ## Research roadmap
 
 ### 1. Strategies for migrating from hexary to binary merkle tree for Ethereum state
