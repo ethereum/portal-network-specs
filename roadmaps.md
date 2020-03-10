@@ -50,10 +50,10 @@ There are also ways of performing incremental (as opposed to "stop the world") m
 There is a way of making transition using a new sync algorithm providing the state using the new state roots.
 
 ### 2. Static jump analysis of deployed EVM code
-
 We might not need this for code merkelisation, if we just include jump dest table into the code before merkelisation.
 
 ### 3. Efficient algorithms for validating static jumps
+If it turns out that the static jump analysis effectively marks all (or most) contracts as "static jump only", the most efficient algorithm can be found to perform such analysis at the contract deploy time. Big downside of such marking is the inclusion of the static analysis into the consensus rules.
 
 ### 4. Benefits of code merkelisation (with oblivious chunking)
 Initial data analysis was done, and the results look promising. However, more thourough analysis needs to be done, with different chunking strategy, with various chunk sizes (to see what is the current optimum), and on much larger set of blocks (to preclude the effects of time of the day, day of the week, or week of the months periodicity).
@@ -71,7 +71,7 @@ Make a change in the code to introduce the second gas counter (to be turned on o
 When block witnesses are relatively large, trying to propagate them through the network as one single packet can be slower than it should be. This is because at every network hop, a participating node needs to completely ingest the block witness, verify it (this can be done at the same time as ingesting though), and only then start streaming it to the next peer. If the block witnesses are split in smaller "tiles", streaming to the next peer can be initiated as soon as the first tile is processed.
 Create network simulation to study the relationship between prevailing bandwidth and latencies and the optimal witness tile size.
 ### 12. Transaction format to include proof of balance and proof of nonce of sender
-Estimate how many bytes per transaction these extra proofs would add. Specify the way the transactions in a pool can be unpdated using information from the block witnesses.
+Estimate how many bytes per transaction these extra proofs would add. Specify the way the transactions in a pool can be updated using information from the block witnesses.
 ### 13. Incentiviation of witness production and relay
 Detailed break-down (this can be implementation specific, but useful netherless) of the process of composing block number `N` by a miner, with estimated durations (in milliseconds). Both cases of not having a witness for block `N-1` and having that witness need to be analysed and compared. Currently, the intuition is that the present of the witness for block `N-1` does not sufficiently speed up the production of the block `N`, possible conclusion being that the presence of witnesses on the network is not enough insentivisation on its own. If this hypothesis is true, the current favourite incentivisation is to have all the participants on gossip network to not propagate blocks without propagating the corresponding witness. Under such rules, stateless nodes would have no option than to refuse propagating the block if the corresponding witness did not arrive. Nodes with the full state, though, may be able to re-generated the witness. This can be a natural solution to the presence of "choke points" in the gossip network. The side effect of "no block propagation without witness" is slowing down the block propagation, with potential consequences being higher uncle rate, etc.
 ### 14. Periodic state swarming
