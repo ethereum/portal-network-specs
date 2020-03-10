@@ -75,6 +75,8 @@ Estimate how many bytes per transaction these extra proofs would add. Specify th
 ### 14. Periodic state swarming
 The duration of swarming cycle is chosen. It can be, for example, 4096 blocks. This can be adjusted over time as the state grows or network becomes efficient at syncing. Alternatively, there can be multiple sub-networks with different cycle durations. Block numbers that are multiple of the cycle duration always start the swarm cycle. At this point (beginning of the new cycle), the seeders (providers of the full state) start maintaining enumeration of the state as of the beginning of the cycle, while also maintaining the current enumeration.
 ### 15. Modification of the state trie structure to support canonical witnesses without witness hash in the header
+Idea of including witness hash into the header has merits. However, it introduces the need to come up with hashing technique of witness into the witness hash. Such technique would ossify the witness format. Additionally, miners' consensus on witness hashing makes it harder to come up with flexible chunking strategy for faster witness relay.
+There is an alternative to witness hash, which is modification of the state trie hashing to include some extra bits of information so that the receiver can distinguish parts of the witnesses belonging to different block numbers.
 
 ## Implementation roadmap
 
