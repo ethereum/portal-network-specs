@@ -86,5 +86,6 @@ There is an alternative to witness hash, which is modification of the state trie
 Although this looks like an unrelated deliverable, it might be enabling faster migration to binary tree hashing than otherwise. Both through turbo-geth potentially being able to support hexary and binary trees simultaneously, and through providing validation for the flat database layout (this can de-risk re-engineering efforts for other implementations).
 It is believed that flat database layout is better suited than merkle-tree based layout for many algorithms and protocols that will become part of Stateless Ethereum. 
 ### 2. Supporting hexary and binary tries simultaneously
+This functionality will need to be built into the implementation that are going to be around for the "transition" period. For merkle-tree based database layouts this means figuring out how to store binary tree data efficiently, or perhaps transition to the flat database layout just for the sake of the supporting binary trees (and then optionally drop the support for hexary trees later)
 ### 3. State sync/swarming for binary trie
 ### 4. Migration of the state to binary trie
