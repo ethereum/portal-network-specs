@@ -83,6 +83,7 @@ There is an alternative to witness hash, which is modification of the state trie
 ## Implementation roadmap
 
 ### 1. Turbo-Geth release (flat database layout)
+Although this looks like an unrelated deliverable, it might be enabling faster migration to binary tree hashing than otherwise. Both through turbo-geth potentially being able to support hexary and binary trees simultaneously, and through providing validation for the flat database layout (this can de-risk re-engineering efforts for other implementations)
 ### 2. Supporting hexary and binary tries simultaneously
 ### 3. State sync/swarming for binary trie
 ### 4. Migration of the state to binary trie
