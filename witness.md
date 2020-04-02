@@ -6,12 +6,12 @@ The key words "MUST", "MUST NOT", "REQUIRED", "SHALL", "SHALL NOT", "SHOULD", "S
 
 The witness format was picked to satisfy the following criteria.
 
-**1. Witness Streaming w/o intermediate dynamic buffers**
-It should be possible to basically stream-as-you-encode the the trie on one node
+**1. Witness Streaming without intermediate dynamic buffers**
+It should be possible to basically stream-as-you-encode the trie on one node
 and recreate it at the same time by using a fixed allocated buffers. That helps
 efficiently transfer and encode/decode witnesses.
 
-The witness allows to walk through the trie and produce the witness as you go w/o buffering
+The witness allows to walk through the trie and produce the witness as you go without buffering
 send it straight to a network socket. A peer can then receive it from the socket
 and it can start computing the hash of the state root straight away.
 
@@ -175,7 +175,7 @@ All the data is interpreted as big-endian.
 
 #### CBOR
 
-The parts of the key that are encoded with CBOR are marked by the `CBOR` function.
+The parts of the key that are encoded with [CBOR](https://cbor.io/) are marked by the `CBOR` function.
 
 #### Keys
 
