@@ -6,13 +6,13 @@ The key words "MUST", "MUST NOT", "REQUIRED", "SHALL", "SHALL NOT", "SHOULD", "S
 
 The witness format was picked to satisfy the following criteria.
 
-**1. Witness Streaming w/o intermediate dynamic buffers**
-It should be possible to basically stream-as-you-encode the the trie on one node
-and recreate it at the same time by using a fixed allocated buffers. That helps
+**1. Witness Streaming without intermediate dynamic buffers**
+It should be possible to stream-as-you-encode the trie on one node
+and recreate it at the same time by using a fixed allocated buffer. That helps
 efficiently transfer and encode/decode witnesses.
 
-The witness allows to walk through the trie and produce the witness as you go w/o buffering
-send it straight to a network socket. A peer can then receive it from the socket
+The witness allows to walk through the trie and produce the witness as you go without buffering;
+sending it straight to a network socket. A peer can then receive it from the socket
 and it can start computing the hash of the state root straight away.
 
 Also, it means that the memory consumption of witness processing itself will be
@@ -30,11 +30,11 @@ extend with more data);
 - splitting the witness into verifiable chunks (when we can build a trie piece
     by piece and verify root hashes). That is possible by first constructing
     a witness for the top of the trie (to verify the root hash) and then for
-    subtries from top level to the bottom. At all times you will be able to
+    subtries from the top level to the bottom. At all times you will be able to
     verify a subtrie root hash.
 
 **3. Arbitrary chunk sizes**
-The witness format doesn't limit a chunk size, that makes it easy to experiment and find
+The witness format doesn't limit a chunk size. That makes it easy to experiment with and find
 the best size for efficient relaying properties.
 
 
@@ -171,11 +171,11 @@ There is no length of witness specified anywhere, the code expects to just reach
 
 #### Endianness
 
-All the data is interpreted as big-endian.
+All the data is interpreted as [big-endian](https://en.wikipedia.org/wiki/Endianness).
 
 #### CBOR
 
-The parts of the key that are encoded with CBOR are marked by the `CBOR` function.
+The parts of the key that are encoded with [CBOR](https://cbor.io/) are marked by the `CBOR` function.
 
 #### Keys
 
@@ -635,7 +635,7 @@ returns the first value in the specified array
 
 #### `REST(array)`
 
-returns the array w/o the first item
+returns the array without the first item
 
 
 ## Validating The Witness
@@ -656,8 +656,8 @@ The witness MUST be rejected as invalid if any of these rules are violated.
         replaced.
 
 
-3. When checking the root hash:
-    - The root hash of the built trie MUST be equal to what we expect.
+3. When checking the candidate root hash:
+    - The candidate root hash of the built trie MUST be equal to the expected root hash.
 
 
 ## Implementer's guide
@@ -667,7 +667,7 @@ This section contains a few tips on actually implementing this spec.
 #### Simple stack machine execution
 
 One simpler implementation of these rules can be a stack machine, taking one
-instruction from the left of the witness and applying rules. That allows to
+instruction from the left of the witness and applying rules. That allows one to
 rebuild a trie in a single pass.
 
 
