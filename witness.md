@@ -2,6 +2,18 @@
 
 The key words "MUST", "MUST NOT", "REQUIRED", "SHALL", "SHALL NOT", "SHOULD", "SHOULD NOT", "RECOMMENDED",  "MAY", and "OPTIONAL" in this document are to be interpreted as described in [RFC 2119](https://tools.ietf.org/html/rfc2119).
 
+## Background
+
+[Vitalik Buterin](https://ethresear.ch/u/vbuterin/summary) proposed the [Stateless Client Concept](https://ethresear.ch/t/the-stateless-client-concept/172) in October 2017. The purpose of the Stateless Client Concept is to create a new type of full Ethereum node that is no longer required to store the state of the entire blockchain. 
+
+Instead, miners would provide each mined block with the minimal information that is required to prove that block’s validity and to do a particular state transition. Such information is known as a witness. Witnesses may include details such as an account's balance, nonce, code, and data values.
+
+A witness contains a list of instructions to use when building a trie matching the claimed state. The resulting trie may then be used as a form of database to look up any state necessary to prove the validity of a block. The data does not need to be trusted, since if you have the state root, or know what it is meant to be, then you can verify that the witness contains the correct data.
+
+Therefore, block witnesses would allow full nodes to store only state roots instead of the entire Merkle Patricia trie for the entire blockchain. A node would receive the state root of a previous state, a newly mined block and the block’s witness. Successful validation of the new block would result in a new state. Only the state root for the new state would be stored by the node.
+
+This document motivates the use of witnesses, provides some use cases, and specifies the witness format.
+
 ## Motivation
 
 The witness format was picked to satisfy the following criteria.
