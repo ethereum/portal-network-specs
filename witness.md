@@ -4,11 +4,15 @@ The key words "MUST", "MUST NOT", "REQUIRED", "SHALL", "SHALL NOT", "SHOULD", "S
 
 ## Goals Of This Document
 
-1. Describe the witness format fully. This helps to implement witnesses support in multiple clients, no matter which programming language is used;
+1. Describe the witness format fully. Helps to implement witnesses support in multiple clients, no matter which programming language is used;
 
-2. Highlighting changes in the witness format. This makes it clear how changes to the witness format affect generation and parsing rules.
+2. Highlighting changes in the witness format. Makes it clear how changes to the witness format affect generation and parsing rules.
 
 3. Provide the single place to discuss the format and its future improvements.
+
+4. Formal analysis. Helps claim, prove and review correctness of the format, as well as, analyse the performance of generation and parsing using complexity theoretic metrics.
+
+5. Reference Tests. Helps to construct a minimal set of test witnesses, which can be encoded and decoded using the witness format. These test witness serve as reference tests for witness format generators and parsers that are included inside a client.
 
 
 ## Background
