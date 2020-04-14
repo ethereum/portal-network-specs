@@ -2,6 +2,19 @@
 
 The key words "MUST", "MUST NOT", "REQUIRED", "SHALL", "SHALL NOT", "SHOULD", "SHOULD NOT", "RECOMMENDED",  "MAY", and "OPTIONAL" in this document are to be interpreted as described in [RFC 2119](https://tools.ietf.org/html/rfc2119).
 
+## Goals Of This Document
+
+1. Describe the witness format fully. Helps to implement witnesses support in multiple clients, no matter which programming language is used;
+
+2. Highlighting changes in the witness format. Makes it clear how changes to the witness format affect generation and parsing rules.
+
+3. Provide the single place to discuss the format and its future improvements.
+
+4. Formal analysis. Helps claim, prove and review correctness of the format, as well as, analyse the performance of generation and parsing using complexity theoretic metrics.
+
+5. Reference Tests. Helps to construct a minimal set of test witnesses, which can be encoded and decoded using the witness format. These test witness serve as reference tests for witness format generators and parsers that are included inside a client.
+
+
 ## Background
 
 [Vitalik Buterin](https://ethresear.ch/u/vbuterin/summary) proposed the [Stateless Client Concept](https://ethresear.ch/t/the-stateless-client-concept/172) in October 2017. The purpose of the Stateless Client Concept is to create a new type of full Ethereum node that is no longer required to store the state of the entire blockchain. 
@@ -52,7 +65,6 @@ extend with more data);
 **3. Arbitrary chunk sizes**
 The witness format doesn't limit a chunk size. That makes it easy to experiment with and find
 the best size for efficient relaying properties.
-
 
 
 ## Use Cases
