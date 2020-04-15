@@ -8,7 +8,7 @@ Specifications for the Stateless Ethereum research effort
 
 ## Specs
 
-* [Block Witness Format](./witness.md)
+* WIP [Block Witness Format](./witness.md)
 
 * [Beam Sync](./beam-sync-phase0.md)
 
