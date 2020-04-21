@@ -222,6 +222,15 @@ Account storage tree nodes are slightly different from world state tree nodes de
                                      {leaf node with value (pathnibbles, key, val)}
 ```
 
+## Properties
+
+### Unambiguity
+
+For a witness `w`, we write `<Block_Witness> :=* w`, to mean that the non-terminal `<Block_Witness>` derives `w` in one or many steps. In general, there can exist many ways to derive a given `w`. Each derivation is modelled by a parse tree. If there is any witness with more than one parse tree, then the grammar is termed ambiguous. If there exist exactly one parse tree for every sentence derived from the grammar, then the grammar is termed unambiguous.
+
+Claim: The above grammar is unambiguous. 
+
+Proof: The rules with a single body cannot introduce ambiguity. Consider the rules with multiple bodies, rules for the non-terminals `<Byte>`, `<Byte_Nonzero>`, `<Byte_More_Than_One_Bit_Set>`, `<Bytes2_More_Than_One_Bit_Set>`, `<Byte_Lower_Nibble_Zero>`, `<Metadata>`, `<Tree_Node(d)>`, `<Child_Of_Extension_Node(d)>`, `<Account_Node(d)>`, `Account_Storage_Tree_Node(d)>`, and `<Child_Of_Account_Storage_Extension_Node(d)>`. The first byte determines the choice of the rule to be applied. So, the above grammar is LL(1), meaning there is at most one rule in the parsing table. Hence, the grammar is unambiguous by construction.
 
 ## Implementer's guide
 
