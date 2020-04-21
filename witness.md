@@ -65,7 +65,7 @@ initial sync and other semi-stateless operations.
 
 ## Syntax, Semantics, and Validation
 
-The binary format of an Ethereum block witness is a byte array whose structure is defined in this section. The witness encoding is defined using [context-free](https://en.wikipedia.org/wiki/Context-free_grammar) syntax rules. We equip each syntax rule with semantics, which gives us a [syntax-directed translation](https://en.wikipedia.org/wiki/Syntax-directed_translation) from the binary format to to a client's internal representation of a block witness. With each syntax rule, we may also give additional restrictions, which we refer to as "validation rules".
+The binary format of an Ethereum block witness is a byte array whose structure is defined in this section. The witness encoding is defined using [context-free](https://en.wikipedia.org/wiki/Context-free_grammar) syntax rules. We equip each syntax rule with semantics, which gives us a [syntax-directed translation](https://en.wikipedia.org/wiki/Syntax-directed_translation) from the binary format to a client's internal representation of a block witness. With each syntax rule, we may also give additional restrictions, which we refer to as "validation rules".
 
 
 ### Notation
@@ -158,7 +158,7 @@ The designated starting non-terminal is `<Block_Witness>`.
 
 <Metadata> := 0x00
               {nothing}
-            | 0x01 lenid<U32> id:<Byte>^lenid lendata:<U32> data:<Byte>^lendata
+            | 0x01 lenid:<U32> id:<Byte>^lenid lendata:<U32> data:<Byte>^lendata
               {a tuple (id, data)}
               Where the 0x01 case is disallowed in a block witnesses, but allowed for extending this spec.
 ```
@@ -166,7 +166,7 @@ The designated starting non-terminal is `<Block_Witness>`.
 Next, recursively define the encoding for an Ethereum state tree node, with some nodes possibly replaced by their merkle hash. Following the yellowpaper section 4.1 and appendix D, the world state tree has three types of node: branch, extension, and account. Add a fourth type of node which can replace any node with the merkle hash of the subtree rooted at that node. Note that the parametrization variable `d` represents the nibble-depth.
 
 ```
-<Tree_Node(d<64)> := 0x00 b:<Branch_Node(d)>
+<Tree_Node(d<65)> := 0x00 b:<Branch_Node(d)>
                      {branch node b}
                    | 0x01 e:<Extension_Node(d)>
                      {extension node e}
@@ -198,7 +198,7 @@ Next, recursively define the encoding for an Ethereum state tree node, with some
 Account storage tree nodes are slightly different from world state tree nodes defined above.
 
 ```
-<Account_Storage_Tree_Node(d<64)> := 0x00 b:<Account_Storage_Branch_Node(d)>
+<Account_Storage_Tree_Node(d<65)> := 0x00 b:<Account_Storage_Branch_Node(d)>
                                      {branch node b}
                                    | 0x01 e:<Account_Storage_Extension_Node(d)>
                                      {extension node e}
