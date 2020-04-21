@@ -195,8 +195,10 @@ Next, recursively define the encoding for an Ethereum state tree node, with some
 
 <Account_Node(d<65)> := 0x00 pathnibbles:<Nibbles(64-d)> address:<Address> balance:<Bytes32> nonce:<Bytes32>
                         {account node for externally owned account with values (pathnibbles, address, balance, nonce)}
-                      | 0x01 pathnibbles:<Nibbles(64-d)> address:<Address> balance:<Bytes32> nonce:<Bytes32> bytecode:<Bytecode> storage:<Account_Storage_Tree_Node(0)>
-                        {account node for contract account with values (pathnibbles address balance nonce bytecode storage)}
+                      | 0x01 pathnibbles:<Nibbles(64-d)> address:<Address> balance:<Bytes32> nonce:<Bytes32> code:<Bytecode> storage:<Account_Storage_Tree_Node(0)>
+                        {account node for executed contract account with values (pathnibbles address balance nonce code storage)}
+                      | 0x02 pathnibbles:<Nibbles(64-d)> address:<Address> balance:<Bytes32> nonce:<Bytes32> codehash:<Bytes32> codesize:<U32> storage:<Account_Storage_Tree_Node(0)>
+                        {account node for contract account with values (pathnibbles address balance nonce codehash codesize storage)}
 
 <Bytecode> := len:<U32> b:<Byte>^len
               {byte array b of length len}
