@@ -1,43 +1,30 @@
-# Block Witness Formal Specification
+Block Witness Formal Specification
+---
 
-## 1. Goals Of This Document
 
-The goals of this document are five-fold, and are outlined below. Moreover, it describes the motivation for using witnesses, provides some use cases, and importantly, presents a detailed formal specification of a block witness.
+# 1. Introduction
 
-**1. Describe the witness format fully.**
-    Ensures consistent implementation of witness support in multiple clients, regardless of the programming language used.
+## 1.1. Design Goals
 
-**2. Highlight changes to the witness format.** 
-     Makes it clear how changes to the witness format affects witness generation and parsing rules.
+### 1.1.1. Semantics
 
-**3. Provide the single, authoritative place to discuss the format, including proposed and future improvements.**
+**Language-independent**
 
-**4. Formal analysis.** 
-     Helps claim, prove, and review correctness of the format. Additionally, using complexity theoretic metrics, analyses the performance of witness generation and parsing rules.
+**Platform-independent**
 
-**5. Reference tests.** 
-     Helps to construct a minimal set of test witnesses, which can be encoded and decoded using the current witness format. These test witnesses serve as reference tests for witness format generators and parsers that are included in a client.
+**Hardware-independent**
 
-## 2. Objectives
+**Well defined**
+The semantics should fully and precisely define valid witnesses in a way that
+is easy to reason about.
 
-The objectives of the witness format are:
+### 1.1.2. Representation
 
-**2.1. Building a state trie.**
-The described witness format must be able to encode a multiproof of the state trie
-enough to run all transactions within a block of the Ethereum blockchain.
+**Efficient**
+Witness should be decoded, validated and executed in a single pass with minimum
+dynamic memory allocation.
 
-**2.2. Verifiability.**
-The code must be able to verify the multiproof encoded in the witness agains
-the block header.
-
-**2.3. Chunking support.**
-It should be possible to split witness in chunks that are independently
-verifiable to speed-up witness propagation in the network.
-
-The witness format doesn't limit a chunk size. That makes it easy to experiment with and find
-the best size for efficient relaying properties.
-
-**2.4. Witness Streaming without intermediate dynamic buffers.**
+**Streamable without intermediate dynamic buffer**
 It should be possible to 'stream-as-you-encode' the trie on one node,
 and recreate it at the same time, by using a fixed allocated buffer. That helps
 to efficiently transfer and encode/decode witnesses.
@@ -49,22 +36,25 @@ and start computing the hash of the state root straight away.
 Also, it means that the memory consumption of witness processing itself will be
 fixed and predictable, which helps nodes that have limited memory.
 
-**2.5. Building a forest.**
-It should be possible to build a forest of tries from a single witness. It is
-needed for two use cases: 
+**Chunkable**
+It should be possible to split witness in chunks that are independently
+verifiable to speed-up witness propagation in the network.
 
-- partial witnesses (like the ones that are used in a 
-semi-stateless initial sync, when you already have some trie that you need to
-extend with more data);
+The witness format doesn't limit a chunk size. That makes it easy to experiment with and find
+the best size for efficient relaying properties.
 
-- splitting the witness into verifiable chunks (when we can build a trie piece
-    by piece and verify root hashes). That is possible by first constructing
-    a witness for the top of the trie (to verify the root hash) and then for
-    subtries from the top level to the bottom. At all times you will be able to
-    verify a subtrie root hash.
+**Upgradeable**
+It should be able to upgrade witness format in the future in a backward
+compatible way (e.g. new versions of clients will support the old versions of
+the witness). Old versions of clients should be able to discard unsupported
+versions of witness.
+
+**Compact**
+Witness should have a binary format that is compact to save bandwith when
+propagating in network.
 
 
-## 3. Syntax, Semantics, and Validation
+# 2. Syntax, Semantics, and Validation
 
 The binary format of an Ethereum block witness is a byte array whose structure is defined in this section.
 The witness encoding is defined using [context-free](https://en.wikipedia.org/wiki/Context-free_grammar) syntax rules.
@@ -74,7 +64,7 @@ With each syntax rule, we may also give additional restrictions, which we refer 
 
 The key words "MUST", "MUST NOT", "REQUIRED", "SHALL", "SHALL NOT", "SHOULD", "SHOULD NOT", "RECOMMENDED",  "MAY", and "OPTIONAL" in this document are to be interpreted as described in [RFC 2119](https://tools.ietf.org/html/rfc2119).
 
-### 3.1. Notation
+## 2.1. Notation
 
 First, we define the notation which will be used to define the syntax, semantics, and validation rules.
 
@@ -97,7 +87,7 @@ First, we define the notation which will be used to define the syntax, semantics
  - Function `numbits()` takes a byte and outputs the number of bits set to `1`.
 
 
-### 3.2. Definition of the Syntax, Semantics, and Validation Rules
+## 2.2. Definition of the Syntax, Semantics, and Validation Rules
 
 The only terminal symbols are 8-bit bytes, represented in hexary notation.
 
@@ -210,9 +200,14 @@ Next, recursively define the encoding for an Ethereum tree nodes, with some node
                              {leaf node with value (pathnibbles, key, val)}
 ```
 
-## 4. Properties
 
-### 4.1. Unambiguity
+# 3. Execution
+
+TBD
+
+# 4. Properties
+
+## 4.1. Unambiguity
 
 For a witness `w`, we write `<Block_Witness> :=* w`, to mean that the non-terminal `<Block_Witness>` derives `w` in one or many steps. In general, there can exist many ways to derive a given `w`. Each derivation is modelled by a parse tree. If there is any witness with more than one parse trees, then the grammar is termed ambiguous. If there exist exactly one parse tree for every sentence derived from the grammar, then the grammar is termed unambiguous.
 
@@ -220,11 +215,11 @@ Claim: The witness grammar is unambiguous.
 
 Proof: The rules with a single body cannot introduce ambiguity. Consider the rules with multiple bodies, rules for the non-terminals `<Byte>`, `<Byte_Nonzero>`, `<Byte_More_Than_One_Bit_Set>`, `<Bytes2_More_Than_One_Bit_Set>`, `<Byte_Lower_Nibble_Zero>`, `<Metadata>`, `<Tree_Node(d)>`, `<Child_Of_Extension_Node(d)>`, `<Account_Node(d)>`, `Account_Storage_Tree_Node(d)>`, and `<Child_Of_Account_Storage_Extension_Node(d)>`. The first byte determines the choice of the rule to be applied. So, the above grammar is LL(1), meaning there is at most one rule in the parsing table. Hence, the grammar is unambiguous by construction.
 
-## 5. Implementer's guide
+# 5. Implementer's guide
 
 This section contains some guidelines on actually implementing this spec.
 
-### 5.1. Simple stack machine execution
+## 5.1. Simple stack machine execution
 
 One simpler implementation of these rules can be a stack machine, taking one
 instruction from the left of the witness and applying rules. That allows one to
