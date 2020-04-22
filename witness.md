@@ -112,7 +112,7 @@ The only terminal symbols are 8-bit bytes, represented in hexary notation.
 First define some non-terminals to simplify later definitions.
 
 ```
-<U32> := u32:<Byte>^4		{u32 as a 32-bit unsigned integer in little-endian}
+<U32> := u32:<Byte>^4		{u32 as a 32-bit unsigned integer in big-endian}
 
 <Bytes32> := b:<Byte>^32	{byte array b in big-endian}
 
