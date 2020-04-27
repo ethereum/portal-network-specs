@@ -92,7 +92,7 @@ First, we define the notation which will be used to define the syntax, semantics
  - After each semantics rule, an optional validation rule starts with `Where` and ends with `.`. These extra restrictions may not be easily rendered in the syntax without introducing much more notation, which we wish to avoid.
  - Whitespace between a syntax rule, semantics rule, and validation rule is arbitrary, and could include new lines and indentation for aesthetics.
 - `x:<Non-terminal>` means that we bind variable `x` to whatever is produced by non-terminal `<Non-terminal>`. We use this variable in the syntax or semantics of this rule.
- - A syntax rule starting with `<Non-terminal1(n<64)>` is a parameterization of different syntax rules for `<Non-terminal1(0)>`, `<Non-terminal1(1)>`, ..., `<Non-terminal1(63)>`, all with the same structure, but possibly using symbol `n` as a variable later in the syntax rule and corresponding semantics and validation rules. When this non-terminal is used after the `:=`, the specific parameter is given like `<Non-terminal(5)>` where `5` can be replaced with any non-negative integer up to 63, or an arithmetic expression in terms of variables like `n`.
+ - A syntax rule starting with `<Non-terminal1(n<64)>` or `<Non-terminal2(d<65,s<2)>` is a parameterization of different syntax rules for `<Non-terminal1(0)>`, `<Non-terminal1(1)>`, ..., `<Non-terminal1(63)>` and similarly for `<Non-terminal2(0,0)>`,...,`<Non-terminal2(64,1)>`, each with the same structure, but using symbols `n`,`d`, and `s` as bound variables later in the syntax rule and corresponding semantics and validation rules. When this non-terminal is used after the `:=`, the specific parameter is given like `<Non-terminal1(k)>` where `k` is a non-negative integer up to 63 or an arithmetic expression in terms of bound variables.
  - `||` between byte arrays means concatenation.
  - Function `numbits()` takes a byte and outputs the number of bits set to `1`.
 
@@ -170,28 +170,31 @@ The designated starting non-terminal is `<Block_Witness>`.
               Where the 0x01 case is disallowed in a block witnesses, but allowed for extending this spec.
 ```
 
-Next, recursively define the encoding for an Ethereum state tree node, with some nodes possibly replaced by their merkle hash. Following the yellowpaper section 4.1 and appendix D, the world state tree has three types of nodes: branch, extension, and account. Add a fourth type of node which can replace any node with the merkle hash of the subtree rooted at that node. Note that the parametrization variable `d` represents the nibble-depth.
+Next, recursively define the encoding for an Ethereum tree nodes, with some nodes possibly replaced by their merkle hash. Following the yellowpaper section 4.1 and appendix D, the tree has three types of nodes: branch, extension, and leaf. Add a fourth type of node which can replace any node with the merkle hash of the subtree rooted at that node. Note that the parametrization variable `d` represents the nibble-depth and `s` represents a flag which is `0` when this node is in the account tree and `1` when in a storage tree.
 
 ```
-<Tree_Node(d<65)> := 0x00 b:<Branch_Node(d)>
-                     {branch node b}
-                   | 0x01 e:<Extension_Node(d)>
-                     {extension node e}
-                   | 0x02 a:<Account_Node(d)>
-                     {account node a}
-                   | 0x03 h:<Bytes32>
-                     {hash node with merkle hash h}
+<Tree_Node(d<65,s<2)> := 0x00 b:<Branch_Node(d,s)>
+                         {branch node b}
+                       | 0x01 e:<Extension_Node(d,s)>
+                         {extension node e}
+                       | 0x02 a:<Leaf_Node(d,s)>
+                         {account node a}
+                       | 0x03 h:<Bytes32>
+                         {hash node with merkle hash h}
 
-<Branch_Node(d<64)> := bitmask:<Bytes2_More_Than_One_Bit_Set> c[0]:<Tree_Node(d+1)>^bitmask[0]==1 c[1]:<Tree_Node(d+1)>^bitmask[1]==1 ... c[15]:<Tree_Node(d+1)>^bitmask[15]==1
+<Branch_Node(d<64,s<2)> := bitmask:<Bytes2_More_Than_One_Bit_Set> c[0]:<Tree_Node(d+1,s)>^bitmask[0]==1 c[1]:<Tree_Node(d+1,s)>^bitmask[1]==1 ... c[15]:<Tree_Node(d+1,s)>^bitmask[15]==1
                       {branch node with children nodes (c[0], c[1], ..., c[15]), note that some children may be empty based on the bitmask}
 
-<Extension_Node(d<63)> := nibbleslen:<Byte_Nonzero> nibbles:<Nibbles(nibbleslen)> child:<Child_Of_Extension_Node(d+nibbleslen)>
-                          {extension node with values (nibbleslen, nibbles, child)}
+<Extension_Node(d<63,s<2)> := nibbleslen:<Byte_Nonzero> nibbles:<Nibbles(nibbleslen)> child:<Child_Of_Extension_Node(d+nibbleslen,s)>
+                              {extension node with values (nibbleslen, nibbles, child)}
 
-<Child_Of_Extension_Node(d<65)> := 0x00 b:<Branch_Node(d)>
-                                   {branch node b}
-                                 | 0x03 h:<Bytes32>
-                                   {hash node with merkle hash h}
+<Child_Of_Extension_Node(d<65,s<2)> := 0x00 b:<Branch_Node(d,s)>
+                                       {branch node b}
+                                     | 0x03 h:<Bytes32>
+                                       {hash node with merkle hash h}
+
+<Leaf_Node(d<65,s<2)> := accountleaf:<Account_Node(d)>^s==0 storageleaf:<Storage_Leaf_Node(d)>^s==1
+                         {leaf node accountleaf or storageleaf, depending on whether s==0 or s==1}
 
 <Account_Node(d<65)> := 0x00 pathnibbles:<Nibbles(64-d)> address:<Address> balance:<Bytes32> nonce:<Bytes32>
                         {account node for externally owned account with values (pathnibbles, address, balance, nonce)}
@@ -202,33 +205,9 @@ Next, recursively define the encoding for an Ethereum state tree node, with some
 
 <Bytecode> := len:<U32> b:<Byte>^len
               {byte array b of length len}
-```
 
-Account storage tree nodes are slightly different from world state tree nodes defined above.
-
-```
-<Account_Storage_Tree_Node(d<65)> := 0x00 b:<Account_Storage_Branch_Node(d)>
-                                     {branch node b}
-                                   | 0x01 e:<Account_Storage_Extension_Node(d)>
-                                     {extension node e}
-                                   | 0x02 a:<Account_Storage_Leaf_Node(d)>
-                                     {storage leaf node a}
-                                   | 0x03 h:<Bytes32>
-                                     {hash node with merkle hash h}
-
-<Account_Storage_Branch_Node(d<64)> := bitmask:<Bytes2_More_Than_One_Bit_Set> c[0]:<Account_Storage_Tree_Node(d+1)>^bitmask[0]==1 c[1]:<Account_Storage_Tree_Node(d+1)>^bitmask[1]==1 ... c[15]:<Account_Storage_Tree_Node(d+1)>^bitmask[15]==1
-                                      {branch node with children nodes (c[0], c[1], ..., c[15]), note that some children may be empty based on the bitmask}
-
-<Account_Storage_Extension_Node(d<63)> := nibbleslen:<Byte_Nonzero> nibbles:<Nibbles(nibbleslen)> child:<Child_Of_Account_Storage_Extension_Node(d+nibbleslen)>
-                          {extension node with values (nibbleslen, nibbles, child)}
-
-<Child_Of_Account_Storage_Extension_Node(d<65)> := 0x00 b:<Account_Storage_Branch_Node(d)>
-                                                   {branch node b}
-                                                 | 0x03 h:<Bytes32>
-                                                   {hash node with merkle hash h}
-
-<Account_Storage_Leaf_Node(d<65)> := pathnibbles:<Nibbles(64-d))> key:<Bytes32> val:<Bytes32>
-                                     {leaf node with value (pathnibbles, key, val)}
+<Storage_Leaf_Node(d<65)> := pathnibbles:<Nibbles(64-d))> key:<Bytes32> val:<Bytes32>
+                             {leaf node with value (pathnibbles, key, val)}
 ```
 
 ## 4. Properties
