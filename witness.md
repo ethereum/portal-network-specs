@@ -1,7 +1,6 @@
 Block Witness Formal Specification
 ---
 
-
 # 1. Introduction
 
 ## 1.1. Design Goals
@@ -54,6 +53,41 @@ Witness should have a binary format that is compact to save bandwith when
 propagating in network.
 
 
+## 1.2. Scope
+
+TBD
+
+## 1.3. Security Considerations
+
+TBD
+
+## 1.4. Dependencies
+
+This specification depends on the following specifications and standards:
+
+[Ethereum Yellow Paper](https://ethereum.github.io/yellowpaper/paper.pdf)
+
+[RFC2119](https://tools.ietf.org/html/rfc2119): The key words "MUST", "MUST NOT", "REQUIRED", "SHALL", "SHALL NOT", "SHOULD", "SHOULD NOT", "RECOMMENDED",  "MAY", and "OPTIONAL" in this document are to be interpreted as described in [RFC 2119](https://tools.ietf.org/html/rfc2119).
+
+## 1.5. Overview
+
+### 1.5.1. Semantic Phases
+
+The semantics of the block witness can be divided into phases:
+
+**Decoding** witnesses are distributed in binary format. Decoding process
+processes that format and converts it into an internal representation of a
+witness. In this specification this representation is modelled by the abstract
+syntax, but it could be represented as classes and functions of a programming
+language used to implement witnesses support.
+
+**Execution** is the phase, where the multiproof is being built from the
+specified block witness. 
+
+**Validation** of the witness is happening during both decoding and execution.
+- *Validation while decoding* checks that the witness binary representation only contains opcodes valid for specified version and that serialized data matches the defined syntax.
+- *Validation while executing* checks that it is possible to build one or more valid multiproofs out of the internal representation and that that consumes the whole witness.
+
 # 2. Syntax, Semantics, and Validation
 
 The binary format of an Ethereum block witness is a byte array whose structure is defined in this section.
@@ -61,8 +95,6 @@ The witness encoding is defined using [context-free](https://en.wikipedia.org/wi
 We equip each syntax rule with semantics, which gives us a [syntax-directed translation](https://en.wikipedia.org/wiki/Syntax-directed_translation)
 from the binary format to a client's internal representation of a block witness.
 With each syntax rule, we may also give additional restrictions, which we refer to as "validation rules".
-
-The key words "MUST", "MUST NOT", "REQUIRED", "SHALL", "SHALL NOT", "SHOULD", "SHOULD NOT", "RECOMMENDED",  "MAY", and "OPTIONAL" in this document are to be interpreted as described in [RFC 2119](https://tools.ietf.org/html/rfc2119).
 
 ## 2.1. Notation
 
