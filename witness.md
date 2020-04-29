@@ -43,7 +43,9 @@ versions of witness.
 
 ## 1.2. Scope
 
-This document is concerned with witness abstract syntax, semantics, binary
+Witnesses is a way to efficiently store, transmit and recover Merkle Patricia multiproofs. That makes them flexible and they can be used in different enviroments for different purposes.
+
+This document is only concerned with witness abstract syntax, semantics, binary
 encoding, validation & execution semantics.
 
 It does not:
