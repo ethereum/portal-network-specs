@@ -7,26 +7,22 @@ Block Witness Formal Specification
 
 ### 1.1.1. Semantics
 
-**Language-independent**
+**Language-independent.** The semantics shouldn't depend on features of
+specific programming languages.
 
-**Platform-independent**
+**Platform-independent.** The semantics shouldn't depend on features of
+specific programming platforms or operating systems.
 
-**Hardware-independent**
+**Hardware-independent.** The semantics shouldn't depend on features of
+specific hardware platroms.
 
-**Well defined**
-The semantics should fully and precisely define valid witnesses in a way that
-is easy to reason about.
+**Well defined.** The semantics should fully and precisely define valid witnesses in a way that is easy to reason about.
 
 ### 1.1.2. Representation
 
-**Efficient**
-Witness should be decoded, validated and executed in a single pass with minimum
-dynamic memory allocation.
+**Efficient** Witness should be decoded, validated and executed in a single pass with minimum dynamic memory allocation.
 
-**Streamable without intermediate dynamic buffer**
-It should be possible to 'stream-as-you-encode' the trie on one node,
-and recreate it at the same time, by using a fixed allocated buffer. That helps
-to efficiently transfer and encode/decode witnesses.
+**Streamable without intermediate dynamic buffer** It should be possible to 'stream-as-you-encode' the trie on one node, and recreate it at the same time, by using a fixed allocated buffer. That helps to efficiently transfer and encode/decode witnesses.
 
 The witness allows you to walk through the trie and to produce the witness as you go without buffering;
 sending it straight to a network socket. A peer can then receive it from the socket
@@ -35,27 +31,26 @@ and start computing the hash of the state root straight away.
 Also, it means that the memory consumption of witness processing itself will be
 fixed and predictable, which helps nodes that have limited memory.
 
-**Chunkable**
-It should be possible to split witness in chunks that are independently
-verifiable to speed-up witness propagation in the network.
+**Chunkable** It should be possible to split witness in chunks that are independently verifiable to speed-up witness propagation in the network.
 
-The witness format doesn't limit a chunk size. That makes it easy to experiment with and find
-the best size for efficient relaying properties.
+The witness format doesn't limit a chunk size. That makes it easy to experiment with and find the best size for efficient relaying properties.
 
-**Upgradeable**
-It should be able to upgrade witness format in the future in a backward
-compatible way (e.g. new versions of clients will support the old versions of
-the witness). Old versions of clients should be able to discard unsupported
+**Upgradeable** It should be able to upgrade witness format in the future in a backward compatible way (e.g. new versions of clients will support the old versions of the witness). Old versions of clients should be able to discard unsupported
 versions of witness.
 
-**Compact**
-Witness should have a binary format that is compact to save bandwith when
-propagating in network.
+**Compact** Witness should have a binary format that is compact to save bandwith when propagating in network.
 
 
 ## 1.2. Scope
 
-TBD
+This document is concerned with witness abstract syntax, semantics, binary
+encoding, validation & execution semantics.
+
+It does not define how the witnesses are being propagated via network. 
+It does not provide specific implementation algorithms, and way to optimize it.
+
+The specification is complemented by an [implementer's handbook](TBD), [example code](TBD) and [tests](TBD) to help with the specific implementation.
+
 
 ## 1.3. Security Considerations
 
@@ -247,25 +242,9 @@ Claim: The witness grammar is unambiguous.
 
 Proof: The rules with a single body cannot introduce ambiguity. Consider the rules with multiple bodies, rules for the non-terminals `<Byte>`, `<Byte_Nonzero>`, `<Byte_More_Than_One_Bit_Set>`, `<Bytes2_More_Than_One_Bit_Set>`, `<Byte_Lower_Nibble_Zero>`, `<Metadata>`, `<Tree_Node(d)>`, `<Child_Of_Extension_Node(d)>`, `<Account_Node(d)>`, `Account_Storage_Tree_Node(d)>`, and `<Child_Of_Account_Storage_Extension_Node(d)>`. The first byte determines the choice of the rule to be applied. So, the above grammar is LL(1), meaning there is at most one rule in the parsing table. Hence, the grammar is unambiguous by construction.
 
-# 5. Implementer's guide
 
-This section contains some guidelines on actually implementing this spec.
+## 5. Alternatives considered
 
-## 5.1. Simple stack machine execution
-
-One simpler implementation of these rules can be a stack machine, taking one
-instruction from the left of the witness and applying rules. That allows one to
-rebuild a trie in a single pass.
-
-
-### 5.2. Building hashes.
-
-It might be useful to build hashes together with building the nodes so we can
-execute and validate the trie in the same pass.
-
-
-## 6. Alternatives considered
-
-### 6.1. GetNodeData
+### 5.1. GetNodeData
 
 TBD
