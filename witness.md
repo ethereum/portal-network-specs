@@ -20,9 +20,9 @@ specific hardware platroms.
 
 ### 1.1.2. Representation
 
-**Efficient** Witness should be decoded, validated and executed in a single pass with minimum dynamic memory allocation.
+**Efficient.** Witness should be decoded, validated and executed in a single pass with minimum dynamic memory allocation.
 
-**Streamable without intermediate dynamic buffer** It should be possible to 'stream-as-you-encode' the trie on one node, and recreate it at the same time, by using a fixed allocated buffer. That helps to efficiently transfer and encode/decode witnesses.
+**Streamable (without intermediate dynamic buffers).** It should be possible to 'stream-as-you-encode' the trie on one node, and recreate it at the same time, by using a fixed allocated buffer. That helps to efficiently transfer and encode/decode witnesses.
 
 The witness allows you to walk through the trie and to produce the witness as you go without buffering;
 sending it straight to a network socket. A peer can then receive it from the socket
@@ -31,14 +31,14 @@ and start computing the hash of the state root straight away.
 Also, it means that the memory consumption of witness processing itself will be
 fixed and predictable, which helps nodes that have limited memory.
 
-**Chunkable** It should be possible to split witness in chunks that are independently verifiable to speed-up witness propagation in the network.
+**Chunkable.** It should be possible to split witness in chunks that are independently verifiable to speed-up witness propagation in the network.
 
 The witness format doesn't limit a chunk size. That makes it easy to experiment with and find the best size for efficient relaying properties.
 
-**Upgradeable** It should be able to upgrade witness format in the future in a backward compatible way (e.g. new versions of clients will support the old versions of the witness). Old versions of clients should be able to discard unsupported
+**Upgradeable.** It should be able to upgrade witness format in the future in a backward compatible way (e.g. new versions of clients will support the old versions of the witness). Old versions of clients should be able to discard unsupported
 versions of witness.
 
-**Compact** Witness should have a binary format that is compact to save bandwith when propagating in network.
+**Compact.** Witness should have a binary format that is compact to save bandwith when propagating in network.
 
 
 ## 1.2. Scope
@@ -46,10 +46,13 @@ versions of witness.
 This document is concerned with witness abstract syntax, semantics, binary
 encoding, validation & execution semantics.
 
-It does not define how the witnesses are being propagated via network. 
-It does not provide specific implementation algorithms, and way to optimize it.
+It does not:
+- define how the witnesses are being propagated via network. 
+- provide specific implementation algorithms, and way to optimize it.
+- provide suggestions on specific use cases of witnesses in sync, hash checks and state storage.
+- provide explanations on how stateless ethereum works in general.
 
-The specification is complemented by an [implementer's handbook](TBD), [example code](TBD) and [tests](TBD) to help with the specific implementation.
+The specification is complemented by a [Stateless Ethereum overview document](./README.md), an [implementer's handbook](TBD), [example code](TBD) and [tests](TBD) to help with the specific implementation.
 
 
 ## 1.3. Security Considerations
