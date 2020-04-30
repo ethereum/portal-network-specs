@@ -14,7 +14,7 @@ specific programming languages.
 specific programming platforms or operating systems.
 
 **Hardware-independent.** The semantics shouldn't depend on features of
-specific hardware platroms.
+specific hardware platforms.
 
 **Well defined.** The semantics should fully and precisely define valid witnesses in a way that is easy to reason about.
 
@@ -38,18 +38,18 @@ The witness format doesn't limit a chunk size. That makes it easy to experiment 
 **Upgradeable.** It should be able to upgrade witness format in the future in a backward compatible way (e.g. new versions of clients will support the old versions of the witness). Old versions of clients should be able to discard unsupported
 versions of witness.
 
-**Compact.** Witness should have a binary format that is compact to save bandwith when propagating in network.
+**Compact.** Witness should have a binary format that is compact to save bandwidth when propagating in network.
 
 
 ## 1.2. Scope
 
-Witnesses is a way to efficiently store, transmit and recover Merkle Patricia multiproofs. That makes them flexible and they can be used in different enviroments for different purposes.
+Witnesses are a way to efficiently store, transmit and recover Merkle Patricia multiproofs. That makes them flexible and they can be used in different environments for different purposes.
 
 This document is only concerned with witness abstract syntax, semantics, binary
 encoding, validation & execution semantics.
 
 It does not:
-- define how the witnesses are being propagated via network. 
+- define how the witnesses are being propagated across the network.
 - provide specific implementation algorithms, and way to optimize it.
 - provide suggestions on specific use cases of witnesses in sync, hash checks and state storage.
 - provide explanations on how stateless ethereum works in general.
