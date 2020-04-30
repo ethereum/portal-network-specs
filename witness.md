@@ -253,7 +253,7 @@ Next, recursively define the encoding for all Ethereum trie nodes, with some nod
 
 # 3. Execution
 
-For a witness `w`, we write `<Block_Witness> ::=* w`, to mean that the non-terminal `<Block_Witness>` derives `w` in one or many steps. In general, there can exist many ways to derive a given `w`. Each derivation is modeled by a parse tree. If there is any witness with more than one parse trees, then the grammar is termed ambiguous. If there exist exactly one parse tree for every sentence derived from the grammar, then the grammar is termed unambiguous.
+For a witness `w`, we write `<Block_Witness> ::=* w`, to mean that the non-terminal `<Block_Witness>` derives `w` in one or many steps. In general, there can exist many ways to derive a given `w`. Each derivation is modeled by a parse tree. If there is any witness with more than one parse tree, then the grammar is termed ambiguous. If there exist exactly one parse tree for every sentence derived from the grammar, then the grammar is termed unambiguous.
 
 Claim: The witness grammar is unambiguous.
 
