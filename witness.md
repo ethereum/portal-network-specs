@@ -127,7 +127,7 @@ First, we define the notation which will be used to define the syntax, semantics
  - Brackets `[` and `]` are used to index an element of a tuple, for example the `i`th element of tuple `T` is denoted `T[i]`.
  - Brackets following a variable named `bitmask` means that the index is of a bit, e.g. `bitmask[0]` represents the leftmost bit.
  - Ellipses `...` are notation for "and so on until", and are used to avoid writing a long enumerated tuple. For example, `A[1] A[2] ... A[5]` is short-hand notation for `A[1] A[2] A[3] A[4] A[5]`.
- - `A^n` represents symbol `A` repeated `n` times. We allow `n` to be `0`, representing zero occurances of `A`. Also, if there is a logical expression in place of `n`, then a false expression is replaced by `0` and a true expression is replaced with `1`.
+ - `A^n` represents symbol `A` repeated `n` times. We allow `n` to be `0`, representing zero occurrences of `A`. Also, if there is a logical expression in place of `n`, then a false expression is replaced by `0` and a true expression is replaced with `1`.
  - `A^+` represents symbol `A` repeated one or more times.
  - `A^*` represents symbol `A` repeated zero or more times.
  - Curly braces `{` and `}` enclose semantics after each syntax rule.
@@ -209,7 +209,7 @@ The designated starting non-terminal is `<Block_Witness>`.
               Where the 0x01 case is disallowed in a block witnesses, but allowed for extending this spec.
 ```
 
-Next, recursively define the encoding for an Ethereum tree nodes, with some nodes possibly replaced by their merkle hash. Following the yellowpaper section 4.1 and appendix D, the tree has three types of nodes: branch, extension, and leaf. Add a fourth type of node which can replace any node with the merkle hash of the subtree rooted at that node. Note that the parametrization variable `d` represents the nibble-depth and `s` represents a flag which is `0` when this node is in the account tree and `1` when in a storage tree.
+Next, recursively define the encoding for all Ethereum trie nodes, with some nodes possibly replaced by their merkle hash. Following the yellowpaper section 4.1 and appendix D, the tree has three types of nodes: branch, extension, and leaf. Add a fourth type of node which can replace any node with the merkle hash of the subtrie rooted at that node. Note that the parametrization variable `d` represents the nibble-depth and `s` represents a flag which is `0` when this node is in the account tree and `1` when in a storage trie.
 
 ```
 <Tree_Node(d<65,s<2)> ::= 0x00 b:<Branch_Node(d,s)>
@@ -253,7 +253,7 @@ Next, recursively define the encoding for an Ethereum tree nodes, with some node
 
 # 3. Execution
 
-For a witness `w`, we write `<Block_Witness> ::=* w`, to mean that the non-terminal `<Block_Witness>` derives `w` in one or many steps. In general, there can exist many ways to derive a given `w`. Each derivation is modelled by a parse tree. If there is any witness with more than one parse trees, then the grammar is termed ambiguous. If there exist exactly one parse tree for every sentence derived from the grammar, then the grammar is termed unambiguous.
+For a witness `w`, we write `<Block_Witness> ::=* w`, to mean that the non-terminal `<Block_Witness>` derives `w` in one or many steps. In general, there can exist many ways to derive a given `w`. Each derivation is modeled by a parse tree. If there is any witness with more than one parse trees, then the grammar is termed ambiguous. If there exist exactly one parse tree for every sentence derived from the grammar, then the grammar is termed unambiguous.
 
 Claim: The witness grammar is unambiguous.
 
