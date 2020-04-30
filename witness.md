@@ -121,7 +121,7 @@ With each syntax rule, we may also give additional restrictions, which we refer 
 
 First, we define the notation which will be used to define the syntax, semantics, and validation rules.
 
- - We use Backus-Naur form notation, namely symbols like `|`, `::=`, `>`, and `<` are used to define production rules.
+ - We use [Backus-Naur form](https://en.wikipedia.org/wiki/Backus%E2%80%93Naur_form) notation, namely symbols like `|`, `::=`, `>`, and `<` are used to define production rules.
  - Because this is a binary format, the only terminal symbols are bytes, which we write in hexadecimal notation `0x00`, `0x01`, ..., and `0xff`.
  - Parentheses `(` and `)` enclose a tuple.
  - Brackets `[` and `]` are used to index an element of a tuple, for example the `i`th element of tuple `T` is denoted `T[i]`.
