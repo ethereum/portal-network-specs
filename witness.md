@@ -1,46 +1,28 @@
-# Block Witness Formal Specification
+Block Witness Formal Specification
+---
 
-## 1. Goals Of This Document
+# 1. Introduction
 
-The goals of this document are five-fold, and are outlined below. Moreover, it describes the motivation for using witnesses, provides some use cases, and importantly, presents a detailed formal specification of a block witness.
+## 1.1. Design Goals
 
-**1. Describe the witness format fully.**
-    Ensures consistent implementation of witness support in multiple clients, regardless of the programming language used.
+### 1.1.1. Semantics
 
-**2. Highlight changes to the witness format.** 
-     Makes it clear how changes to the witness format affects witness generation and parsing rules.
+**Language-independent.** The semantics shouldn't depend on features of
+specific programming languages.
 
-**3. Provide the single, authoritative place to discuss the format, including proposed and future improvements.**
+**Platform-independent.** The semantics shouldn't depend on features of
+specific programming platforms or operating systems.
 
-**4. Formal analysis.** 
-     Helps claim, prove, and review correctness of the format. Additionally, using complexity theoretic metrics, analyses the performance of witness generation and parsing rules.
+**Hardware-independent.** The semantics shouldn't depend on features of
+specific hardware platforms.
 
-**5. Reference tests.** 
-     Helps to construct a minimal set of test witnesses, which can be encoded and decoded using the current witness format. These test witnesses serve as reference tests for witness format generators and parsers that are included in a client.
+**Well defined.** The semantics should fully and precisely define valid witnesses in a way that is easy to reason about.
 
-## 2. Objectives
+### 1.1.2. Representation
 
-The objectives of the witness format are:
+**Efficient.** Witness should be decoded, validated and executed in a single pass with minimum dynamic memory allocation.
 
-**2.1. Building a state trie.**
-The described witness format must be able to encode a multiproof of the state trie
-enough to run all transactions within a block of the Ethereum blockchain.
-
-**2.2. Verifiability.**
-The code must be able to verify the multiproof encoded in the witness agains
-the block header.
-
-**2.3. Chunking support.**
-It should be possible to split witness in chunks that are independently
-verifiable to speed-up witness propagation in the network.
-
-The witness format doesn't limit a chunk size. That makes it easy to experiment with and find
-the best size for efficient relaying properties.
-
-**2.4. Witness Streaming without intermediate dynamic buffers.**
-It should be possible to 'stream-as-you-encode' the trie on one node,
-and recreate it at the same time, by using a fixed allocated buffer. That helps
-to efficiently transfer and encode/decode witnesses.
+**Streamable (without intermediate dynamic buffers).** It should be possible to 'stream-as-you-encode' the trie on one node, and recreate it at the same time, by using a fixed allocated buffer. That helps to efficiently transfer and encode/decode witnesses.
 
 The witness allows you to walk through the trie and to produce the witness as you go without buffering;
 sending it straight to a network socket. A peer can then receive it from the socket
@@ -49,22 +31,64 @@ and start computing the hash of the state root straight away.
 Also, it means that the memory consumption of witness processing itself will be
 fixed and predictable, which helps nodes that have limited memory.
 
-**2.5. Building a forest.**
-It should be possible to build a forest of tries from a single witness. It is
-needed for two use cases: 
+**Chunkable.** It should be possible to split witness in chunks that are independently verifiable to speed-up witness propagation in the network.
 
-- partial witnesses (like the ones that are used in a 
-semi-stateless initial sync, when you already have some trie that you need to
-extend with more data);
+The witness format doesn't limit a chunk size. That makes it easy to experiment with and find the best size for efficient relaying properties.
 
-- splitting the witness into verifiable chunks (when we can build a trie piece
-    by piece and verify root hashes). That is possible by first constructing
-    a witness for the top of the trie (to verify the root hash) and then for
-    subtries from the top level to the bottom. At all times you will be able to
-    verify a subtrie root hash.
+**Upgradeable.** It should be able to upgrade witness format in the future in a backward compatible way (e.g. new versions of clients will support the old versions of the witness). Old versions of clients should be able to discard unsupported
+versions of witness.
+
+**Compact.** Witness should have a binary format that is compact to save bandwidth when propagating in network.
 
 
-## 3. Syntax, Semantics, and Validation
+## 1.2. Scope
+
+Witnesses are a way to efficiently store, transmit and recover Merkle Patricia multiproofs. That makes them flexible and they can be used in different environments for different purposes.
+
+This document is only concerned with witness abstract syntax, semantics, binary
+encoding, validation & execution semantics.
+
+It does not:
+- define how the witnesses are being propagated across the network.
+- provide specific implementation algorithms, and way to optimize it.
+- provide suggestions on specific use cases of witnesses in sync, hash checks and state storage.
+- provide explanations on how stateless ethereum works in general.
+
+The specification is complemented by a [Stateless Ethereum overview document](./README.md), an [implementer's handbook](TBD), [example code](TBD) and [tests](TBD) to help with the specific implementation.
+
+
+## 1.3. Security Considerations
+
+TBD
+
+## 1.4. Dependencies
+
+This specification depends on the following specifications and standards:
+
+- [Ethereum Yellow Paper](https://ethereum.github.io/yellowpaper/paper.pdf)
+
+- [RFC2119](https://tools.ietf.org/html/rfc2119): The key words "MUST", "MUST NOT", "REQUIRED", "SHALL", "SHALL NOT", "SHOULD", "SHOULD NOT", "RECOMMENDED",  "MAY", and "OPTIONAL" in this document are to be interpreted as described in [RFC 2119](https://tools.ietf.org/html/rfc2119).
+
+## 1.5. Overview
+
+### 1.5.1. Semantic Phases
+
+The semantics of the block witness can be divided into phases:
+
+**Decoding** witnesses are distributed in binary format. Decoding process
+processes that format and converts it into an internal representation of a
+witness. In this specification this representation is modelled by the abstract
+syntax, but it could be represented as classes and functions of a programming
+language used to implement witnesses support.
+
+**Execution** is the phase, where the multiproof is being built from the
+specified block witness. 
+
+**Validation** of the witness is happening during both decoding and execution.
+- *Validation while decoding* checks that the witness binary representation only contains opcodes valid for specified version and that serialized data matches the defined syntax.
+- *Validation while executing* checks that it is possible to build one or more valid multiproofs out of the internal representation and that that consumes the whole witness.
+
+# 2. Syntax, Semantics, and Validation
 
 The binary format of an Ethereum block witness is a byte array whose structure is defined in this section.
 The witness encoding is defined using [context-free](https://en.wikipedia.org/wiki/Context-free_grammar) syntax rules.
@@ -72,9 +96,7 @@ We equip each syntax rule with semantics, which gives us a [syntax-directed tran
 from the binary format to a client's internal representation of a block witness.
 With each syntax rule, we may also give additional restrictions, which we refer to as "validation rules".
 
-The key words "MUST", "MUST NOT", "REQUIRED", "SHALL", "SHALL NOT", "SHOULD", "SHOULD NOT", "RECOMMENDED",  "MAY", and "OPTIONAL" in this document are to be interpreted as described in [RFC 2119](https://tools.ietf.org/html/rfc2119).
-
-### 3.1. Notation
+## 2.1. Notation
 
 First, we define the notation which will be used to define the syntax, semantics, and validation rules.
 
@@ -97,7 +119,7 @@ First, we define the notation which will be used to define the syntax, semantics
  - Function `numbits()` takes a byte and outputs the number of bits set to `1`.
 
 
-### 3.2. Definition of the Syntax, Semantics, and Validation Rules
+## 2.2. Definition of the Syntax, Semantics, and Validation Rules
 
 The only terminal symbols are 8-bit bytes, represented in hexary notation.
 
@@ -210,9 +232,14 @@ Next, recursively define the encoding for an Ethereum tree nodes, with some node
                              {leaf node with value (pathnibbles, key, val)}
 ```
 
-## 4. Properties
 
-### 4.1. Unambiguity
+# 3. Execution
+
+TBD
+
+# 4. Properties
+
+## 4.1. Unambiguity
 
 For a witness `w`, we write `<Block_Witness> :=* w`, to mean that the non-terminal `<Block_Witness>` derives `w` in one or many steps. In general, there can exist many ways to derive a given `w`. Each derivation is modelled by a parse tree. If there is any witness with more than one parse trees, then the grammar is termed ambiguous. If there exist exactly one parse tree for every sentence derived from the grammar, then the grammar is termed unambiguous.
 
@@ -220,25 +247,9 @@ Claim: The witness grammar is unambiguous.
 
 Proof: The rules with a single body cannot introduce ambiguity. Consider the rules with multiple bodies, rules for the non-terminals `<Byte>`, `<Byte_Nonzero>`, `<Byte_More_Than_One_Bit_Set>`, `<Bytes2_More_Than_One_Bit_Set>`, `<Byte_Lower_Nibble_Zero>`, `<Metadata>`, `<Tree_Node(d)>`, `<Child_Of_Extension_Node(d)>`, `<Account_Node(d)>`, `Account_Storage_Tree_Node(d)>`, and `<Child_Of_Account_Storage_Extension_Node(d)>`. The first byte determines the choice of the rule to be applied. So, the above grammar is LL(1), meaning there is at most one rule in the parsing table. Hence, the grammar is unambiguous by construction.
 
-## 5. Implementer's guide
 
-This section contains some guidelines on actually implementing this spec.
+## 5. Alternatives considered
 
-### 5.1. Simple stack machine execution
-
-One simpler implementation of these rules can be a stack machine, taking one
-instruction from the left of the witness and applying rules. That allows one to
-rebuild a trie in a single pass.
-
-
-### 5.2. Building hashes.
-
-It might be useful to build hashes together with building the nodes so we can
-execute and validate the trie in the same pass.
-
-
-## 6. Alternatives considered
-
-### 6.1. GetNodeData
+### 5.1. GetNodeData
 
 TBD
