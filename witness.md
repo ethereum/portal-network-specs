@@ -5,18 +5,18 @@ Block Witness Formal Specification
 
 ## 1.1. Design Goals
 
-### 1.1.1. Semantics
+**1.1. Describe the witness format fully.**
+    Ensures consistent implementation of witness support in multiple clients, regardless of the programming language used.
 
-**2. Highlight changes to the witness format.**
+**1.2. Highlight changes to the witness format.**
      Makes it clear how changes to the witness format affects witness generation and parsing rules.
 
-**Platform-independent.** The semantics shouldn't depend on features of
-specific programming platforms or operating systems.
+**1.3. Provide the single, authoritative place to discuss the format, including proposed and future improvements.**
 
-**4. Formal analysis.**
+**1.4. Formal analysis.**
      Helps claim, prove, and review correctness of the format. Additionally, using complexity theoretic metrics, analyses the performance of witness generation and parsing rules.
 
-**5. Reference tests.**
+**1.5. Reference tests.**
      Helps to construct a minimal set of test witnesses, which can be encoded and decoded using the current witness format. These test witnesses serve as reference tests for witness format generators and parsers that are included in a client.
 
 ### 1.1.2. Representation
