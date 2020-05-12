@@ -182,7 +182,7 @@ The designated starting non-terminal is `<Block_Witness>`.
 <Version> := 0x01
              {the version byte 0x01}
 
-<Tree> := 0xbb m:<Metadata> n:<Tree_Node(0)>
+<Tree> := m:<Metadata> n:<Tree_Node(0)>
           {a tuple (m, n)}
 
 <Metadata> := 0x00
@@ -218,18 +218,19 @@ Next, recursively define the encoding for an Ethereum tree nodes, with some node
 <Leaf_Node(d<65,s<2)> := accountleaf:<Account_Node(d)>^s==0 storageleaf:<Storage_Leaf_Node(d)>^s==1
                          {leaf node accountleaf or storageleaf, depending on whether s==0 or s==1}
 
-<Account_Node(d<65)> := 0x00 pathnibbles:<Nibbles(64-d)> address:<Address> balance:<Bytes32> nonce:<Bytes32>
-                        {account node for externally owned account with values (pathnibbles, address, balance, nonce)}
-                      | 0x01 pathnibbles:<Nibbles(64-d)> address:<Address> balance:<Bytes32> nonce:<Bytes32> code:<Bytecode> storage:<Account_Storage_Tree_Node(0)>
-                        {account node for executed contract account with values (pathnibbles address balance nonce code storage)}
-                      | 0x02 pathnibbles:<Nibbles(64-d)> address:<Address> balance:<Bytes32> nonce:<Bytes32> codehash:<Bytes32> codesize:<U32> storage:<Account_Storage_Tree_Node(0)>
-                        {account node for contract account with values (pathnibbles address balance nonce codehash codesize storage)}
+<Account_Node(d<65)> := 0x00 address:<Address> balance:<Bytes32> nonce:<Bytes32>
+                        {externally owned account node with values (address, balance, nonce)}
+                      | 0x01 address:<Address> balance:<Bytes32> nonce:<Bytes32> bytecode:<Bytecode> storage:<Tree_Node(0,1)>
+                        {contract account node with values (address balance nonce bytecode storage)}
 
-<Bytecode> := len:<U32> b:<Byte>^len
-              {byte array b of length len}
+<Bytecode> := 0x00 codelen:<U32> b:<Byte>^codelen
+              {byte array b of length codelen}
+              Where code b must be accessed in the block, otherwise use case 0x01.
+            | 0x01 codelen:<U32> codehash:<Bytes32>
+              {tuple (codelen, codehash)}
 
-<Storage_Leaf_Node(d<65)> := pathnibbles:<Nibbles(64-d))> key:<Bytes32> val:<Bytes32>
-                             {leaf node with value (pathnibbles, key, val)}
+<Storage_Leaf_Node(d<65)> := key:<Bytes32> val:<Bytes32>
+                             {leaf node with value (key, val)}
 ```
 
 
