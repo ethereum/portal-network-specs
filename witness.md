@@ -115,13 +115,14 @@ First, we define the notation which will be used to define the syntax, semantics
  - Whitespace between a syntax rule, semantics rule, and validation rule is arbitrary, and could include new lines and indentation for aesthetics.
 - `x:<Non-terminal>` means that we bind variable `x` to whatever is produced by non-terminal `<Non-terminal>`. We use this variable in the syntax or semantics of this rule.
  - A syntax rule starting with `<Non-terminal1(n<64)>` or `<Non-terminal2(d<65,s<2)>` is a parameterization of different syntax rules for `<Non-terminal1(0)>`, `<Non-terminal1(1)>`, ..., `<Non-terminal1(63)>` and similarly for `<Non-terminal2(0,0)>`,...,`<Non-terminal2(64,1)>`, each with the same structure, but using symbols `n`,`d`, and `s` as bound variables later in the syntax rule and corresponding semantics and validation rules. When this non-terminal is used after the `:=`, the specific parameter is given like `<Non-terminal1(k)>` where `k` is a non-negative integer up to 63 or an arithmetic expression in terms of bound variables.
+ - In place of a variable, there may be an arithmetic or logical expression in terms of bound variables. The expression is evaluated to an integer. For example, `A^n-7` represents `A` repeated `n-7` times, where `n` is a bound variable representing an integer. For logical expression, a false expression evaluates to `0` and a true expression evaluates to `1`. We omit defining the structure of expressions, we just use standard notation for binary infix operations `+`, `-`, `*`, modulo `%`, floor division `//`. Logical expressions use binary infix relations `<`, `>`, `<=`, `>=`, and `==`, evaluating to integer `0` if false and `1` if true. Order of operations is standard, and parentheses `(`, `)` enclose expressions to be evaluated first.
  - `||` between byte arrays means concatenation.
  - Function `numbits()` takes a byte and outputs the number of bits set to `1`.
 
 
 ## 2.2. Definition of the Syntax, Semantics, and Validation Rules
 
-The only terminal symbols are 8-bit bytes, represented in hexary notation.
+The only terminal symbols are 8-bit bytes, represented in hexadecimal notation. First define some base non-terminals to simplify later non-terminals.
 
 ```
 <Byte> := 0x00        {byte with value 0x00}
@@ -129,11 +130,6 @@ The only terminal symbols are 8-bit bytes, represented in hexary notation.
         | ...
         | 0xff        {byte with value 0xff}
 
-```
-
-First define some non-terminals to simplify later definitions.
-
-```
 <U32> := u32:<Byte>^4		{u32 as a 32-bit unsigned integer in big-endian}
 
 <Bytes32> := b:<Byte>^32	{byte array b in big-endian}
