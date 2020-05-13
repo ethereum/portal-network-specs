@@ -122,7 +122,7 @@ First, we define the notation which will be used to define the syntax, semantics
 
 ## 2.2. Definition of the Syntax, Semantics, and Validation Rules
 
-The only terminal symbols are 8-bit bytes, represented in hexary notation.
+The only terminal symbols are 8-bit bytes, represented in hexadecimal notation. First define some base non-terminals to simplify later non-terminals.
 
 ```
 <Byte> := 0x00        {byte with value 0x00}
@@ -130,11 +130,6 @@ The only terminal symbols are 8-bit bytes, represented in hexary notation.
         | ...
         | 0xff        {byte with value 0xff}
 
-```
-
-First define some non-terminals to simplify later definitions.
-
-```
 <U32> := u32:<Byte>^4		{u32 as a 32-bit unsigned integer in big-endian}
 
 <Bytes32> := b:<Byte>^32	{byte array b in big-endian}
