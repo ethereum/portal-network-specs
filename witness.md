@@ -103,7 +103,7 @@ syntax, but it could be represented as classes and functions of a programming
 language used to implement witnesses support.
 
 **Execution** is the phase, where the multiproof is being built from the
-specified block witness. 
+specified block witness.
 
 **Validation** of the witness is happening during both decoding and execution.
 - *Validation while decoding* checks that the witness binary representation only contains opcodes valid for specified version and that serialized data matches the defined syntax.
@@ -193,7 +193,7 @@ The designated starting non-terminal is `<Block_Witness>`.
 
 ```
 <Block_Witness> ::= v:<Version> t:<Tree>^*
-                   {tuple of witness trees t}
+                   {tuple of witness tries t}
                    Where we exhaust all bytes available.
 
 <Version> ::= 0x01
@@ -209,7 +209,7 @@ The designated starting non-terminal is `<Block_Witness>`.
               Where the 0x01 case is disallowed in a block witnesses, but allowed for extending this spec.
 ```
 
-Next, recursively define the encoding for all Ethereum trie nodes, with some nodes possibly replaced by their merkle hash. Following the yellowpaper section 4.1 and appendix D, the tree has three types of nodes: branch, extension, and leaf. Add a fourth type of node which can replace any node with the merkle hash of the subtrie rooted at that node. Note that the parametrization variable `d` represents the nibble-depth and `s` represents a flag which is `0` when this node is in the account tree and `1` when in a storage trie.
+Next, recursively define the encoding for all Ethereum trie nodes, with some nodes possibly replaced by their merkle hash. Following the yellowpaper section 4.1 and appendix D, the trie has three types of nodes: branch, extension, and leaf. Add a fourth type of node which can replace any node with the merkle hash of the subtrie rooted at that node. Note that the parametrization variable `d` represents the nibble-depth and `s` represents a flag which is `0` when this node is in the account trie and `1` when in a storage trie.
 
 ```
 <Tree_Node(d<65,s<2)> ::= 0x00 b:<Branch_Node(d,s)>
