@@ -5,41 +5,24 @@ Block Witness Formal Specification
 
 ## 1.1. Design Goals
 
-**1.1. Describe the witness format fully.**
-    Ensures consistent implementation of witness support in multiple clients, regardless of the programming language used.
+### 1.1.1. Semantics
 
-**1.2. Highlight changes to the witness format.**
-     Makes it clear how changes to the witness format affects witness generation and parsing rules.
+**Language-independent.** The semantics shouldn't depend on features of
+specific programming languages.
 
-**1.3. Provide the single, authoritative place to discuss the format, including proposed and future improvements.**
+**Platform-independent.** The semantics shouldn't depend on features of
+specific programming platforms or operating systems.
 
-**1.4. Formal analysis.**
-     Helps claim, prove, and review correctness of the format. Additionally, using complexity theoretic metrics, analyses the performance of witness generation and parsing rules.
+**Hardware-independent.** The semantics shouldn't depend on features of
+specific hardware platforms.
 
-**1.5. Reference tests.**
-     Helps to construct a minimal set of test witnesses, which can be encoded and decoded using the current witness format. These test witnesses serve as reference tests for witness format generators and parsers that are included in a client.
+**Well defined.** The semantics should fully and precisely define valid witnesses in a way that is easy to reason about.
 
 ### 1.1.2. Representation
 
 **Efficient.** Witness should be decoded, validated and executed in a single pass with minimum dynamic memory allocation.
 
 **Streamable (without intermediate dynamic buffers).** It should be possible to 'stream-as-you-encode' the trie on one node, and recreate it at the same time, by using a fixed allocated buffer. That helps to efficiently transfer and encode/decode witnesses.
-
-**2.2. Verifiability.**
-The code must be able to verify the multiproof encoded in the witness against
-the block header.
-
-**2.3. Chunking support.**
-It should be possible to split witness in chunks that are independently
-verifiable to speed-up witness propagation in the network.
-
-The witness format doesn't limit a chunk size. That makes it easy to experiment with and find
-the best size for efficient relaying properties.
-
-**2.4. Witness Streaming without intermediate dynamic buffers.**
-It should be possible to 'stream-as-you-encode' the trie on one node,
-and recreate it at the same time, by using a fixed allocated buffer. That helps
-to efficiently transfer and encode/decode witnesses.
 
 The witness allows you to walk through the trie and to produce the witness as you go without buffering;
 sending it straight to a network socket. A peer can then receive it from the socket
@@ -48,13 +31,9 @@ and start computing the hash of the state root straight away.
 Also, it means that the memory consumption of witness processing itself will be
 fixed and predictable, which helps nodes that have limited memory.
 
-**2.5. Building a forest.**
-It should be possible to build a forest of tries from a single witness. It is
-needed for two use cases:
+**Chunkable.** It should be possible to split witness in chunks that are independently verifiable to speed-up witness propagation in the network.
 
-- partial witnesses (like the ones that are used in a
-semi-stateless initial sync, when you already have some trie that you need to
-extend with more data);
+The witness format doesn't limit a chunk size. That makes it easy to experiment with and find the best size for efficient relaying properties.
 
 **Upgradeable.** It should be able to upgrade witness format in the future in a backward compatible way (e.g. new versions of clients will support the old versions of the witness). Old versions of clients should be able to discard unsupported
 versions of witness.
@@ -252,6 +231,12 @@ Next, recursively define the encoding for all Ethereum trie nodes, with some nod
 
 
 # 3. Execution
+
+TBD
+
+# 4. Properties
+
+## 4.1. Unambiguity
 
 For a witness `w`, we write `<Block_Witness> ::=* w`, to mean that the non-terminal `<Block_Witness>` derives `w` in one or many steps. In general, there can exist many ways to derive a given `w`. Each derivation is modeled by a parse tree. If there is any witness with more than one parse tree, then the grammar is termed ambiguous. If there exist exactly one parse tree for every sentence derived from the grammar, then the grammar is termed unambiguous.
 
