@@ -114,7 +114,7 @@ First, we define the notation which will be used to define the syntax, semantics
  - After each semantics rule, an optional validation rule starts with `Where` and ends with `.`. These extra restrictions may not be easily rendered in the syntax without introducing much more notation, which we wish to avoid.
  - Whitespace between a syntax rule, semantics rule, and validation rule is arbitrary, and could include new lines and indentation for aesthetics.
 - `x:<Non-terminal>` means that we bind variable `x` to whatever is produced by non-terminal `<Non-terminal>`. We use this variable in the syntax or semantics of this rule.
- - A syntax rule starting with `<Non-terminal1(n<64)>` or `<Non-terminal2(d<65,s<2)>` is a parameterization of different syntax rules for `<Non-terminal1(0)>`, `<Non-terminal1(1)>`, ..., `<Non-terminal1(63)>` and similarly for `<Non-terminal2(0,0)>`,...,`<Non-terminal2(64,1)>`, each with the same structure, but using symbols `n`,`d`, and `s` as bound variables later in the syntax rule and corresponding semantics and validation rules. When this non-terminal is used after the `:=`, the specific parameter is given like `<Non-terminal1(k)>` where `k` is a non-negative integer up to 63 or an arithmetic expression in terms of bound variables.
+ - A syntax rule starting with `<Non-terminal1(0<=n<64)>` is a parameterization of different syntax rules for `<Non-terminal1(0)>`, `<Non-terminal1(1)>`, ..., `<Non-terminal1(63)>`, each with the same structure, but using symbol `n` as a bound variable later in the syntax rule, and in corresponding semantics and validation rules. When this non-terminal is used after the `:=`, the specific parameter is given like `<Non-terminal1(k)>` where `k` is a non-negative integer up to 63 or an arithmetic expression in terms of bound variables. This notation is generalized for multiple parameters, using a comma to separate parameters, `<Non-terminal2(0<=d<65,0<=s<2)>`.
  - In place of a variable, there may be an arithmetic or logical expression in terms of bound variables. The expression is evaluated to an integer. For example, `A^n-7` represents `A` repeated `n-7` times, where `n` is a bound variable representing an integer. For logical expression, a false expression evaluates to `0` and a true expression evaluates to `1`. We omit defining the structure of expressions, we just use standard notation for binary infix operations `+`, `-`, `*`, modulo `%`, floor division `//`. Logical expressions use binary infix relations `<`, `>`, `<=`, `>=`, and `==`, evaluating to integer `0` if false and `1` if true. Order of operations is standard, and parentheses `(`, `)` enclose expressions to be evaluated first.
  - `||` between byte arrays means concatenation.
  - Function `numbits()` takes a byte and outputs the number of bits set to `1`.
@@ -129,9 +129,11 @@ The only terminal symbols are 8-bit bytes, represented in hexadecimal notation. 
         | 0x01        {byte with value 0x01}
         | ...
         | 0xff        {byte with value 0xff}
+```
 
-<U32> := u32:<Byte>^4		{u32 as a 32-bit unsigned integer in big-endian}
+First define some non-terminals to simplify later definitions.
 
+```
 <Bytes32> ::= b:<Byte>^32	{byte array b in big-endian}
 
 <Address> ::= b:<Byte>^20	{byte array b in big-endian}
@@ -162,11 +164,19 @@ The only terminal symbols are 8-bit bytes, represented in hexadecimal notation. 
                           | ...
                           | 0xf0    {byte with value 0xf0}
 
-<Nibbles(n<65)> ::= nibbles:<Byte>^(n//2) overflownibble:<Byte_Lower_Nibble_Zero>^(n%2)
-                   {byte array nibbles||overflownibble}
+<Nibbles(0<=n<65)> ::= nibbles:<Byte>^(n//2) overflownibble:<Byte_Lower_Nibble_Zero>^(n%2)
+                       {byte array nibbles||overflownibble}
+```
 
+
+Next, a variable-length integer encoding. [LEB128](https://en.wikipedia.org/wiki/LEB128#Unsigned_LEB128) with the restriction that the most-significant "chunk" is non-zero.
 
 ```
+Integer(0<n<=256) ::= low:<Byte> high:<Integer(n-7)>^(low>>7)
+                      {Integer high<<7 + low - 128*(low>>7) where we assign high=0 if (low>>7)==0.}
+                      Where low<2^n and where high==0 only if (low>>7)==0.
+```
+
 
 The designated starting non-terminal is `<Block_Witness>`.
 
@@ -183,7 +193,7 @@ The designated starting non-terminal is `<Block_Witness>`.
 
 <Metadata> ::= 0x00
               {nothing}
-            | 0x01 lenid:<U32> id:<Byte>^lenid lendata:<U32> data:<Byte>^lendata
+            | 0x01 lenid:<Integer(32)> id:<Byte>^lenid lendata:<Integer(32)> data:<Byte>^lendata
               {a tuple (id, data)}
               Where the 0x01 case is disallowed in a block witnesses, but allowed for extending this spec.
 ```
@@ -191,42 +201,42 @@ The designated starting non-terminal is `<Block_Witness>`.
 Next, recursively define the encoding for all Ethereum trie nodes, with some nodes possibly replaced by their merkle hash. Following the yellowpaper section 4.1 and appendix D, the trie has three types of nodes: branch, extension, and leaf. Add a fourth type of node which can replace any node with the merkle hash of the subtrie rooted at that node. Note that the parametrization variable `d` represents the nibble-depth and `s` represents a flag which is `0` when this node is in the account trie and `1` when in a storage trie.
 
 ```
-<Tree_Node(d<65,s<2)> ::= 0x00 b:<Branch_Node(d,s)>
-                         {branch node b}
-                       | 0x01 e:<Extension_Node(d,s)>
-                         {extension node e}
-                       | 0x02 a:<Leaf_Node(d,s)>
-                         {account node a}
-                       | 0x03 h:<Bytes32>
-                         {hash node with merkle hash h}
+<Tree_Node(0<=d<65,0<=s<2)> ::= 0x00 b:<Branch_Node(d,s)>
+                                {branch node b}
+                              | 0x01 e:<Extension_Node(d,s)>
+                                {extension node e}
+                              | 0x02 a:<Leaf_Node(d,s)>
+                                {account node a}
+                              | 0x03 h:<Bytes32>
+                                {hash node with merkle hash h}
 
-<Branch_Node(d<64,s<2)> ::= bitmask:<Bytes2_More_Than_One_Bit_Set> c[0]:<Tree_Node(d+1,s)>^bitmask[0]==1 c[1]:<Tree_Node(d+1,s)>^bitmask[1]==1 ... c[15]:<Tree_Node(d+1,s)>^bitmask[15]==1
-                      {branch node with children nodes (c[0], c[1], ..., c[15]), note that some children may be empty based on the bitmask}
+<Branch_Node(0<=d<64,0<=s<2)> ::= bitmask:<Bytes2_More_Than_One_Bit_Set> c[0]:<Tree_Node(d+1,s)>^bitmask[0]==1 c[1]:<Tree_Node(d+1,s)>^bitmask[1]==1 ... c[15]:<Tree_Node(d+1,s)>^bitmask[15]==1
+                                  {branch node with children nodes (c[0], c[1], ..., c[15]), note that some children may be empty based on the bitmask}
 
-<Extension_Node(d<63,s<2)> ::= nibbleslen:<Byte_Nonzero> nibbles:<Nibbles(nibbleslen)> child:<Child_Of_Extension_Node(d+nibbleslen,s)>
-                              {extension node with values (nibbleslen, nibbles, child)}
+<Extension_Node(0<=d<63,0<=s<2)> ::= nibbleslen:<Byte_Nonzero> nibbles:<Nibbles(nibbleslen)> child:<Child_Of_Extension_Node(d+nibbleslen,s)>
+                                     {extension node with values (nibbleslen, nibbles, child)}
 
-<Child_Of_Extension_Node(d<65,s<2)> ::= 0x00 b:<Branch_Node(d,s)>
-                                       {branch node b}
-                                     | 0x03 h:<Bytes32>
-                                       {hash node with merkle hash h}
+<Child_Of_Extension_Node(0<=d<65,0<=s<2)> ::= 0x00 b:<Branch_Node(d,s)>
+                                              {branch node b}
+                                            | 0x03 h:<Bytes32>
+                                              {hash node with merkle hash h}
 
-<Leaf_Node(d<65,s<2)> ::= accountleaf:<Account_Node(d)>^s==0 storageleaf:<Storage_Leaf_Node(d)>^s==1
-                         {leaf node accountleaf or storageleaf, depending on whether s==0 or s==1}
+<Leaf_Node(0<=d<65,0<=s<2)> ::= accountleaf:<Account_Node(d)>^s==0 storageleaf:<Storage_Leaf_Node(d)>^s==1
+                                {leaf node accountleaf or storageleaf, depending on whether s==0 or s==1}
 
-<Account_Node(d<65)> := 0x00 address:<Address> balance:<Bytes32> nonce:<Bytes32>
-                        {externally owned account node with values (address, balance, nonce)}
-                      | 0x01 address:<Address> balance:<Bytes32> nonce:<Bytes32> bytecode:<Bytecode> storage:<Tree_Node(0,1)>
-                        {contract account node with values (address balance nonce bytecode storage)}
+<Account_Node(0<=d<65)> := 0x00 address:<Address> balance:<Integer(256)> nonce:<Integer(256)>
+                           {externally owned account node with values (address, balance, nonce)}
+                         | 0x01 address:<Address> balance:<Integer(256)> nonce:<Integer(256)> bytecode:<Bytecode> storage:<Tree_Node(0,1)>
+                           {contract account node with values (address balance nonce bytecode storage)}
 
-<Bytecode> := 0x00 codelen:<U32> b:<Byte>^codelen
+<Bytecode> := 0x00 codelen:<Integer(32)> b:<Byte>^codelen
               {byte array b of length codelen}
               Where code b must be accessed in the block, otherwise use case 0x01.
-            | 0x01 codelen:<U32> codehash:<Bytes32>
+            | 0x01 codelen:<Integer(32)> codehash:<Bytes32>
               {tuple (codelen, codehash)}
 
-<Storage_Leaf_Node(d<65)> := key:<Bytes32> val:<Bytes32>
-                             {leaf node with value (key, val)}
+<Storage_Leaf_Node(0<=d<65)> := key:<Bytes32> val:<Bytes32>
+                                {leaf node with value (key, val)}
 ```
 
 
