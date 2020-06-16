@@ -54,6 +54,8 @@ It does not:
 - provide suggestions on specific use cases of witnesses in sync, hash checks and state storage.
 - provide explanations on how stateless ethereum works in general.
 
+In the present version the specification is catered for hexary trie support. Binary trie support will be added later as a change to the specification.
+
 The specification is complemented by a [Stateless Ethereum overview document](./README.md), an [implementer's handbook](TBD), [example code](TBD) and [tests](TBD) to help with the specific implementation.
 
 
