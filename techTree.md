@@ -2,7 +2,7 @@
 
 A 'roadmap' delineates centrally determined deliverables and milestones. Because the Stateless Ethereum effort is not centrally planned, it's helpful to instead use a [tech tree](https://en.wikipedia.org/wiki/Technology_tree) to organize and record ongoing work in the Stateless Ethereum initiative. This helps to map out a shared understanding of 'the critical path' and dependencies in research / implementation.
 
-![tech_tree](/home/gichiba/Documents/snake_charmers/stateless-ethereum-specs/assets/Stateless_Tech_Tree_06-2020.png)
+![tech_tree](./assets/Stateless_Tech_Tree_06-2020.png)
 
 > ### Key
 >
