@@ -184,8 +184,9 @@ Next, recursively define the encoding for all Ethereum trie nodes, with some nod
                                 {extension node e}
                               | 0x02 a:<Leaf_Node(d,s)>
                                 {account node a}
-                              | 0x03 h:<Bytes32>
-                                {hash node with merkle hash h}
+                              | 0x03 h:<Bytes32>^(s!=1 or d<9) c:<Storage_Hash_Or_Short_RLP()>^(s==1 and d>=9)
+                                {hash node with merkle hash h, or, in rare cases, child node c which is either a hash or a short RLP encoding}
+
 
 <Branch_Node(0<=d<64,0<=s<2)> ::= bitmask:<Bytes2> c[0]:<Tree_Node(d+1,s)>^(bitmask[0]==1) c[1]:<Tree_Node(d+1,s)>^(bitmask[1]==1) ... c[15]:<Tree_Node(d+1,s)>^(bitmask[15]==1)
                                   {branch node with children nodes (c[0], c[1], ..., c[15]), note that some children may be empty based on the bitmask}
@@ -196,8 +197,8 @@ Next, recursively define the encoding for all Ethereum trie nodes, with some nod
 
 <Child_Of_Extension_Node(0<=d<65,0<=s<2)> ::= 0x00 b:<Branch_Node(d,s)>
                                               {branch node b}
-                                            | 0x03 h:<Bytes32>
-                                              {hash node with merkle hash h}
+                                            | 0x03 h:<Bytes32>^(s!=1 or d<9) c:<Storage_Hash_Or_Short_RLP()>^(s==1 and d>=9)
+                                              {hash node with merkle hash h, or, in rare cases, child node c which is either a hash or a shorter RLP encoding}
 
 <Leaf_Node(0<=d<65,0<=s<2)> ::= accountleaf:<Account_Node(d)>^(s==0) storageleaf:<Storage_Leaf_Node(d)>^(s==1)
                                 {leaf node accountleaf or storageleaf, depending on whether s==0 or s==1}
@@ -215,8 +216,17 @@ Next, recursively define the encoding for all Ethereum trie nodes, with some nod
 
 <Storage_Leaf_Node(0<=d<65)> ::= key:<Bytes32> val:<Bytes32>
                                  {leaf node with value (key, val)}
+
+<Storage_Hash_Or_Short_RLP> ::= h0:<Byte_Nonzero> hrest:<Byte>^31
+                                {hash h0||hrest}
+                              | 0x00 0x00 hrest:<Byte>^31
+                                {hash 0x00||hrest}
+                              | 0x00 len:<Byte> b:<Bytes>^len
+                                {RLP encoding b of a subtree t of a storage trie.}
+                                Where subtree t is produced by the yellowpaper appx. D, function n, the <32 case, i.e. bytelength(RLP(t))<32.
 ```
 
+The syntax rule `<Storage_Hash_Or_Short_RLP>` is used in the rare case when the RLP encoding of a node is less than 32 bytes. This is not possible in the account trie (because each account node has RLP bytelength greater than 32) or in a storage node at nibbledepth less than 9 (because at smaller nibbledepth, any RLP encoding exceeds 31 bytes).
 
 # 3. Execution
 
