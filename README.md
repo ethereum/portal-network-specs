@@ -15,7 +15,7 @@ Stateless Ethereum is the "all in" direction of Ethereum 1.x research to solve t
 
 **[Ethresear.ch (tag: "1.x research")](https://ethresear.ch/c/eth1x-research/37)**
 
-**[Eth1x / 2 Research Discord]()** 
+**[Eth1x / 2 Research Discord](https://discord.gg/hpFs23p)** 
 
 
 
