@@ -52,6 +52,14 @@ In order to get data into the appropriate region, we need a more targeted approa
 
 The lasted research suggests we need a network with long lived connections that allow streaming larger data payloads than are possible with single UDP packets.  This could be accomplished using libp2p or an implementation of [uTP](https://www.bittorrent.org/beps/bep_0029.html) over DiscV5.
 
+### Proofs
+
+As the main Ethereum network progresses, a proof will need to be produced that captures new, updated, and deleted trie data.  These proofs will contain some set of trie nodes.
+
+Each of the new and updated trie nodes will need to be gossiped to the nodes in the network that are interested in them.
+
+For deleted trie data, we will need some form of exclusion proof that allows nodes to schedule deletion of old trie data that is no longer part of the current state.
+
 ### Messages
 
 The network uses the following message triple for transmission of proof data.
@@ -67,6 +75,18 @@ A message requesting one of the proofs advertised via an `AdvertiseProofs` messa
 #### Proofs
 
 The response message containing the proofs requested by a `RetrieveProofs` message.
+
+### DOS Mitigation
+
+We need mitigation against:
+
+- flooding the gossip network with lots of "valid" trie data that isn't new or updated.
+- bloated proofs which contain lots of *extra* trie nodes that aren't necessary (proofs should be minimal)
+- any form of amplification attack
+
+Requiring proofs to be "minimal" should be easy.
+
+Both the DOS and amplification attacks may be trivially solved by only having nodes gossip data that was of interest to them (new content that they didn't have but that falls into their area of interest).
 
 
 ## DHT Network
