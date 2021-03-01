@@ -60,6 +60,10 @@ Each of the new and updated trie nodes will need to be gossiped to the nodes in 
 
 For deleted trie data, we will need some form of exclusion proof that allows nodes to schedule deletion of old trie data that is no longer part of the current state.
 
+#### Proof Format
+
+TODO: We need to specify a proof format.  Consumers of proofs will need to be able to verify them against a known state root, and derive path information for individual nodes.  Proofs should also be *canonical* meaning that there is exactly one valid representation for a collection of trie nodes comprising a proof.
+
 ### Messages
 
 The network uses the following message triple for transmission of proof data.
