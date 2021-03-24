@@ -97,6 +97,10 @@ Both the DOS and amplification attacks may be trivially solved by only having no
 
 Our DHT will be an overlay network on the existing [Discovery V5](https://github.com/ethereum/devp2p/blob/master/discv5/discv5.md) network.
 
+The identifier `0xTODO` will be used as the `protocol_id` for TALKREQ and TALKRESP messages.
+
+Nodes **must** support the `utp` Discovery v5 protocol.
+
 We use the same distance function as the core protocol.
 
 We use the same routing table structure as the core protocol.
@@ -109,37 +113,66 @@ All content on the network has a key and a value.  The keys are referred to as `
 
 > TODO: define `hash` function (probably sha256)
 
+> TODO: define serialization for content keys
+
 The data stored in the network is referred to as "content".  The network houses three different types of content.
 
 - Account trie data
 - Contract storage trie data
 - Contract bytecode
 
+> TODO: encoding scheme for trie paths that accounts for nibbles: https://github.com/ethereum/py-trie/blob/6da013af84f5448b30abe81a6e7ada07400b7a55/trie/utils/nibbles.py
+
+
 #### Account Trie Data
 
 ```
-content_key  := content_type | trie_path | node_hash
+content_key  := network_id | content_type | trie_path | node_hash
+network_id   := uint16
 content_type := 0x01
-trie_path    := nibbles + terminator (TODO)
+trie_path    := nibbles (TODO)
 node_hash    := hash(content)
 ```
+
+The SSZ sedes used for encoding/decoding
+
+```
+Container(network_id: uint16, content_type: uint8, trie_path: byte_list, node_hash: bytes32)
+```
+
 
 #### Contract Storage Trie Data
 
 ```
-content_key  := content_type | trie_path | node_hash
+content_key  := network_id | content_type | address | trie_path | node_hash
+network_id   := uint16
 content_type := 0x02
-trie_path    := nibbles + terminator (TODO)
+address      := bytes20
+trie_path    := nibbles (TODO)
 node_hash    := hash(content)
+```
+
+The SSZ sedes used for encoding/decoding
+
+```
+Container(network_id: uint16, content_type: uint8, address: bytes20, trie_path: byte_list, node_hash: bytes32)
 ```
 
 
 #### Contract Bytecode
 
 ```
-content_key  := content_type | code_hash
+content_key  := network_id | content_type | address | code_hash
+network_id   := uint16
 content_type := 0x03
+address      := bytes20
 code_hash    := keccak(content)
+```
+
+The SSZ sedes used for encoding/decoding
+
+```
+Container(network_id: uint16, content_type: uint8, address: bytes20, code_hash: bytes32)
 ```
 
 ### Radius
@@ -149,6 +182,13 @@ Nodes on the network broadcast a `radius` value which is used to advertise how m
 A node is expected to be *interested* in a piece of content if `distance(node_id, content_id) <= radius`.
 
 Nodes are expected to track the radius of other nodes on the network.
+
+
+### Gossip
+
+Nodes in the network should use the following rules for gossip.
+
+TODO: outline the process of receiving a proof and: 1) extracting the parent proofs, and re-advertising them to the nodes in the network they expect to be interested in them as well as 2) relaying the base proof to neighbor nodes that should be interested.
 
 
 ### Wire Protocol
@@ -264,4 +304,51 @@ sedes      := Container(enrs: List[byte_list, max_length=32], payload: byte_list
 * `payload`: bytestring of the requested content.
     * This field **must** be empty if `enrs` is non-empty.
     
-> A response with an empty `payload` and empty `enrs` indicates that the node odes is not aware of any closer nodes, *nor* does the node have the requested content.
+> A response with an empty `payload` and empty `enrs` indicates that the node is not aware of any closer nodes, *nor* does the node have the requested content.
+
+
+#### Advertise (0x07)
+
+Advertise a set of content keys that this node has proofs available for.
+
+```
+message_id := 7
+type       := request
+sedes      := List[byte_list, max_length=32]
+```
+
+The payload of this message is a list of encoded `content_key` entries.
+
+
+#### RequestProofs (0x08)
+
+Response message to Advertise (0x07).
+
+Request the proofs for a piece of content.
+
+> Despite the name of this message having the name "Request" in it, this is a response message.
+
+```
+message_id := 8
+type       := response
+sedes      := Container(connection_id: bytes4, content_keys: List[byte_list, max_length=32]]
+```
+
+* `connection_id`: ConnectionID to be used for a uTP stream
+    * ConnectionID values should be randomly generated.
+* `content_keys`: The set of encoded content keys that should be sent.
+    * Only content keys from the corresponding Advertise message are valid.
+
+Upon *sending* this message, the requesting node should *listen* for an incoming uTP stream with the generated `connection_id`.
+
+Upon *receiving* this message, the serving node should initiate a uTP stream.
+
+Proofs sent across the stream should be framed with a 4-byte length prefix.
+
+TODO: proof encoding and format....
+
+```
+message_frame := length_prefix | message
+length_prefix := bytes4
+message       := variable length encoded proof
+```
