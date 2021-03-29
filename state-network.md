@@ -128,6 +128,16 @@ Nodes in the network should use the following rules for gossip.
 
 TODO: outline the process of receiving a proof and: 1) extracting the parent proofs, and re-advertising them to the nodes in the network they expect to be interested in them as well as 2) relaying the base proof to neighbor nodes that should be interested.
 
+### POKE
+
+The standard process of looking up content is a depth first traversal of the trie towards the desired path, iteratively building a "proof".
+
+At each stage, a node is likely to encounter nodes who are "interested" in the content, but who did not have it.
+
+Once the content has been required, nodes are encouraged to POKE the assembled proof back to these nodes.  This would use the same gossip mechanisms.
+
+This POKE mechanic actively spreads propular content through the network.
+
 
 ### Wire Protocol
 
@@ -286,8 +296,8 @@ Proofs sent across the stream should be framed with a 4-byte length prefix.
 ```
 message_frame := length_prefix | message
 length_prefix := bytes4
-message       := proof
-proof         := [[path_0, node_0], [path_1, node_1], ...]  # see below for proof encoding
+message       := encode(proof)
+proof         := TBD
 ```
 
 > The exact semantics of how we encode proofs are under active development and subject to major changes.
