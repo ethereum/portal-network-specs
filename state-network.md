@@ -22,75 +22,13 @@ The network(s) that support "on-demand" availability of the Ethereum state must 
     - D: Mechanism for *missing* state data to be distributed to *interested* nodes
     
     
-We solve A with a standard Kademlia DHT.
+We solve A with a standard Kademlia DHT using the "recursive find" algorithm.
 
 We solve B with a gossip network and merkle proofs.
 
-C & D are unsolved, though the POKE concept may be adequate to solve both.
-    
-    
-## Gossip Network
+We ignore C because it can be handled via a combination of POKE and the solution for D
 
-> The exacp semantics of this network are only loosely defined. More research is needed to establish a more concrete specification.
-
-The gossip network is designed to facilitate ingress of new state data into the network.  Nodes in this network establish long lived connections with other peers.  Nodes advertise available hashes to connected peers, and serve proofs for those hashes upon request.
-
-Nodes in this network should not be required to process the full proof for every block. This requirement is in place to ensure that nodes are able to limit total resource requirements.
-
-### Topology
-
-> This is an area of active research.  There is still work to be done to validate whether this `radius` based network topology is appropriate.
-
-The leading idea for this network is to have each node publish their `radius` and to have nodes prioritize connections with other nodes with intersecting areas of interest.  This could also be modeled as nodes maintaining connections loosely based on the same routing table rules used for the DHT, with a higher number of connections allocated towards *nearby* nodes and fewer connections to *far-away* nodes.
-
-The resulting topology is one that can reliably gossip data to all interested nodes once the data reaches at least one node that is *close enough* as well as a few connections allowing data to be pushed to further away parts of the network. Within a specific region of the network data will spread between nodes until it saturates that region, dying out once the data spreads far enough away from it's center that nodes are no longer *interested*.
-
-In order to get data into the appropriate region, we need a more targeted approach.  This mechanism is referred to as `POKE`.  The exact semantics of this are only loosely defined, but a node wishing to push data to a region of the network would lookup some number of nodes in that region, establish a connection with them, and push some number of proofs.  This *could* use the same transport messages as the generic gossip messages but research is needed to determine if this will be reliable enough.
-
-
-### Transport
-
-The lasted research suggests we need a network with long lived connections that allow streaming larger data payloads than are possible with single UDP packets.  This could be accomplished using libp2p or an implementation of [uTP](https://www.bittorrent.org/beps/bep_0029.html) over DiscV5.
-
-### Proofs
-
-As the main Ethereum network progresses, a proof will need to be produced that captures new, updated, and deleted trie data.  These proofs will contain some set of trie nodes.
-
-Each of the new and updated trie nodes will need to be gossiped to the nodes in the network that are interested in them.
-
-For deleted trie data, we will need some form of exclusion proof that allows nodes to schedule deletion of old trie data that is no longer part of the current state.
-
-#### Proof Format
-
-TODO: We need to specify a proof format.  Consumers of proofs will need to be able to verify them against a known state root, and derive path information for individual nodes.  Proofs should also be *canonical* meaning that there is exactly one valid representation for a collection of trie nodes comprising a proof.
-
-### Messages
-
-The network uses the following message triple for transmission of proof data.
-
-#### AdvertiseProofs
-
-A message containing a list of identifiers, probably `content_ids` that the node has proofs available for.
-
-#### RetrieveProofs
-
-A message requesting one of the proofs advertised via an `AdvertiseProofs` message.
-
-#### Proofs
-
-The response message containing the proofs requested by a `RetrieveProofs` message.
-
-### DOS Mitigation
-
-We need mitigation against:
-
-- flooding the gossip network with lots of "valid" trie data that isn't new or updated.
-- bloated proofs which contain lots of *extra* trie nodes that aren't necessary (proofs should be minimal)
-- any form of amplification attack
-
-Requiring proofs to be "minimal" should be easy.
-
-Both the DOS and amplification attacks may be trivially solved by only having nodes gossip data that was of interest to them (new content that they didn't have but that falls into their area of interest).
+We solve D without any modification to the protocol, by simply having a daemon that searches for missing state and injects it into the network using standard gossip mechanics
 
 
 ## DHT Network
@@ -345,10 +283,15 @@ Upon *receiving* this message, the serving node should initiate a uTP stream.
 
 Proofs sent across the stream should be framed with a 4-byte length prefix.
 
-TODO: proof encoding and format....
-
 ```
 message_frame := length_prefix | message
 length_prefix := bytes4
-message       := variable length encoded proof
+message       := proof
+proof         := [[path_0, node_0], [path_1, node_1], ...]  # see below for proof encoding
 ```
+
+> The exact semantics of how we encode proofs are under active development and subject to major changes.
+
+We encode proofs as a stream of `(path, node)` pairs which have been sorted in preorder traversal ordering.  We can save some bytes by de-duplicating the `path` components since each path will tend to have a common prefix with the previous path.
+
+We also validate that proofs are "minimal", only containing the minimal set of trie nodes necessary for the proven piece of data.
