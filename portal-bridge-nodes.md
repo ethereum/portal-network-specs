@@ -19,7 +19,7 @@ Bridge nodes push state into the state availability network. They need to be in 
 - `bridge_waitNewCanonicalChain()`
 	- Blocks the caller until the canonical chain tip changes (indicating there is more work to be done).
 
-- `bridge_getBlockChanges(blockHash) -> List[(Address, [Address, ...])]`
+- `bridge_getBlockChanges(blockHash) -> List[(acctAddr, [slotAddr, ...])]`
 	- Returns a list containing every account/slot which was created, updated, or deleted in the given block.
 	- Return type mirrors [eth1 mainnet access list API](https://eips.ethereum.org/EIPS/eip-2930#definitions)
 		- Accounts are represented by `(acctAddr, [])`
