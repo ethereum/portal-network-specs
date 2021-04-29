@@ -58,7 +58,11 @@ TODO
 
 ## Network Specifications
 
-- uTP over DiscoveryV5: TODO
-- State Network: TODO
-- Chain History Network: TODO
-- Transaction Gossip: TODO
+- [uTP over DiscoveryV5](./discv5-utp.md)
+- [State Network](./state-network.md)
+- Chain History Network
+    - No current spec
+    - Prior work: https://notes.ethereum.org/oUJE4ZX2Q6eMOgEMiQPkpQ?view
+- Transaction Gossip:
+    - No current spec
+    - Prior work: https://ethresear.ch/t/scalable-transaction-gossip/8660
