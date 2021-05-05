@@ -29,6 +29,7 @@ The term "light client" tends to refer to a client of the existing DevP2P LES ne
 The Portal Network aims to solve this problem by designing our networks so that each additional client that joints the network adds additional capacity to the network.  The end result *should* be a network which becomes more robust and powerful as more nodes join the network.
 
 > Additional reading: https://snakecharmers.ethereum.org/the-winding-road-to-functional-light-clients/
+> 
 > Additional watching: https://www.youtube.com/watch?v=MZxqRs_tLNs
 
 
