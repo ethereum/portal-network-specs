@@ -62,6 +62,7 @@ TODO
 
 - [uTP over DiscoveryV5](./discv5-utp.md)
 - [State Network](./state-network.md)
+    - Scalable gossip for new state data: https://ethresear.ch/t/scalable-gossip-for-state-network/8958/4
 - Chain History Network
     - No current spec
     - Prior work: https://notes.ethereum.org/oUJE4ZX2Q6eMOgEMiQPkpQ?view
