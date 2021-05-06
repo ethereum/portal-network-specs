@@ -43,7 +43,13 @@ TODO
 
 ### State: Accounts and Contract Storage
 
-TODO
+The goal of the state network is to make pieces of the state available to light clients before the next block is mined.
+
+Nodes should be able to choose how much state they want to store and share, and the network should provide a way to identify which nodes to query for a wanted portion of state.
+
+Full "bridge" nodes acting as benevolent state providers could selectively push out proofs from the main network to interested light nodes, who could also request more data if needed. For example, a full node could only push leaf proofs and any interested light client would request intermediate leaf-to-root proofs and participate in broadcasting them.
+
+Querying and reading data from the network should be fast, since wallet operations such as estimating needed gas for a transaction might need to retrieve a significant amount of state data and access contract storage (which is stored in a separate trie and inherently unbalanced), resulting in many requests for different pieces of state.
 
 ### Chain History: Headers, Blocks, and Receipts
 
@@ -55,8 +61,13 @@ TODO
 
 ### Transaction Sending: Cooperative Transaction Gossip
 
-TODO
+The goal of the transaction gossip network is to make sure all new transactions are validated and broadcast to the miners so that they can be included in a block.
 
+Stateless clients should be able to declare where they stand on the spectrum of "how many transactions do I want to process out of the whole mempool", based on the amount of resources they have and their role in the network, and the network should let clients filter and select destination nodes based on which transactions they are interested in.
+
+Stateless transaction validation involves checking accounts' balances and nonces, so transactions should be broadcast with those proofs included.
+
+Transaction broadcasting involves pushing new transactions to the "center" of the network, where the miners are.  Note how this is different from the needs of the state network, where pieces of the state need to be "pushed out" from the full nodes to the light ones who will store it so they can participate in achieving or strenghening consensus.  This means that the "lightest" clients would not have to know about all (or any) transactions, they just need to make sure their own transactions are validated and sent to the miners as quickly as possible.
 
 ## Network Specifications
 
