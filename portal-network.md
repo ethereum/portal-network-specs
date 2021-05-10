@@ -47,11 +47,19 @@ TODO
 
 ### Chain History: Headers, Blocks, and Receipts
 
-TODO
+In order to validate requested portal network data, a portal client needs to be able to request headers and validate their inclusion in the canonical header chain. Clients can use validated headers to further validate blocks, uncles, transactions, receipts, and state nodes.
 
-### Canonical Indices: Transactions by Hash and Blocks by Hash
+Normal clients will download every block header to construct the canonical chain. This is unreasonable for a "stateless" client. The "double-batched merkle log accumulator" is the mechanism that enables portal clients to achieve this goal, without requiring them to download every canonical header.
 
-TODO
+When a portal client requests a certain header, the response includes two accumulator proofs. As long as the client maintains an up-to-date view of the chain tip (via the gossip network) it can use the proofs to validate a headers inclusion in the canonical chain. Then, the client can use the header to validate other data retrieved from the portal network.
+
+### Canonical Indices: Transactions by Hash and Blocks by Number
+
+To serve the `eth_getTransactionByHash` and `eth_getBlockByNumber` JSON-RPC API endpoints, clients typically build local indexes as they sync the entire chain. The portal network will need to mimic these indices. This can be acheived by generating unique mappings for transactions and blocks, and then pushing these into to portal network.
+
+Since valid transactions can exist outside of the context of a particular block, we need a mechanism to prove that they were included in a certain block. Likewise, valid blocks can exist as uncles, without proof that they were included in the canonical chain at a certain number. So, a mechanism is required to validate that a given block is canonical at a certain level, and a transaction was included in a canonical block.
+
+In the portal network, the canonical block index is built by mapping block numbers to their respective canonical block hash. The canonical transaction index is built by mapping transaction hashes to their respective canonical block hash and transaction index. These key-value pairs are then pushed into the portal network, similar to other data objects.
 
 ### Transaction Sending: Cooperative Transaction Gossip
 
