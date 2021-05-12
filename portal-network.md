@@ -47,11 +47,33 @@ TODO
 
 ### Chain History: Headers, Blocks, and Receipts
 
-TODO
+In order to validate requested portal network data, a portal client needs to be able to request headers and validate their inclusion in the canonical header chain. Clients can use validated headers to further validate blocks, uncles, transactions, receipts, and state nodes.
 
-### Canonical Indices: Transactions by Hash and Blocks by Hash
+Normal clients will download every block header to construct the canonical chain. This is unreasonable for a "stateless" client. The "[double-batched merkle log accumulator](https://ethresear.ch/t/double-batched-merkle-log-accumulator/571)" is the mechanism that enables portal clients to achieve this goal, without requiring them to download every canonical header.
 
-TODO
+When a portal client requests a certain header, the response includes two accumulator proofs. As long as the client maintains an up-to-date view of the chain tip (via the gossip network) it can use the proofs to validate a headers inclusion in the canonical chain. Then, the client can use the header to validate other data retrieved from the portal network.
+
+The portal network is designed to emulate the following [ETH protocol](https://github.com/ethereum/devp2p/blob/d3f6d6724ea587fc28d3c22911d8ac0490627c8c/caps/eth.md#protocol-messages) messages, by supporting the following data to be retrieved via `block_hash`.
+
+| ETH Protocol | Portal Network |
+| - | - |
+| `GetBlockHeaders` -> `BlockHeaders` | `block_hash` -> header & inclusion proof |
+| `GetBlockBodies` -> `BlockBodies` | `block_hash` -> block body |
+| `GetReceipts` -> `Receipts` | `block_hash` -> block receipts |
+
+### Canonical Indices: Transactions by Hash and Blocks by Number
+
+To serve the `eth_getTransactionByHash` and `eth_getBlockByNumber` JSON-RPC API endpoints, clients typically build local indexes as they sync the entire chain. The portal network will need to mimic these indices. This can be acheived by generating unique mappings for transactions and blocks, and then pushing these into to portal network.
+
+Since valid transactions can exist outside of the context of a particular block, we need a mechanism to prove that they were included in a certain block. Likewise, valid blocks can exist as uncles, without proof that they were included in the canonical chain at a certain number. So, a mechanism is required to validate that a given block is canonical at a certain level, and a transaction was included in a canonical block.
+
+The following mappings are stored by the portal network. Together with the accumulator, they replicate the functionality of canonical indices.
+	- Canonical block index: `block_number -> (block_hash)`
+		- Fetch the block header associated with `block_hash`, and validate the header against the accumulator to verify that `block_hash` is accurate for the given `block_number`.
+	- Canonical transaction index: `tx_hash -> (block_hash, tx_index)`
+		- Fetch the block header associated with `block_hash`, and verify the header against the accumulator.
+		- Then, fetch the block body associated with the header and verify that `tx_hash` matches the transaction found at the `tx_index` in the transaction trie.
+
 
 ### Transaction Sending: Cooperative Transaction Gossip
 
