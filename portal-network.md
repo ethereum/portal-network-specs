@@ -59,7 +59,13 @@ To serve the `eth_getTransactionByHash` and `eth_getBlockByNumber` JSON-RPC API 
 
 Since valid transactions can exist outside of the context of a particular block, we need a mechanism to prove that they were included in a certain block. Likewise, valid blocks can exist as uncles, without proof that they were included in the canonical chain at a certain number. So, a mechanism is required to validate that a given block is canonical at a certain level, and a transaction was included in a canonical block.
 
-In the portal network, the canonical block index is built by mapping block numbers to their respective canonical block hash. The canonical transaction index is built by mapping transaction hashes to their respective canonical block hash and transaction index. These key-value pairs are then pushed into the portal network, similar to other data objects.
+The following mappings are stored by the portal network. Together with the accumulator, they replicate the functionality of canonical indices.
+	- Canonical block index: `block_number -> (block_hash)`
+		- Fetch the block header with `block_hash`, and validate the header against the accumulator to verify that `block_hash` is accurate for the given `block_number`.
+	- Canonical transaction index: `tx_hash -> (block_hash, tx_index)`
+		- Fetch the block header associated with `block_hash`, and verify the header against the accumulator.
+		- Then, fetch the block body associated with the header and verify that `tx_hash` matches the transaction found at the `tx_index` in the transaction trie.
+
 
 ### Transaction Sending: Cooperative Transaction Gossip
 
