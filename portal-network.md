@@ -65,7 +65,7 @@ The goal of the transaction gossip network is to make sure all new transactions 
 
 Stateless clients should be able to declare how many transactions they want to process out of the set of all unmined and valid transactions (called _mempool_) based on the amount of resources they have, and should only receive that many transactions from other nodes.
 
-Stateless transaction validation involves checking accounts' balances and nonces, so transactions should be broadcast with those proofs included.
+Stateless transaction validation involves checking accounts' balances and nonces, so the network will need to facilitate transmission of account proofs alongside each transaction.
 
 ## Network Specifications
 
