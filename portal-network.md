@@ -49,7 +49,7 @@ Nodes should be able to choose how much state they want to store and share, and 
 
 The network needs to have a way to push state from new blocks into the network, so that it can be made available for query and retrieval by interested nodes. Full "bridge" nodes acting as benevolent state providers would be responsible for bringing in this data from the main network, and the network should be able to remain healthy even with a small number of bridge nodes.
 
-Querying and reading data from the network should be fast, since wallet operations such as estimating needed gas for a transaction might need to retrieve a significant amount of state data and access contract storage (which is stored in a separate trie and inherently unbalanced), resulting in many requests for different pieces of state.
+Querying and reading data from the network should be fast enough for human driven wallet operations like estimating the gas for a transaction or reading state from a contract.
 
 ### Chain History: Headers, Blocks, and Receipts
 
