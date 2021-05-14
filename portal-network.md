@@ -43,7 +43,7 @@ TODO
 
 ### State: Accounts and Contract Storage
 
-The state network needs to make pieces of the state available to light clients before the next block is mined, so that they can be quickly retrieved by the users' wallets and dapps.
+The state network facilitates on-demand retrieval of the Ethereum "state" data.
 
 Nodes should be able to choose how much state they want to store and share, and the network should provide a way to identify which nodes to query for a wanted portion of state. This is so that every node, no matter how small, can contribute to the health and robustness of the network.
 
