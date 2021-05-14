@@ -43,7 +43,13 @@ TODO
 
 ### State: Accounts and Contract Storage
 
-TODO
+The state network facilitates on-demand retrieval of the Ethereum "state" data.
+
+Nodes should be able to choose how much state they want to store and share, and the network should provide a way to identify which nodes to query for a wanted portion of state. This is so that every node, no matter how small, can contribute to the health and robustness of the network.
+
+The network will be dependent on receiving new and updated state for new blocks. Full "bridge" nodes acting as benevolent state providers would be responsible for bringing in this data from the main network. The network should be able to remain healthy even with a small number of bridge nodes.
+
+Querying and reading data from the network should be fast enough for human-driven wallet operations, like estimating the gas for a transaction or reading state from a contract.
 
 ### Chain History: Headers, Blocks, and Receipts
 
@@ -77,8 +83,11 @@ The following mappings are stored by the portal network. Together with the accum
 
 ### Transaction Sending: Cooperative Transaction Gossip
 
-TODO
+The goal of the transaction gossip network is to make sure all new transactions are made available to the miners so that they can be included in a block.
 
+Stateless clients should be able to declare what percentage of transactions they want to process out of the set of all unmined and valid transactions (called _mempool_) based on the amount of resources they have, and should only receive that many transactions from other nodes.
+
+Stateless transaction validation involves checking accounts' balances and nonces, so the network will need to facilitate transmission of account proofs alongside each transaction.
 
 ## Network Specifications
 
