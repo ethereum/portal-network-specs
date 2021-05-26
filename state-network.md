@@ -169,7 +169,7 @@ Request message to check if a node is reachable, communicate basic information a
 ```
 message_id := 1
 type       := request
-sedes      := Container(enr_seq: uint32, data_radius: uint256)
+sedes      := Container(enr_seq: uint64, data_radius: uint256)
 ```
 
 * `enr_seq`: The node's current sequence number of their ENR record
@@ -183,7 +183,7 @@ Response message to Ping(0x01)
 ```
 message_id := 2
 type       := response
-sedes      := Container(enr_seq: uint32, data_radius: uint256)
+sedes      := Container(enr_seq: uint64, data_radius: uint256)
 ```
 
 * `enr_seq`: The node's current sequence number of their ENR record
