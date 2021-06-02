@@ -151,7 +151,7 @@ message_id      := uint8
 encoded_message := bytes
 ```
 
-The `encoded_payload` component is the SSZ encoded payload for the message type as indicated by the `message_id`.  Each message has its own `sedes` which dictates how it should be encoded and decoded.
+The `encoded_message` component is the SSZ encoded payload for the message type as indicated by the `message_id`.  Each message has its own `sedes` which dictates how it should be encoded and decoded.
 
 The SSZ sedes `byte_list` is used to alias `List[uint8, max_length=2048]`.
 
@@ -213,7 +213,7 @@ type       := response
 sedes      := Container(total: uint8, enrs: List[byte_list, max_length=32])
 ```
 
-* `total`: The total number of ENR records being returned.
+* `total`: The total number of `Nodes` response messages being sent.
 * `enrs`: List of bytestrings, each of which is an RLP encoded ENR record.
     * Individual ENR records **MUST** correspond to one of the requested distances.
     * It is invalid to return multiple ENR records for the same `node_id`.
