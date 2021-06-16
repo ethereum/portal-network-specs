@@ -33,11 +33,6 @@ The Portal Network aims to solve this problem by designing our networks so that 
 > Additional watching: https://www.youtube.com/watch?v=MZxqRs_tLNs
 
 
-### JSON-RPC API
-
-The following JSON-RPC API endpoints are intended to be supported by the portal network and exposed by portal clients.
-
-TODO
 
 ## Network Functionality
 
@@ -102,3 +97,84 @@ Stateless transaction validation involves checking accounts' balances and nonces
 - Transaction Gossip:
     - No current spec
     - Prior work: https://ethresear.ch/t/scalable-transaction-gossip/8660
+
+
+## JSON-RPC API
+
+This section documents JSON-RPC API as it relates to portal clients.  Endpoints will fall into one of the following categories.
+
+- supported
+    - The functionality for this endpoint is directly supported by the portal network
+- independent
+    - Serving this endpoint is independent of access to the portal network or may not apply to portal clients
+- optional
+    - It is possible to serve this endpoint using the portal network but it may be infeasible under certain circumstances
+
+Additionally, supported endpoints will have dependencies on one or more of the components of the portal network.
+
+- Chain History
+    - Depends on one historical chain data
+- State Network
+    - Depends on access to recent state data
+- Block Gossip
+    - Depends on the client's current view of the HEAD of the header chain
+- Transaction Gossip
+    - Depends on the client being able to broadcast transactions.
+- Canonical Indices
+    - Depends on the canonical block or transaction indices.
+
+> Note that most "State Network" has an implicit dependency on "Block Gossip" due to the need for clients to know a recent state root.
+
+
+### Endpoints
+
+| Endpoint | Status | Dependencies |
+--- | --- | ---
+| `web3_clientVersion` | Independent | n/a | 
+| `web3_sha3` | Independent | n/a |
+| `net_listening` | Independent | n/a |
+| `net_peerCount` | Independent | n/a |
+| `net_version` | Independent | n/a |
+| `eth_blockNumber` | Supported | Block Gossip |
+| `eth_call` | Supported | State Network |
+| `eth_chainId` | Supported | n/a |
+| `eth_coinbase` | Independent | n/a |
+| `eth_estimateGas` | Supported | State Network |
+| `eth_gasPrice` | Optional | n/a |
+| `eth_feeHistory` | Supported | Chain History |
+| `eth_getBalance` | Supported | State Network | 
+| `eth_getBlockByHash` | Supported | Chain History |
+| `eth_getBlockByNumber` | Supported | Canonical Indices & Chain History |
+| `eth_getBlockTransactionCountByHash` | Supported | Chain History |
+| `eth_getBlockTransactionCountByNumber` | Supported | Canonical Indices & Chain History |
+| `eth_getCode` | Supported | State Network |
+| `eth_getFilterChanges` | Optional | Canonical Indices & Chain History |
+| `eth_getFilterLogs` | Optional | Canonical Indices & Chain History |
+| `eth_getRawTransactionByHash` | Supported | Canonical Indices & Chain History |
+| `eth_getRawTransactionByBlockHashAndIndex` | Supported | Chain History |
+| `eth_getRawTransactionByBlockNumberAndIndex` | Supported | Canonical Indices & Chain History |
+| `eth_getLogs` | Optional | Canonical Indices & Chain History |
+| `eth_getStorageAt` | Supported | State Network |
+| `eth_getTransactionByBlockHashAndIndex` | Supported | Chain History |
+| `eth_getTransactionByBlockNumberAndIndex` | Supported | Canonical Indices & Chain History |
+| `eth_getTransactionByHash` | Supported | Canonical Indices & Chain History |
+| `eth_getTransactionCount` | Supported | State Network |
+| `eth_getTransactionReceipt` | Supported | Canonical Indices & Chain History |
+| `eth_getUncleByBlockHashAndIndex` | Supported | Chain History |
+| `eth_getUncleByBlockNumberAndIndex` | Supported | Canonical Indices & Chain History |
+| `eth_getUncleCountByBlockHash` | Supported | Chain History |
+| `eth_getUncleCountByBlockNumber` | Supported | Canonical Indices & Chain History |
+| `eth_getProof` | Supported | State Network |
+| `eth_getWork` | Independent | n/a |
+| `eth_hashrate` | Independent | n/a |
+| `eth_mining` | Independent | n/a |
+| `eth_newBlockFilter` | Optional | Block Gossip |
+| `eth_newFilter` | Optional | Canonical Independent & Chain History |
+| `eth_newPendingTransactionFilter` | Optional | Transaction Gossip |
+| `eth_pendingTransactions` | Optional | Transaction Gossip |
+| `eth_protocolVersion` | Independent | n/a |
+| `eth_sendRawTransaction` | Supported | Transaction Gossip |
+| `eth_submitHashrate` | Independent | n/a |
+| `eth_submitWork` | Independent | n/a |
+| `eth_syncing` | Optional | n/a |
+| `eth_uninstallFilter` | Optional | n/a |
