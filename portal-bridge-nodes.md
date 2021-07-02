@@ -35,3 +35,9 @@ Bridge nodes push state into the state availability network. They need to be in 
 
 - `bridge_getNextItem(blockHash, '0x0', null)` will return the the lowest (hashed) address, throwing that address back into `bridge_getNextItem` will return the next address.
 	- Returns `null` if there is no next address/slot.
+
+### Experimental API Currently implemented by the Nethermind Bridge Node plugin
+- This API should be considered experimental and expected to change / become deprecated in favor of the above API.
+
+- `bridge_getBlockWitness(blockNumber) -> List[Bytes]`
+	- Returns a list of all RLP-encoded merkle trie values (including contract bytecode) accessed during block execution.
