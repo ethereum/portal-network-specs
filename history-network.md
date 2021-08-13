@@ -6,13 +6,15 @@ This document is a preliminary specification for a networking protocol that supp
 
 Chain history data consists of historical block headers and block bodies, where a block body consists of transactions and transaction receipts.
 
-The data stored in the chain history storage network will support the following [eth](https://github.com/ethereum/devp2p/blob/master/caps/eth.md) protocol requests:
+The data stored in the chain history storage network will indirectly support the following [eth](https://github.com/ethereum/devp2p/blob/master/caps/eth.md) protocol requests:
 
 * `GetBlockHeaders (0x03)`
 * `GetBlockBodies (0x05)`
 * `GetReceipts (0x0f)`
 
-The chain history storage network is a [Kademlia](https://pdos.csail.mit.edu/~petar/papers/maymounkov-kademlia-lncs.pdf) DHT that forms an overlay network on top of a [Discovery v5](https://github.com/ethereum/devp2p/blob/master/discv5/discv5-wire.md) network.
+By indirectly support, we mean that nodes in the network do not serve those requests, but instead collectively store and serve the underlying data necessary to serve those requests.
+
+The chain history storage network is a [Kademlia](https://pdos.csail.mit.edu/~petar/papers/maymounkov-kademlia-lncs.pdf) DHT that forms an overlay network on top of a [Discovery v5](https://github.com/ethereum/devp2p/blob/master/discv5/discv5-wire.md) network. By overlay network, we mean that the history network is a higher level network whose messages are transmitted via the underlying Discovery v5 network's protocol messages.
 
 The history network uses the following protocol messages from the Discovery v5 network:
 
@@ -46,7 +48,7 @@ This specification does not support block lookups by number or transaction looku
 
 ### Data Bridge
 
-Participants in the `eth` protocol are responsible for injecting data into the network. These nodes act as a bridge between the `eth` protocol and the chain history network. Once the data is present within the network, that data is distributed to nodes "close" to that data. We define a notion of distance between some node and some data item below.
+The chain history network obtains data from the `eth` protocol. A "bridge node" is a node that runs a custom piece of software to extract data from the `eth` protocol and inject it into the chain history network. These nodes form a bridge between the `eth` protocol and the chain history network. Once the data is present within the network, that data is distributed to nodes "close" to that data. We define a notion of distance between some node and some data item below.
 
 ### Data Completeness
 In order to ensure that the network holds the entirety of the chain history, a separate process searches for missing data. Upon discovery of some missing data, that node issues a request to a bridge node for that data. The bridge node responds with the data, and it is distributed in the same way that new history is distributed.
@@ -79,7 +81,9 @@ The chain history DHT stores the following data items:
 
 Each of these data items are represented as a key-value pair. Denote the key for a data item by `content-key`. Denote the value for an item as `content`.
 
-We derive a `content-id` from the `content-key` as `H(content-key)` where `H` denotes the [placeholder] hash function, which outputs 32-byte values. The `content-id` represents the key in the DHT that we use for `distance` calculations.
+All `content` items are transmitted as RLP-encoded byte arrays.
+
+We derive a `content-id` from the `content-key` as `H(content-key)` where `H` denotes the SHA-256 hash function, which outputs 32-byte values. The `content-id` represents the key in the DHT that we use for `distance` calculations.
 
 All `content-key` values are encoded and decoded according to SSZ sedes.
 
@@ -139,28 +143,30 @@ protocol-message      = byte array
 
 All `protocol-message` values are encoded and decoded according to SSZ sedes.
 
-If the size of a message would exceed the max packet size of 1280 bytes, then the transmission of the message contents would occur over [uTP](https://github.com/ethereum/stateless-ethereum-specs/blob/master/discv5-utp.md).
+For the transmission of `content` items, the size of `protocol-message` may exceed the max packet size of 1280 bytes. If this occurs, then the transmission of the message contents would occur over [uTP](https://github.com/ethereum/stateless-ethereum-specs/blob/master/discv5-utp.md).
 
 uTP connections are initiated with randomly generated connection IDs. Upon sending a message with some `connection-id`, the sender should initiate a uTP stream using `connection-id`. Upon receiving a message that contains some `connection-id`, the recipient should listen for an incoming uTP connection with `connection-id`.
+
+While the data requested by a `FindNode` message may also exceed the max packet size, `FoundNodes` does not utilize uTP but instead sends multiple response messages.
 
 NOTE: The `Offer`/`Accept`/`Store` messages do not conform to the request/response paradigm of Discovery v5. We plan to propose a change to the base protocol definition to loosen the language.
 
 #### Ping (0x01)
 
-Communicate `radius` information of the sender, and request `radius` information of the recipient.
+Communicate ENR sequence number and `radius` information of the sender, and request the same information of the recipient.
 
 ```
 protocol-message-type = 0x01
-protocol-message      = Container(radius: uint256)
+protocol-message      = Container(enr-seq: uint64, radius: uint256)
 ```
 
 #### Pong (0x02)
 
-In response to a `Ping` message, communicate `radius` information of the sender.
+In response to a `Ping` message, communicate ENR sequence number and `radius` information of the sender.
 
 ```
 protocol-message-type = 0x02
-protocol-message      = Container(radius: uint256)
+protocol-message      = Container(enr-seq: uint64, radius: uint256)
 ```
 
 #### FindNode (0x03)
@@ -183,7 +189,7 @@ protocol-message-type = 0x04
 protocol-message      = Container(total: uint8, enrs: List[Bytes, 32])
 ```
 
-The recipient may know of more than 32 nodes that satisfy the request. In this case, the recipient will need to send multiple `FoundNodes` messages in response to the `FindNode` message.
+The recipient may know of more than 32 nodes that satisfy the request, or the size of `enrs` may exceed the max packet size. In this case, the recipient will need to send multiple `FoundNodes` messages in response to the `FindNode` message.
 
 Here, `total` denotes the total number of `FoundNodes` messages that the sender of the `FindNode` message should expect in response.
 
@@ -210,28 +216,32 @@ In response to a `FindContent` message, communicate one of the following:
 
 ```
 protocol-message-type = 0x06
-protocol-message      = Container(connection-id: Bytes4, enrs: List[Bytes, 32], content: Bytes)
+protocol-message      = Union[connection-id: Bytes4, enrs: List[Bytes, 32], content: Bytes]
 ```
 
-If the node does not hold the requested content, and the node does not know of any nodes with eligible ENR values, then the node should return `connection-id` as a zero byte array, `enrs` as an empty list and `content` as an empty byte-array.
+If the node does not hold the requested content, and the node does not know of any nodes with eligible ENR values, then the node should return `connection-id` as a zero byte array.
 
 #### Offer (0x07)
 
-Communicate to the recipient that the data for `content-key` is available for transmission.
+Communicate to the recipient that the data for each content key in `content-keys` is available for transmission.
 
 ```
 protocol-message-type = 0x07
-protocol-message      = Container(content-key: Bytes)
+protocol-message      = Container(content-keys: List[Bytes, 32])
 ```
+
+Each element in `content-keys` **MUST** be unique.
 
 #### Accept (0x08)
 
-In response to a `Offer` message, request the data for `content-key`.
+In response to a `Offer` message, request the data for each content key in `content-keys`.
 
 ```
 protocol-message-type = 0x08
-protocol-message      = Container(content-key: Bytes)
+protocol-message      = Container(content-keys: List[Bytes, 32])
 ```
+
+`content-keys` **MUST** correspond to a non-empty subset of the `content-keys` field of the associated `Offer` message.
 
 If a node transmits a `Accept` message, then we expect that node to store the corresponding data locally following the subsequent `Store` message.
 
@@ -240,12 +250,16 @@ If a node transmits a `Accept` message, then we expect that node to store the co
 In response to a `Accept` message, communicate one of the following:
 
 * A connection ID for a uTP stream to transmit the requested  data
-* A byte-array that encodes the requested data
+* A byte-array that encodes the requested data in the order requested
 
 ```
 protocol-message-type = 0x09
-protocol-message      = Container(connection-id: Bytes4, content: Bytes)
+protocol-message      = Union[connection-id: Bytes4, content: List[Bytes, 32]]
 ```
+
+The length and ordering of `content` **MUST** match the length and ordering of the `content-keys` field of the associated `Accept` message.
+
+If the sender is unable to transmit the data for one or more elements in the `content-keys` field of the associated `Accept` message, then the sender should populate those coordinates in the list with empty byte arrays.
 
 ## Algorithms and Data Structures
 
