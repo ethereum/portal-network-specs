@@ -297,13 +297,148 @@ Upon *receiving* this message, the serving node should initiate a uTP stream.
 
 ## Gossip
 
-The state network will use multiple different mechanism to satisfy the various needs for distributing and replicating data around the network.
+The state network will use a multi stage mechanism to store new and updated state data.
 
-### Definitions
+### Overview
 
-#### **state witness**
+The state data is stored in the network in two formats.
 
-The term *"state witness"* refers to the collection of state data under a single `Header.state_root`:
+- A: Trie nodes
+    - Individual leaf and intermediate trie nodes.
+    - Gossiped with a proof against a recent state root
+    - Stored without a proof not anchored to a specific state root
+- B: Leaf proofs
+    - Contiguous sections of leaf data
+    - Gossiped and stored with a proof against a specific state root
+    - Proof is continually updated to latest state root
+
+The state data first enters the network as trie nodes which are then used to populate and update the leaf proofs.
+
+### Terminology
+
+We define the following terms when referring to state data.  
+
+> The diagrams below use a binary trie for visual simplicity. The same
+> definitions naturally extend to the hexary patricia trie.
+
+
+```
+0:                           X
+                            / \
+                          /     \
+                        /         \
+                      /             \
+                    /                 \
+                  /                     \
+                /                         \
+1:             0                           1
+             /   \                       /   \
+           /       \                   /       \
+         /           \               /           \
+2:      0             1             0             1
+       / \           / \           / \           / \
+      /   \         /   \         /   \         /   \
+3:   0     1       0     1       0     1       0     1
+    / \   / \     / \   / \     / \   / \     / \   / \
+4: 0   1 0   1   0   1 0   1   0   1 0   1   0   1 0   1
+```
+
+
+#### *"state root"*
+    
+The node labeled `X` in the diagram.
+
+#### *"trie node"*
+
+Any of the individual nodes in the trie.
+
+#### *"intermediate node"*
+
+Any of the nodes in the trie which are computed from other nodes in the trie.  The nodes in the diagram at levels 0, 1, 2, and 3 are all intermediate.
+
+#### *"leaf node"*
+
+Any node in the trie that represents a value stored in the trie.  The nodes in the diagram at level 4 are leaf nodes.
+
+#### *"leaf proof"*
+
+The merkle proof which contains a leaf node and the intermediate trie nodes necessary to compute the state root of the trie.
+
+
+
+### Stages
+
+The gossip mechanism is divided up into individual stages which are designed to
+ensure that each individual piece of data is properly disceminated to the DHT
+nodes responsible for storing it, as well as spreading the responsibility as
+evenly as possible across the DHT.
+
+The stages are:
+
+- Stage 1:
+    - Bridge node generates a proof of all new and updated state data from the most recent block and initiates gossip of the individual trie nodes.
+- Stage 2:
+    - DHT nodes receiving trie nodes perform *neighborhood gossip* to spread the data to nearby interested DHT nodes.
+    - DHT nodes receiving trie nodes extract the trie nodes from the anchor proof to perform *recursive gossip*.
+    - DHT nodes receiving "leaf" nodes initiate gossip of the leaf proofs (for stage 3)
+- Stage 3:
+    - DHT nodes receiving leaf proofs perform *neighborhood gossip* to spread the data to nearby interested DHT nodes.
+
+
+```
+    +-------------------------+
+    | Stage 1: data ingress   |
+    +-------------------------+
+    |                         |
+    | Bridge node initializes |
+    | trie node gossip        |
+    |                         |
+    +-------------------------+
+            |
+            v
+    +---------------------------+
+    | Stage 2: trie nodes       |
+    +---------------------------+
+    |                           |
+    | A: neighborhood gossip of |
+    |    trie node and proof    |
+    |                           |
+    | B: initialization of      |
+    |    gossip for proof trie  |
+    |    nodes.                 |
+    |                           |
+    | C: initialization of      |
+    |    leaf proof gossip      |
+    |                           |
+    +---------------------------+
+            |
+            v
+    +----------------------------+
+    | Stage 3: leaf proofs       |
+    +----------------------------+
+    |                            |
+    | neighborhood gossip of     |
+    | leaf proofs                |
+    |                            |
+    +----------------------------+
+
+```
+
+
+In this context the term "neighborhood gossip" refers to a DHT node
+re-distributed data that they were interested in to the DHT nodes nearby who
+are also interested.
+
+The phrase "initialization of XXX gossip" refers to finding the DHT nodes that
+are responsible for XXX and offering the data to them.
+
+
+#### Stage 1: Data Ingress
+
+
+The first stage of gossip is performed by a bridge node. Each time a new block
+is added to their view of the chain, a set of merkle proofs which are all
+anchored to `Header.state_root` is generated which contains.
 
 - Account trie Data:
     - All of the intermediate and leaf trie nodes from the account trie necessary to prove new and modified accounts.
@@ -313,43 +448,58 @@ The term *"state witness"* refers to the collection of state data under a single
     - All of the intermediate and leaf trie nodes from each contract storage trie necessary for exclusion proofs for zero'd storage slots.
 - All contract bytecode for newly created contracts
 
-#### leaf trie nodes
+> TODO: Figure out language for defining which trie nodes from this proof the bridge node must initialize gossip.
 
-The nodes in the trie which represent the actual data stored in the trie.  These are `Account` objects for the global state trie and storage slot values for the individual contract storage tries.
 
-#### intermediate trie nodes
+#### Stage 2A
 
-The nodes in the trie which are computed from the "leaf" nodes.
 
-#### proof edge nodes
+When individual trie nodes are gossiped they will be transmitted as both the trie node itself, and the additional proof nodes necessary to prove the trie node against a recent state root.
 
-The trie nodes from a merkle proof that cannot be computed from other trie nodes in that proof.  This can include both leaf and intermediate trie nodes.
+Upon receipt of this data a DHT will perform *neighborhood* gossip to nearby nodes from their routing table.
 
-#### minimal proof
+#### Stage 2B
 
-A merkle proof that contains the minimal set of trie nodes necessary to prove one or more values in the trie.  The values being proven can be either *leaf* or *intermediate*
+When individual trie nodes are gossiped, the receiving node is responsible for initializing gossip for some of the trie nodes contained in the accompanying proof.
 
-#### "bridge" node
+This diagram illustrates the proof for the trie node under the path `0011`.  
 
-A DHT node in the network that is actively injecting new data into the network.  In most cases this data will be pulled from a fully synced "full" node.k
+```
+0:                           X
+                            / \
+                          /     \
+                        /         \
+                      /             \
+                    /                 \
+                  /                     \
+                /                         \
+1:             0                           1
+             /   \
+           /       \
+         /           \
+2:      0             1
+       / \
+      /   \
+3:   0     1
+          / \
+4:       0  (1)
+```
 
-#### trie node storage location
+Note that it also includes the intermediate trie nodes under the paths:
 
-The DHT storage location (aka `content_id`) for either an individual account trie node or a contract storage trie node.  These are used for `GetNodeData` style retrieval of trie data.
+- `000`
+- `001`
+- `00`
+- `01`
+- `0`
+- `1`
+- `X`
 
-#### trie proof storage location
+The gossip payload for the trie node at `0011` will contain these trie nodes as a proof.
 
-The DHT storage location (aka `content_id`) where a full proof against a leaf value.  These are used for `O(1)` direct access to leaf data.
 
-### Initialization of gossip
+#### Stage 3
 
-- Compute the trie node storage location, aka the `content_id`.
-- Lookup DHT nodes for which the `content_id` falls within the nodes area of interest.
-- Use the OFFER (0x07) / ACCEPT (0x08) messages to provide the data to the interested nodes.
-
-### Recursive propogation of Gossip
-
-Upon receiving new data, a node will use OFFER (0x07) / ACCEPT (0x08) to spread that data to peers from their routing table for whom the data falls within their area of interest.  This is a recursive process that continues until either a node has sent the data to enough peers, or it has been offered to all known peers.
 
 
 ### Distributing New State Data
