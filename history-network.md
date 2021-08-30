@@ -8,15 +8,6 @@ Chain history data consists of historical block headers, block bodies (transacti
 
 The chain history storage network is a [Kademlia](https://pdos.csail.mit.edu/~petar/papers/maymounkov-kademlia-lncs.pdf) DHT that forms an overlay network on top of the [Discovery v5](https://github.com/ethereum/devp2p/blob/master/discv5/discv5-wire.md) network. The term *overlay network* means that the history network operates with its own independent routing table and uses the extensible `TALKREQ` and `TALKRESP` messages from the base Discovery v5 protocol for communication.
 
-The history network uses the following protocol messages from the Discovery v5 network:
-
-* `PING (0x01)`
-* `PONG (0x02)`
-* `FINDNODE (0x03)`
-* `NODES (0x04)`
-* `TALKREQ (0x05)`
-* `TALKRESP (0x06)`
-
 The `TALKREQ` and `TALKRESP` protocol messages are application-level messages whose contents are specific to the history protocol. We specify these messages below.
 
 The history protocol uses the node table structure from the Discovery v5 network and the lookup algorithm from section 2.3 of the Kademlia paper.
