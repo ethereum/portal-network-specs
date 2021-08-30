@@ -1,14 +1,14 @@
-# State Availability Network
+# Portal Network: State Network
 
-This document is intended to serve as a preliminary specification for the networking protocols needed to support on-demand availability of the Ethereum "State".
+This document is the specification for the "State" portion of the portal network.
 
 ## Definition of "State"
 
 We define the Ethereum "State" to be the collection of:
 
 - Accounts and intermediate trie data from the main account trie referenced by `Header.state_root`
-- The set of all contract storage values and intermediate trie data referenced by `Account.state_root`
-- The set of all contract bytecodes referenced by `Account.code_hash`
+- The set of all contract storage values from all contracts
+- The set of all contract bytecodes
 
 ## Overview
 
@@ -29,7 +29,7 @@ We solve B with a structured gossip algorithm that distributes the individual tr
 
 Our DHT will be an overlay network on the existing [Discovery V5](https://github.com/ethereum/devp2p/blob/master/discv5/discv5.md) network.
 
-The identifier `0xTODO` will be used as the `protocol_id` for TALKREQ and TALKRESP messages.
+The identifier `portal-state` will be used as the `protocol_id` for TALKREQ and TALKRESP messages.
 
 Nodes **must** support the `utp` Discovery v5 protocol to facilitate transmission of merkle proofs which will in most cases exceed the UDP packet size.
 
@@ -47,26 +47,34 @@ All content keys are the concatenation of a 1-byte `content_type` and a serializ
 
 We define a custom SSZ sedes alias `Nibbles` to mean `List[uint8, max_length=64]` where each individual value **must** be constrained to a valid "nibbles" value of `0 - 15`.
 
-#### Account Trie Nodes
+#### Account Trie Node (0x00)
+
+An individual trie node from the main account trie.
 
 > TODO: consult on best way to define trie paths
 ```
 0x00 | Container(path: Nibbles, node_hash: bytes32, state_root: bytes32)
 
 content_id := sha256(path | node_hash)
+path       := TODO
 
 ```
 
-#### Contract Storage Trie Nodes
+#### Contract Storage Trie Node
+
+An individual trie node from a contract storage trie.
 
 ```
 0x01 | Container(address: bytes20, path: Nibbles, node_hash: bytes32, state_root: bytes32)
 
 content_id := sha256(address | path | node_hash)
+path       := TODO
 ```
 
 
 #### Account Trie Proof
+
+A leaf node from the main account trie and accompanying merkle proof against a recent `Header.state_root`
 
 ```
 0x02 | Container(address: bytes20, state_root: bytes32)
@@ -77,6 +85,8 @@ content_id := keccak(address)
 
 #### Contract Storage Trie Proof
 
+A leaf node from a contract storage trie and accompanying merkle proof against the `Account.storage_root`.
+
 ```
 0x03 | Container(address: bytes20, slot: uint256, state_root: bytes32)
 
@@ -84,6 +94,8 @@ content_id := (keccak(address) + keccak(slot)) % 2**256
 ```
 
 #### Contract Bytecode
+
+The bytecode for a specific contract as referenced by `Account.code_hash`
 
 ```
 0x04 | Container(address: bytes20, code_hash: bytes32)
@@ -450,17 +462,20 @@ anchored to `Header.state_root` is generated which contains.
 
 > TODO: Figure out language for defining which trie nodes from this proof the bridge node must initialize gossip.
 
+> TODO: Determine mechanism for contract code.
 
-#### Stage 2A
+
+#### Stage 2A: Neighborhood Trie Node Gossip
 
 
 When individual trie nodes are gossiped they will be transmitted as both the trie node itself, and the additional proof nodes necessary to prove the trie node against a recent state root.
 
-Upon receipt of this data a DHT will perform *neighborhood* gossip to nearby nodes from their routing table.
+The receiving DHT node will perform *neighborhood* gossip to nearby nodes from their routing table.
 
-#### Stage 2B
 
-When individual trie nodes are gossiped, the receiving node is responsible for initializing gossip for some of the trie nodes contained in the accompanying proof.
+#### Stage 2B: Recursive Trie Node Gossip
+
+When individual trie nodes are gossiped, the receiving node is responsible for initializing gossip for other trie nodes contained in the accompanying proof.
 
 This diagram illustrates the proof for the trie node under the path `0011`.  
 
@@ -483,6 +498,7 @@ This diagram illustrates the proof for the trie node under the path `0011`.
 3:   0     1
           / \
 4:       0  (1)
+
 ```
 
 Note that it also includes the intermediate trie nodes under the paths:
@@ -495,49 +511,55 @@ Note that it also includes the intermediate trie nodes under the paths:
 - `1`
 - `X`
 
-The gossip payload for the trie node at `0011` will contain these trie nodes as a proof.
+The gossip payload for the trie node at `0011` will contain these trie nodes as a proof.  Upon receipt of this trie node and proof, the receiving DHT node will extract the proof for the intermediate node under the path `001` which is the direct parent of the main trie node currently being gossiped.  This proof would be visualized as follows:
 
 
-#### Stage 3
+```
+0:                           X
+                            / \
+                          /     \
+                        /         \
+                      /             \
+                    /                 \
+                  /                     \
+                /                         \
+1:             0                           1
+             /   \
+           /       \
+         /           \
+2:      0             1
+       / \
+      /   \
+3:   0    (1)
+
+4:
+
+```
+
+The DHT node would then *initialize* gossip for the trie node under the path `001`, using this new slimmed down proof to anchor to the same state root.  This process continues until it reaches the state root where it naturally terminates.  We refer to this as *recursive trie node* gossip.
+
+#### Stage 2C: Initialization Of Leaf Proof Gossip
+
+When receiving an individual trie node which represents a "leaf" node in the trie, the combined leaf node and proof are equivalent to a *"leaf proof"*.  The DHT node receiving this data in the form of "trie node" data is responsible for *initializing gossip* for the same data as a *"leaf proof"*.
+
+#### Stage 3: Neighborhood *"Leaf Proof"* Gossip
+
+When receiving a *"leaf proof"* over gossip, a DHT node will perform *"neighborhood gossip"* to nearby nodes from their routing table.
 
 
+### Updating cold Leaf Proofs
 
-### Distributing New State Data
+Anytime the state root changes for either the main account trie or a contract storage trie, every leaf proof under that root will need to be updated.  The primary gossip mechanism will ensure that leaf data that was added, modified, or removed will receive and updated proof.  However, we need a mechanism for updating the leaf proofs for "cold" data that has not been changed.
 
-The state network uses "structured" gossip to push new state data into the storage of individual DHT nodes.  This process happens in the following stages.
+Each time a new block is added to the chain, the DHT nodes storing leaf proof data will need to perform a walk of the trie starting at the state root.  This walk of the trie will be directed towards the slice of the trie dictated by the set of leaves that the node is storing.  As the trie is walked it should be compared to the previous proof from the previous state root.  This walk concludes once the node has fully connected the leaf data from there previous proof to the new state root.
 
+> TODO: reverse diffs and storing only the latest proof.
 
-#### Stage 1: Initial dissemination of edge node data.
-
-1. A *bridge node* builds a *state witness* for the most recent block.
-2. Individual *minimal proofs* are extracted for each *edge node* in the *state witness*
-3. For each *edge node* and corresponding proof the bridge node will *initialize gossip*.
+> TODO: gossiping proof updates to neighbors to reduce duplicate work.
 
 
-#### Stage 2a: Neighbor gossip of trie node data
+### POKE: Actively disceminating data and replication of popular data
 
-Any DHT node in the network which receives an account or contract storage trie node will also receive an accompanying proof anchoring that data to the `Header.state_root` or `Account.storage_root`.  Upon receiving this data, the node is then responsible for offering that same data to the DHT nodes in their routing table for which the `content_id` falls within the neighbor's area of interest.
+When a DHT node in the network is retrieving some piece of data they will perform a "recursive find" using the FINDCONTENT (0x05) and FOUNDCONTENT (0x06) messages.  During the course of this recursive find, they may encounter nodes along the search path which did not have the content but for which the content does fall within their radius.
 
-#### Stage 2b: Recursive gossip of parent trie node data
-
-Upon receiving trie node data and the corresponding proof, a DHT node is responsible for initiating gossip for the trie nodes one level above the received trie data.  For each node in the received proof one level above the received trie data, the DHT node will *initialize gossip*.
-
-The process continues until its natural termination point once the `Header.state_root` node has been gossiped.
-
-#### Stage 2c: Leaf proof gossip
-
-Upon receiving a leaf node and corresponding proof, a DHT node is responsible for *initiating gossip* for the storage of the O(1) trie proof.  While this node has received the data in the format of a trie node, they will be treating it as a full trie proof, and *initializing gossip* for the alternate storage location of the O(1) trie proof.
-
-#### Stage 3: Leaf proof neighborhood gossip
-
-Upon receiving an O(1) trie proof, a DHT node will do the neighborhood gossip.
-
-> TODO: 3: bridge nodes need to do gossip for contract bytecodes
-
-
-
-### POKE
-
-> TODO: Discribe this mechanism
-
-
+When a DHT encounters this situation, and successfully retrieves the content from some other node, they should gossip the content to those nodes that should be interested.  This mechanism is designed to help spread content to nodes that may not yet be aware of it.
