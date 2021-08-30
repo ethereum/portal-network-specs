@@ -4,17 +4,9 @@ This document is a preliminary specification for a networking protocol that supp
 
 ## Overview
 
-Chain history data consists of historical block headers and block bodies, where a block body consists of transactions and transaction receipts.
+Chain history data consists of historical block headers, block bodies (transactions and omners), and receipts.
 
-The data stored in the chain history storage network will indirectly support the following [eth](https://github.com/ethereum/devp2p/blob/master/caps/eth.md) protocol requests:
-
-* `GetBlockHeaders (0x03)`
-* `GetBlockBodies (0x05)`
-* `GetReceipts (0x0f)`
-
-By indirectly support, we mean that nodes in the network do not serve those requests, but instead collectively store and serve the underlying data necessary to serve those requests.
-
-The chain history storage network is a [Kademlia](https://pdos.csail.mit.edu/~petar/papers/maymounkov-kademlia-lncs.pdf) DHT that forms an overlay network on top of a [Discovery v5](https://github.com/ethereum/devp2p/blob/master/discv5/discv5-wire.md) network. By overlay network, we mean that the history network is a higher level network whose messages are transmitted via the underlying Discovery v5 network's protocol messages.
+The chain history storage network is a [Kademlia](https://pdos.csail.mit.edu/~petar/papers/maymounkov-kademlia-lncs.pdf) DHT that forms an overlay network on top of the [Discovery v5](https://github.com/ethereum/devp2p/blob/master/discv5/discv5-wire.md) network. The term *overlay network* means that the history network operates with its own independent routing table and uses the extensible `TALKREQ` and `TALKRESP` messages from the base Discovery v5 protocol for communication.
 
 The history network uses the following protocol messages from the Discovery v5 network:
 
@@ -36,7 +28,8 @@ Types:
 * Block headers
 * Block bodies
     * Transactions
-    * Receipts
+    * Omners
+* Receipts
 
 Lookups:
 
@@ -45,13 +38,6 @@ Lookups:
 * Block receipts by block header hash
 
 This specification does not support block lookups by number or transaction lookups by hash. To support these lookups, we will require a specification for a block header accumulator so that we can return the canonical block for a given height or the transaction for a given hash included in some canonical block.
-
-### Data Bridge
-
-The chain history network obtains data from the `eth` protocol. A "bridge node" is a node that runs a custom piece of software to extract data from the `eth` protocol and inject it into the chain history network. These nodes form a bridge between the `eth` protocol and the chain history network. Once the data is present within the network, that data is distributed to nodes "close" to that data. We define a notion of distance between some node and some data item below.
-
-### Data Completeness
-In order to ensure that the network holds the entirety of the chain history, a separate process searches for missing data. Upon discovery of some missing data, that node issues a request to a bridge node for that data. The bridge node responds with the data, and it is distributed in the same way that new history is distributed.
 
 ## Specification
 
@@ -193,7 +179,7 @@ The recipient may know of more than 32 nodes that satisfy the request, or the si
 
 Here, `total` denotes the total number of `FoundNodes` messages that the sender of the `FindNode` message should expect in response.
 
-Each ENR **MUST** be unique to some `node-id`. Each ENR **MUST** correspond to an element in the `distances` field of the `FindNode` request.
+The mapping from ENR values to `node-id` values **MUST** be one-to-one. Each ENR **MUST** correspond to an element in the `distances` field of the `FindNode` request.
 
 #### FindContent (0x05)
 
@@ -216,10 +202,10 @@ In response to a `FindContent` message, communicate one of the following:
 
 ```
 protocol-message-type = 0x06
-protocol-message      = Union[connection-id: Bytes4, enrs: List[Bytes, 32], content: Bytes]
+protocol-message      = Union[connection-id: Bytes2, enrs: List[Bytes, 32], content: Bytes]
 ```
 
-If the node does not hold the requested content, and the node does not know of any nodes with eligible ENR values, then the node should return `connection-id` as a zero byte array.
+If the node does not hold the requested content, and the node does not know of any nodes with eligible ENR values, then the node should return `enrs` as an empty list.
 
 #### Offer (0x07)
 
@@ -234,14 +220,14 @@ Each element in `content-keys` **MUST** be unique.
 
 #### Accept (0x08)
 
-In response to a `Offer` message, request the data for each content key in `content-keys`.
+In response to a `Offer` message, request the data for a subset of the offered content keys.
 
 ```
 protocol-message-type = 0x08
-protocol-message      = Container(content-keys: List[Bytes, 32])
+protocol-message      = Container(content-keys: Bitlist[32])
 ```
 
-`content-keys` **MUST** correspond to a non-empty subset of the `content-keys` field of the associated `Offer` message.
+The length of `content-keys` **MUST** be equal to the length of the `content-keys` field of the associated `Offer` message. The sender sets `content-keys[i]` equal to `1` to request the data that corresponds to coordinate `i` in the list of offered content keys.
 
 If a node transmits a `Accept` message, then we expect that node to store the corresponding data locally following the subsequent `Store` message.
 
@@ -250,16 +236,16 @@ If a node transmits a `Accept` message, then we expect that node to store the co
 In response to a `Accept` message, communicate one of the following:
 
 * A connection ID for a uTP stream to transmit the requested  data
-* A byte-array that encodes the requested data in the order requested
+* A byte-array that encodes the requested data
 
 ```
 protocol-message-type = 0x09
-protocol-message      = Union[connection-id: Bytes4, content: List[Bytes, 32]]
+protocol-message      = Union[connection-id: Bytes2, content: List[Bytes, 32]]
 ```
 
 The length and ordering of `content` **MUST** match the length and ordering of the `content-keys` field of the associated `Accept` message.
 
-If the sender is unable to transmit the data for one or more elements in the `content-keys` field of the associated `Accept` message, then the sender should populate those coordinates in the list with empty byte arrays.
+If the data for `content-keys[i]` was not requested, or if the sender is unable to transmit that data, then the sender should populate `content[i]` with an empty byte array.
 
 ## Algorithms and Data Structures
 
