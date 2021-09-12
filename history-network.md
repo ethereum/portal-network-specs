@@ -60,9 +60,19 @@ Each of these data items are represented as a key-value pair. Denote the key for
 
 All `content` items are transmitted as RLP-encoded byte arrays.
 
-We derive a `content-id` from the `content-key` as `H(content-key)` where `H` denotes the SHA-256 hash function, which outputs 32-byte values. The `content-id` represents the key in the DHT that we use for `distance` calculations.
-
 All `content-key` values are encoded and decoded according to SSZ sedes.
+
+In addition to the `content-key`, each piece of `content` has a corresponding `content-id`. The `content-id` is the 32 byte value that we use (along with the `node-id`) for `distance` calculations.
+
+We derive a `content-id` from the `content-key` as follows:
+
+  1.) If the `content-key` has `content-type` 0x04, change the `content-type` to 0x02 and remove the `transaction-hash` field.
+  2.) Calculate `H(content-key)` where `H` denotes the SHA-256 hash function.
+
+Step 1 is done so that a `content-key` for a single transaction maps to the `content-id` for the entire block body that contains this transaction.
+The individual transaction can then be retrieved from the block. Otherwise the network would need to store each transaction twice: individually, as well as in a block body.
+
+The `content-key` format for retrieving each type of `content` are as follows:
 
 #### Block Header
 
@@ -83,6 +93,13 @@ content-type = 0x02
 ```
 content-key  = Container(chain-id: uint16, content-type: uint8, block-hash: Bytes32)
 content-type = 0x03
+```
+
+#### Transactions
+
+```
+content-key = Container(chain-id: uint16, content-type: uint8, block-hash: Bytes32, transaction-hash: Bytes32)
+content-type = 0x04
 ```
 
 ### Radius
