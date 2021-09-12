@@ -69,10 +69,9 @@ We derive a `content-id` from the `content-key` as follows:
   1.) If the `content-key` has `content-type` 0x04, change the `content-type` to 0x02 and remove the `transaction-hash` field.
   2.) Calculate `H(content-key)` where `H` denotes the SHA-256 hash function.
 
-Step 1 is done so that a `content-key` for a single transaction maps to the `content-id` for the entire block body that contains this transaction.
-The individual transaction can then be retrieved from the block. Otherwise the network would need to store each transaction twice: individually, as well as in a block body.
+Step 1 is done so that a `content-key` for a single transaction maps to the same `content-id` as the entire block body that contains the desired transaction. The individual transaction can then be retrieved and sent over the wire by itself. Otherwise the network would need to store each transaction twice: individually, as well as within the block body. This, along with the required inclusion proofs, would roughly triple the required network storage space.
 
-The `content-key` format for retrieving each type of `content` are as follows:
+The `content-key` format for retrieving each type of `content` are defined as follows:
 
 #### Block Header
 
