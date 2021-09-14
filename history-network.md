@@ -120,13 +120,11 @@ protocol-message      = byte array
 
 All `protocol-message` values are encoded and decoded according to SSZ sedes.
 
-For the transmission of `content` items, the size of `protocol-message` may exceed the max packet size of 1280 bytes. If this occurs, then the transmission of the message contents would occur over [uTP](https://github.com/ethereum/stateless-ethereum-specs/blob/master/discv5-utp.md).
+The transmission of `content` items occurs over [uTP](https://github.com/ethereum/stateless-ethereum-specs/blob/master/discv5-utp.md).
 
 uTP connections are initiated with randomly generated connection IDs. Upon sending a message with some `connection-id`, the sender should initiate a uTP stream using `connection-id`. Upon receiving a message that contains some `connection-id`, the recipient should listen for an incoming uTP connection with `connection-id`.
 
-While the data requested by a `FindNode` message may also exceed the max packet size, `FoundNodes` does not utilize uTP but instead sends multiple response messages.
-
-NOTE: The `Offer`/`Accept`/`Store` messages do not conform to the request/response paradigm of Discovery v5. We plan to propose a change to the base protocol definition to loosen the language.
+While the data requested by a `FindNode` message may exceed the max packet size, `FoundNodes` does not utilize uTP but instead sends multiple response messages.
 
 #### Ping (0x01)
 
@@ -215,28 +213,10 @@ In response to a `Offer` message, request the data for a subset of the offered c
 
 ```
 protocol-message-type = 0x08
-protocol-message      = Container(content-keys: Bitlist[32])
+protocol-message      = Container(connection-id: Bytes2, content-keys: Bitlist[32])
 ```
 
 The length of `content-keys` **MUST** be equal to the length of the `content-keys` field of the associated `Offer` message. The sender sets `content-keys[i]` equal to `1` to request the data that corresponds to coordinate `i` in the list of offered content keys.
-
-If a node transmits a `Accept` message, then we expect that node to store the corresponding data locally following the subsequent `Store` message.
-
-#### Store (0x09)
-
-In response to a `Accept` message, communicate one of the following:
-
-* A connection ID for a uTP stream to transmit the requested  data
-* A byte-array that encodes the requested data
-
-```
-protocol-message-type = 0x09
-protocol-message      = Union[connection-id: Bytes2, content: List[Bytes, 32]]
-```
-
-The length and ordering of `content` **MUST** match the length and ordering of the `content-keys` field of the associated `Accept` message.
-
-If the data for `content-keys[i]` was not requested, or if the sender is unable to transmit that data, then the sender should populate `content[i]` with an empty byte array.
 
 ## Algorithms and Data Structures
 
@@ -286,6 +266,6 @@ To find a piece of content for `content-id`, a node performs a content lookup vi
 
 ### Storing Content
 
-To store a piece of content with key `content-id`, a node performs a lookup to find the `k` closest nodes with radii that contain `content-id`. Then the node sends `Offer` RPCs to those nodes. For any node that responds to the `Offer` RPC with a `Accept` RPC, the local node responds with a `Store` RPC for the content.
+To store a piece of content with key `content-id`, a node performs a lookup to find the `k` closest nodes with radii that contain `content-id`. Then the node sends `Offer` RPCs to those nodes. For any node that responds to the `Offer` RPC with a `Accept` RPC, the local node attempts to transmit the content over the uTP connection with the `connection-id` from the `Accept` RPC.
 
-The network cannot make guarantees about the storage of particular content. A lazy node may ignore all `Offer` RPCs. A malicious node may send `Accept` RPCs and ignore the `Store` RPCs. The offer-accept mechanism is in place to require that nodes explicitly accept some data before another node attempts to transmit that data. The mechanism prevents the unnecessary consumption of bandwidth in the presence of lazy nodes. However, it does not defend against malicious nodes who accept offers for data with no intent to store it.
+The network cannot make guarantees about the storage of particular content. A lazy node may ignore all `Offer` RPCs. A malicious node may send `Accept` RPCs and ignore the data transmissions. The offer-accept mechanism is in place to require that nodes explicitly accept some data before another node attempts to transmit that data. The mechanism prevents the unnecessary consumption of bandwidth in the presence of lazy nodes. However, it does not defend against malicious nodes who accept offers for data with no intent to store it.
