@@ -262,10 +262,10 @@ Following the join phase, a node's k-buckets are generally kept fresh by network
 
 ### Finding Content
 
-To find a piece of content for `content-id`, a node performs a content lookup via `FindContent`. If the lookup succeeds, then the requestor sends a `Offer` message for the content to the closest node it observed that did not return the value and whose `radius` contains `content-id`.
+To find a piece of content for `content-id`, a node performs a content lookup via `FindContent`. If the lookup succeeds, then the requestor sends an `Offer` message for the content to the closest node it observed that did not return the value and whose `radius` contains `content-id`.
 
 ### Storing Content
 
-To store a piece of content with key `content-id`, a node performs a lookup to find the `k` closest nodes with radii that contain `content-id`. Then the node sends `Offer` RPCs to those nodes. For any node that responds to the `Offer` RPC with a `Accept` RPC, the local node attempts to transmit the content over the uTP connection with the `connection-id` from the `Accept` RPC.
+To store a piece of content with key `content-id`, a node performs a lookup to find the `k` closest nodes with radii that contain `content-id`. Then the node sends `Offer` messages to those nodes. For any node that responds to the `Offer` message with an `Accept` message, the local node attempts to transmit the content over the uTP connection with the `connection-id` from the `Accept` message.
 
-The network cannot make guarantees about the storage of particular content. A lazy node may ignore all `Offer` RPCs. A malicious node may send `Accept` RPCs and ignore the data transmissions. The offer-accept mechanism is in place to require that nodes explicitly accept some data before another node attempts to transmit that data. The mechanism prevents the unnecessary consumption of bandwidth in the presence of lazy nodes. However, it does not defend against malicious nodes who accept offers for data with no intent to store it.
+The network cannot make guarantees about the storage of particular content. A lazy node may ignore all `Offer` messages. A malicious node may send `Accept` messages and ignore the data transmissions. The offer-accept mechanism is in place to require that nodes explicitly accept some data before another node attempts to transmit that data. The mechanism prevents the unnecessary consumption of bandwidth in the presence of lazy nodes. However, it does not defend against malicious nodes who accept offers for data with no intent to store it.
