@@ -266,6 +266,6 @@ To find a piece of content for `content-id`, a node performs a content lookup vi
 
 ### Storing Content
 
-To store a piece of content with key `content-id`, a node performs a lookup to find the `k` closest nodes with radii that contain `content-id`. Then the node sends `Offer` messages to those nodes. For any node that responds to the `Offer` message with an `Accept` message, the local node attempts to transmit the content over the uTP connection with the `connection-id` from the `Accept` message.
+To store a piece of content with DHT key `content-id`, a node performs a lookup to find the `k` closest nodes with radii that contain `content-id`. Then the node sends `Offer` messages to those nodes. For any node that responds to the `Offer` message with an `Accept` message, the local node attempts to transmit the content over the uTP connection with the `connection-id` from the `Accept` message.
 
 The network cannot make guarantees about the storage of particular content. A lazy node may ignore all `Offer` messages. A malicious node may send `Accept` messages and ignore the data transmissions. The offer-accept mechanism is in place to require that nodes explicitly accept some data before another node attempts to transmit that data. The mechanism prevents the unnecessary consumption of bandwidth in the presence of lazy nodes. However, it does not defend against malicious nodes who accept offers for data with no intent to store it.
