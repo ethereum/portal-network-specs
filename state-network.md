@@ -6,9 +6,10 @@ This document is the specification for the "State" portion of the portal network
 
 We define the Ethereum "State" to be the collection of:
 
-- Accounts and intermediate trie data from the main account trie referenced by `Header.state_root`
+- The set of all accounts from the main account trie referenced by `Header.state_root`
 - The set of all contract storage values from all contracts
 - The set of all contract bytecodes
+- Any information required to prove inclusion of the above data in the state.
 
 ## Overview
 
@@ -29,17 +30,23 @@ We solve B with a structured gossip algorithm that distributes the individual tr
 
 Our DHT will be an overlay network on the existing [Discovery V5](https://github.com/ethereum/devp2p/blob/master/discv5/discv5.md) network.
 
-The identifier `portal-state` will be used as the `protocol_id` for TALKREQ and TALKRESP messages.
+The identifier `portal-state` will be used as the `protocol_id` for TALKREQ and TALKRESP messages from the base discovery v5 protocol.
 
-Nodes **must** support the `utp` Discovery v5 protocol to facilitate transmission of merkle proofs which will in most cases exceed the UDP packet size.
+Nodes **must** support the `utp` Discovery v5 sub-protocol to facilitate transmission of merkle proofs which will in most cases exceed the UDP packet size.
 
 We use a custom distance function defined below.
 
 We use the same routing table structure as the core protocol.  The routing table must use the custom distance function defined below.
 
-We use the same PING/PONG/FINDNODES/NODES messaging rules as the core protocol.
+A separate instance of the routing table must be maintained for the state network, independent of the base routing table managed by the base discovery v5 protocol, only containing nodes that support the `portal-state` sub-protocol.  We refer to this as the *"overlay routing table"*.
+
+We use custom PING/PONG/FINDNODES/NODES messages which are transmitted over the TALKREQ/TALKRESP messages from the base discovery v5 protocol.
+
+We use the same PING/PONG/FINDNODES/NODES rules from base discovery v5 protocol for management of the overlay routing table.
 
 ### Content Keys and Content IDs
+
+Content keys are used to request a specific package of data from a peer. Content IDs are used to identify the location in the network where the content is located.
 
 The network supports the following schemes for addressing different types of content.
 
@@ -47,17 +54,20 @@ All content keys are the concatenation of a 1-byte `content_type` and a serializ
 
 We define a custom SSZ sedes alias `Nibbles` to mean `List[uint8, max_length=64]` where each individual value **must** be constrained to a valid "nibbles" value of `0 - 15`.
 
+> TODO: we may want to use a more efficient definition for the `Nibbles` encoding.  Current approach incurs 2x overhead.
+
 #### Account Trie Node (0x00)
 
 An individual trie node from the main account trie.
 
 > TODO: consult on best way to define trie paths
 ```
-0x00 | Container(path: Nibbles, node_hash: bytes32, state_root: bytes32)
+content_key := 0x00 | Container(path: Nibbles, node_hash: bytes32, state_root: bytes32)
 
-content_id := sha256(path | node_hash)
-path       := TODO
-
+content_id  := sha256(path | node_hash)
+node_hash   := bytes32
+state_root  := bytes32
+path        := TODO
 ```
 
 #### Contract Storage Trie Node
@@ -65,10 +75,12 @@ path       := TODO
 An individual trie node from a contract storage trie.
 
 ```
-0x01 | Container(address: bytes20, path: Nibbles, node_hash: bytes32, state_root: bytes32)
+content_key := 0x01 | Container(address: bytes20, path: Nibbles, node_hash: bytes32, state_root: bytes32)
 
-content_id := sha256(address | path | node_hash)
-path       := TODO
+content_id  := sha256(address | path | node_hash)
+address     := bytes20
+node_hash   := bytes32
+path        := TODO
 ```
 
 
@@ -77,9 +89,11 @@ path       := TODO
 A leaf node from the main account trie and accompanying merkle proof against a recent `Header.state_root`
 
 ```
-0x02 | Container(address: bytes20, state_root: bytes32)
+content_key := 0x02 | Container(address: bytes20, state_root: bytes32)
 
-content_id := keccak(address)
+content_id  := keccak(address)
+address     := bytes20
+state_root  := bytes32
 ```
 
 
@@ -88,9 +102,12 @@ content_id := keccak(address)
 A leaf node from a contract storage trie and accompanying merkle proof against the `Account.storage_root`.
 
 ```
-0x03 | Container(address: bytes20, slot: uint256, state_root: bytes32)
+content_key := 0x03 | Container(address: bytes20, slot: uint256, state_root: bytes32)
 
-content_id := (keccak(address) + keccak(slot)) % 2**256
+content_id  := (keccak(address) + keccak(slot)) % 2**256
+address     := bytes20
+slot        := uint256
+state_root  := bytes32
 ```
 
 #### Contract Bytecode
@@ -98,9 +115,10 @@ content_id := (keccak(address) + keccak(slot)) % 2**256
 The bytecode for a specific contract as referenced by `Account.code_hash`
 
 ```
-0x04 | Container(address: bytes20, code_hash: bytes32)
-
-content_id := sha256(address | code_hash)
+content_key := 0x04 | Container(address: bytes20, code_hash: bytes32)
+address     := bytes20
+code_hash   := bytes32
+content_id  := sha256(address | code_hash)
 ```
 
 
@@ -117,8 +135,6 @@ MID = 2**255
 
 def distance(node_id: int, content_id: int) -> int:
     """
-    Source: https://stackoverflow.com/questions/28036652/finding-the-shortest-distance-between-two-angles
-    
     A distance function for determining proximity between a node and content.
     
     Treats the keyspace as if it wraps around on both ends and 
@@ -135,11 +151,15 @@ def distance(node_id: int, content_id: int) -> int:
     >>> assert distance(0, 2**255) == 2**255
     >>> assert distance(0, 2**255 + 1) == 2**255 - 1
     """
-    delta = (node_id - content_id + MID) % MODULO - MID
-    if delta  < -MID:
-        return abs(delta + MID)
+    if node_id > content_id:
+        diff = node_id - content_id
     else:
-        return abs(delta)
+        diff = content_id - node_id
+
+    if diff > MID:
+        return MODULO - diff
+    else:
+        return diff
 
 ```
 
@@ -181,7 +201,7 @@ Request message to check if a node is reachable, communicate basic information a
 
 
 ```
-message_id := 1
+message_id := 0x01
 type       := request
 sedes      := Container(enr_seq: uint64, data_radius: uint256)
 ```
@@ -195,7 +215,7 @@ sedes      := Container(enr_seq: uint64, data_radius: uint256)
 Response message to Ping(0x01)
 
 ```
-message_id := 2
+message_id := 0x02
 type       := response
 sedes      := Container(enr_seq: uint64, data_radius: uint256)
 ```
@@ -208,7 +228,7 @@ sedes      := Container(enr_seq: uint64, data_radius: uint256)
 Request nodes from the peer's routing table at the given logarithmic distances.  The distance of `0` indicates a request for the peer's own ENR record.
 
 ```
-message_id := 3
+message_id := 0x03
 type       := request
 sedes      := Container(distances: List[uint16, max_length=256])
 ```
@@ -222,7 +242,7 @@ sedes      := Container(distances: List[uint16, max_length=256])
 Response message to FindNodes(0x03).
 
 ```
-message_id := 4
+message_id := 0x04
 type       := response
 sedes      := Container(total: uint8, enrs: List[byte_list, max_length=32])
 ```
@@ -239,7 +259,7 @@ sedes      := Container(total: uint8, enrs: List[byte_list, max_length=32])
 Request either the data payload for a specific piece of content on the network, **or** ENR records of nodes that are closer to the requested content.
 
 ```
-message_id := 5
+message_id := 0x05
 type       := request
 sedes      := Container(content_key: byte_list)
 ```
@@ -254,7 +274,7 @@ Response message to Find Content (0x05).
 This message can contain **either** the data payload for the requested content *or* a list of ENR records that are closer to the content than the responding node.
 
 ```
-message_id := 6
+message_id := 0x06
 type       := response
 sedes      := Container(enrs: List[byte_list, max_length=32], payload: byte_list)
 ```
@@ -274,9 +294,9 @@ sedes      := Container(enrs: List[byte_list, max_length=32], payload: byte_list
 Offer a set of content keys that this node has proofs available for.
 
 ```
-message_id := 7
+message_id := 0x07
 type       := request
-sedes      := List[byte_list, max_length=64]
+sedes      := Container(content_keys: List[byte_list, max_length=64])
 ```
 
 The payload of this message is a list of encoded `content_key` entries.
@@ -318,7 +338,7 @@ The state data is stored in the network in two formats.
 - A: Trie nodes
     - Individual leaf and intermediate trie nodes.
     - Gossiped with a proof against a recent state root
-    - Stored without a proof not anchored to a specific state root
+    - Optionally stored without a proof not anchored to a specific state root
 - B: Leaf proofs
     - Contiguous sections of leaf data
     - Gossiped and stored with a proof against a specific state root
@@ -376,12 +396,22 @@ Any node in the trie that represents a value stored in the trie.  The nodes in t
 
 The merkle proof which contains a leaf node and the intermediate trie nodes necessary to compute the state root of the trie.
 
+### Neighborhood Gossip
 
+We use the term *neighborhood gossip* to refer to the process through which content is disseminated to all of the DHT nodes *near* the location in the DHT where the content is located.
+
+The process works as follows.
+
+- A DHT node receives a piece of content that they are interested in storing.
+- The DHT node checks their routing table for nearby DHT nodes that should also be interested in the content.
+- A random subset of the nearby interested nodes is selected and the content is offered to them.
+
+The process above should quickly saturate the area of the DHT where the content is located and naturally terminate as more nodes become aware of the content.
 
 ### Stages
 
 The gossip mechanism is divided up into individual stages which are designed to
-ensure that each individual piece of data is properly disceminated to the DHT
+ensure that each individual piece of data is properly disseminated to the DHT
 nodes responsible for storing it, as well as spreading the responsibility as
 evenly as possible across the DHT.
 
@@ -391,7 +421,7 @@ The stages are:
     - Bridge node generates a proof of all new and updated state data from the most recent block and initiates gossip of the individual trie nodes.
 - Stage 2:
     - DHT nodes receiving trie nodes perform *neighborhood gossip* to spread the data to nearby interested DHT nodes.
-    - DHT nodes receiving trie nodes extract the trie nodes from the anchor proof to perform *recursive gossip*.
+    - DHT nodes receiving trie nodes extract the trie nodes from the anchor proof to perform *recursive gossip* (defined below).
     - DHT nodes receiving "leaf" nodes initiate gossip of the leaf proofs (for stage 3)
 - Stage 3:
     - DHT nodes receiving leaf proofs perform *neighborhood gossip* to spread the data to nearby interested DHT nodes.
@@ -435,11 +465,6 @@ The stages are:
     +----------------------------+
 
 ```
-
-
-In this context the term "neighborhood gossip" refers to a DHT node
-re-distributed data that they were interested in to the DHT nodes nearby who
-are also interested.
 
 The phrase "initialization of XXX gossip" refers to finding the DHT nodes that
 are responsible for XXX and offering the data to them.
@@ -551,14 +576,15 @@ When receiving a *"leaf proof"* over gossip, a DHT node will perform *"neighborh
 
 Anytime the state root changes for either the main account trie or a contract storage trie, every leaf proof under that root will need to be updated.  The primary gossip mechanism will ensure that leaf data that was added, modified, or removed will receive and updated proof.  However, we need a mechanism for updating the leaf proofs for "cold" data that has not been changed.
 
-Each time a new block is added to the chain, the DHT nodes storing leaf proof data will need to perform a walk of the trie starting at the state root.  This walk of the trie will be directed towards the slice of the trie dictated by the set of leaves that the node is storing.  As the trie is walked it should be compared to the previous proof from the previous state root.  This walk concludes once the node has fully connected the leaf data from there previous proof to the new state root.
+Each time a new block is added to the chain, the DHT nodes storing leaf proof data will need to perform a walk of the trie starting at the state root. This walk of the trie will be directed towards the slice of the trie dictated by the set of leaves that the node is storing. As the trie is walked it should be compared to the previous proof from the previous state root. This walk concludes once all of the in-range leaves can be proven with the new state root.
+
 
 > TODO: reverse diffs and storing only the latest proof.
 
 > TODO: gossiping proof updates to neighbors to reduce duplicate work.
 
 
-### POKE: Actively disceminating data and replication of popular data
+### POKE: Actively disseminating data and replication of popular data
 
 When a DHT node in the network is retrieving some piece of data they will perform a "recursive find" using the FINDCONTENT (0x05) and FOUNDCONTENT (0x06) messages.  During the course of this recursive find, they may encounter nodes along the search path which did not have the content but for which the content does fall within their radius.
 
