@@ -1,84 +1,104 @@
-# stateless-ethereum-specs
-Specifications for the Stateless Ethereum research effort
+# The Portal Network
 
-## Problem Statement and Goals
+## Introduction
 
-[*Problem statement and goals subject to revision and the will of all contributers to Stateless Ethereum*]
-
-The Ethereum state is ever-growing, and it will continue to do so at an accelerating pace. The growing size of the state will not only make running a full node more and more untennable for a ''normal" person, but may render the Ethereum network unstable and unusable if ignored. So we must not ignore it. 
-
-Stateless Ethereum is the "all in" direction of Ethereum 1.x research to solve this problem. It encompasses a set of upgrades and features that will make keeping a full copy of the Ethereum state *optional* on the network, by introducing a proving scheme for clients without state (a block witness). 
+The "Portal Network" is an in progess effort to enable lightweight protocol access to resource constrained devices.  The term *"portal"* is used to indicate that these networks provide a *view* into the protocol but are not critical to the operation of the core Ethereum protocol.
 
 
+The Portal Network will be comprised of one or more decentralized peer-to-peer networks which together provide the data and functionality necessary to expose the standard JSON-RPC API.  These networks are being specially designed to ensure that clients participating in these networks can do so with minimal expendature of networking bandwidth, CPU, RAM, and HDD resources.
 
-## Contributing
+The term "Portal Client" is used to describe a piece of software that participates in these networks and exposes the standard JSON-RPC API
 
-**[Ethresear.ch (tag: "1.x research")](https://ethresear.ch/c/eth1x-research/37)**
+## Motivation
 
-**[Eth1x / 2 Research Discord](https://discord.gg/hpFs23p)** 
+This effort is motivated by two overlapping goals.
 
+### Full Functionality for Stateless Clients
 
+The core Ethereum protocol is moving towards a "stateless" model of block verification.  Under this model a client will be able to fully verify the execution of a block using a witness.  Such a client would no longer need to keep or maintain any of the Ethereum "state" data.  Such a client is very valuable in the context of the core protocol, as it facilitates a cleaner merge of the Eth1 and Eth2 chains.  
 
-## In this Repo
+> Additional reading on why stateless is so important to the Eth1/Eth2 merge: https://dankradfeist.de/ethereum/2021/02/14/why-stateless.html)
 
-### Specs
-
-* WIP [Block Witness Format](./witness.md)
-
-* [Beam Sync](./beam-sync-phase0.md)
-
-### Roadmaps
-
-* [Stateless Ethereum Tech Tree](./techTree.md)
-* [Roadmaps for Eth1x and Stateless Ethereum](./roadmaps.md)
+What is easy to overlook is that such a "stateless" client will be unable to do much else without additional infrastructure.  Specifically it would be unable to serve the vast majority of the JSON-RPC apis.  The Portal Network provides this additional infrastructure, allowing stateless clients to also expose the external APIs that support the web3 ecosystem.
 
 
+### Scalable Lightweight Clients
+
+The term "light client" tends to refer to a client of the existing DevP2P LES network.  This network is designed using a client/server architecture.  The LES network has a total capacity dictated by the number of "servers" on the network.  In order for this network to scale, the "server" capacity has to increase.  This also means that at any point in time the network has some total capacity which if exceeded will cause service degredation across the network.  Because of this the LES network is unreliable when operating near capacity.
+
+The Portal Network aims to solve this problem by designing our networks so that each additional client that joints the network adds additional capacity to the network.  The end result *should* be a network which becomes more robust and powerful as more nodes join the network.
+
+> Additional reading: https://snakecharmers.ethereum.org/the-winding-road-to-functional-light-clients/
+> 
+> Additional watching: https://www.youtube.com/watch?v=MZxqRs_tLNs
 
 
-## Background
+### JSON-RPC API
 
-[Vitalik Buterin](https://ethresear.ch/u/vbuterin/summary) proposed the [Stateless Client Concept](https://ethresear.ch/t/the-stateless-client-concept/172) in October 2017. The purpose of the Stateless Client Concept is to create a new type of full Ethereum node that is no longer required to store the state of the entire blockchain.
+The following JSON-RPC API endpoints are intended to be supported by the portal network and exposed by portal clients.
 
-Instead, miners would provide each mined block with the minimal information that is required to prove that block’s validity and to do a particular state transition. Such information is known as a witness. Witnesses are a set of Merkle branches proving the values of all data that the execution of the block accesses.
+TODO
 
-We encode the witness, the set of Merkle branches, as instructions. The block validator parses these instructions and constructs these Merkle branches, in order to check validity. Block validity is checked by constructing a partial Merkle tree using:
+## Network Functionality
 
-* the state-data provided by a state provider
+### State: Accounts and Contract Storage
 
-* the above Merkle branches, and matching the computed Merkle root with the held Merkle root.
+The state network facilitates on-demand retrieval of the Ethereum "state" data.
 
-Therefore, block witnesses would allow stateless nodes to store only state roots instead of the entire Merkle Patricia trie for the entire blockchain. A node would receive the state root of a previous state, a newly mined block and the block’s witness. Successful validation of the new block would result in a new state. Only the state root for the new state would be stored by the node.
+Nodes should be able to choose how much state they want to store and share, and the network should provide a way to identify which nodes to query for a wanted portion of state. This is so that every node, no matter how small, can contribute to the health and robustness of the network.
 
-## Further Reading
+The network will be dependent on receiving new and updated state for new blocks. Full "bridge" nodes acting as benevolent state providers would be responsible for bringing in this data from the main network. The network should be able to remain healthy even with a small number of bridge nodes.
 
-### Overview & Concepts
+Querying and reading data from the network should be fast enough for human-driven wallet operations, like estimating the gas for a transaction or reading state from a contract.
 
-* https://blog.ethereum.org/2019/12/30/eth1x-files-state-of-stateless-ethereum/
-* https://blog.ethereum.org/2020/05/04/eth1x-witness-primer/
-* https://medium.com/@pipermerriam/stateless-clients-a-new-direction-for-ethereum-1-x-e70d30dc27aa
-* https://medium.com/@akhounov/on-the-state-rent-and-pivot-to-stateless-ethereum-ab4d967ff630
-* https://medium.com/@akhounov/the-shades-of-statefulness-in-ethereum-nodes-697b0f88cd04
+### Chain History: Headers, Blocks, and Receipts
+
+In order to validate requested portal network data, a portal client needs to be able to request headers and validate their inclusion in the canonical header chain. Clients can use validated headers to further validate blocks, uncles, transactions, receipts, and state nodes.
+
+Normal clients will download every block header to construct the canonical chain. This is unreasonable for a "stateless" client. The "[double-batched merkle log accumulator](https://ethresear.ch/t/double-batched-merkle-log-accumulator/571)" is the mechanism that enables portal clients to achieve this goal, without requiring them to download every canonical header.
+
+When a portal client requests a certain header, the response includes two accumulator proofs. As long as the client maintains an up-to-date view of the chain tip (via the gossip network) it can use the proofs to validate a headers inclusion in the canonical chain. Then, the client can use the header to validate other data retrieved from the portal network.
+
+The portal network is designed to emulate the following [ETH protocol](https://github.com/ethereum/devp2p/blob/d3f6d6724ea587fc28d3c22911d8ac0490627c8c/caps/eth.md#protocol-messages) messages, by supporting the following data to be retrieved via `block_hash`.
+
+| ETH Protocol | Portal Network |
+| - | - |
+| `GetBlockHeaders` -> `BlockHeaders` | `block_hash` -> header & inclusion proof |
+| `GetBlockBodies` -> `BlockBodies` | `block_hash` -> block body |
+| `GetReceipts` -> `Receipts` | `block_hash` -> block receipts |
+
+### Canonical Indices: Transactions by Hash and Blocks by Number
+
+To serve the `eth_getTransactionByHash` and `eth_getBlockByNumber` JSON-RPC API endpoints, clients typically build local indexes as they sync the entire chain. The portal network will need to mimic these indices. This can be acheived by generating unique mappings for transactions and blocks, and then pushing these into to portal network.
+
+Since valid transactions can exist outside of the context of a particular block, we need a mechanism to prove that they were included in a certain block. Likewise, valid blocks can exist as uncles, without proof that they were included in the canonical chain at a certain number. So, a mechanism is required to validate that a given block is canonical at a certain level, and a transaction was included in a canonical block.
+
+The following mappings are stored by the portal network. Together with the accumulator, they replicate the functionality of canonical indices.
+	- Canonical block index: `block_number -> (block_hash)`
+		- Fetch the block header associated with `block_hash`, and validate the header against the accumulator to verify that `block_hash` is accurate for the given `block_number`.
+	- Canonical transaction index: `tx_hash -> (block_hash, tx_index)`
+		- Fetch the block header associated with `block_hash`, and verify the header against the accumulator.
+		- Then, fetch the block body associated with the header and verify that `tx_hash` matches the transaction found at the `tx_index` in the transaction trie.
 
 
-### Witness Optimization Techniques
+### Transaction Sending: Cooperative Transaction Gossip
 
-* https://medium.com/@mandrigin/stateless-ethereum-binary-tries-experiment-b2c035497768
-* https://medium.com/@mandrigin/semi-stateless-initial-sync-experiment-897cc9c330cb
-* https://ethresear.ch/t/some-quick-numbers-on-code-merkelization/7260
-* https://medium.com/ewasm/evm-bytecode-merklization-2a8366ab0c90
+The goal of the transaction gossip network is to make sure all new transactions are made available to the miners so that they can be included in a block.
 
-### Sync and Network
+Stateless clients should be able to declare what percentage of transactions they want to process out of the set of all unmined and valid transactions (called _mempool_) based on the amount of resources they have, and should only receive that many transactions from other nodes.
 
-* SNAP protocol: https://github.com/ethereum/devp2p/blob/3fe9713658f3b3b56e4e99493c54f313e11b43a0/caps/snap.md
-* Merry-go-round sync: https://ethresear.ch/t/merry-go-round-sync/7158
+Stateless transaction validation involves checking accounts' balances and nonces, so the network will need to facilitate transmission of account proofs alongside each transaction.
 
-### State Trie
+## Network Specifications
 
-* https://medium.com/@gballet/ethereum-state-tree-format-change-using-an-overlay-e0862d1bf201
-
-### EVM
-
-* https://corepaper.org/ethereum/compatibility/leaky/
-* https://ethresear.ch/t/meta-transactions-oil-and-karma-megathread/7472
-* https://gist.github.com/holiman/8a3c31e459ee1bff04256bc214ea7f14
-
+- [uTP over DiscoveryV5](./discv5-utp.md)
+- [State Network](./state-network.md)
+    - Scalable gossip for new state data: https://ethresear.ch/t/scalable-gossip-for-state-network/8958/4
+- Chain History Network
+    - No current spec
+    - Prior work: https://notes.ethereum.org/oUJE4ZX2Q6eMOgEMiQPkpQ?view
+    - Prior Python proof-of-concept: https://github.com/ethereum/ddht/tree/341e84e9163338556cd48dd2fcfda9eedec3eb45
+        - This POC shouldn't be considered representative of the end goal.  It incorperates mechanisms that aren't likely to be apart of the actual implementation, specifically the "advertisement" system which proved to be a big bottleneck, as well as the SSZ merkle root system which was a work-around for large data transfer which we now intend to solve with uTP.
+- Transaction Gossip:
+    - No current spec
+    - Prior work: https://ethresear.ch/t/scalable-transaction-gossip/8660
