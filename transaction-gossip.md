@@ -92,8 +92,8 @@ The proof must be valid and against a *recent* state root. Individual implementa
 
 The proof **must** show that:
 
-- `transaction.to.balance >= transaction.value`
-- `transaction.to.nonce >= transaction.nonce`
+- `transaction.sender.balance >= transaction.value`
+- `transaction.sender.nonce >= transaction.nonce`
 
 ### Gossip Rules
 
