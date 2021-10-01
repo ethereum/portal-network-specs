@@ -1,5 +1,7 @@
 # The Portal Network
 
+>  This specification is a work-in-progress and should be considered preliminary.
+
 ## Introduction
 
 The Portal Network is an in progess effort to enable lightweight protocol access by resource constrained devices.  The term *"portal"* is used to indicate that these networks provide a *view* into the protocol but are not critical to the operation of the core Ethereum protocol.
@@ -134,14 +136,16 @@ A [double batched merkle log accumulator](./https://ethresear.ch/t/double-batche
 
 - [uTP over DiscoveryV5](./discv5-utp.md)
 - [State Network](./state-network.md)
-    - Scalable gossip for new state data: https://ethresear.ch/t/scalable-gossip-for-state-network/8958/4
-- Chain History Network
-    - No current spec
+    - Prior work: https://ethresear.ch/t/scalable-gossip-for-state-network/8958/4
+- [Chain History Network](./history-network.md)
     - Prior work: https://notes.ethereum.org/oUJE4ZX2Q6eMOgEMiQPkpQ?view
     - Prior Python proof-of-concept: https://github.com/ethereum/ddht/tree/341e84e9163338556cd48dd2fcfda9eedec3eb45
         - This POC shouldn't be considered representative of the end goal.  It incorperates mechanisms that aren't likely to be apart of the actual implementation, specifically the "advertisement" system which proved to be a big bottleneck, as well as the SSZ merkle root system which was a work-around for large data transfer which we now intend to solve with uTP.
-- Transaction Gossip:
-    - No current spec
+- [Transaction Gossip Network](./transaction-gossip.md):
+    - Spec is preliminary
     - Prior work: https://ethresear.ch/t/scalable-transaction-gossip/8660
-- Header Gossip:
-    - No current spec
+- Header Gossip Network
+    - WIP: https://github.com/ethereum/portal-network-specs/pull/79
+- Canonical Indices Network:
+    - No specification has been written.  Largely mirrors that of Chain History.
+
