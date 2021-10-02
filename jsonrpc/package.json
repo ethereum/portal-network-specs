@@ -1,0 +1,24 @@
+{
+  "name": "portal-network-apis",
+  "version": "0.0.1",
+  "description": "Collection of JSON-RPC APIs provided by Portal Network clients",
+  "main": "index.js",
+  "type": "module",
+  "scripts": {
+    "build": "node scripts/build.js",
+    "lint": "node scripts/build.js && node scripts/validate.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/ethereum/portal-network-specs.git"
+  },
+  "author": "Ethereum",
+  "license": "CC0-1.0",
+  "bugs": {
+    "url": "https://github.com/ethereum/portal-network-specs/issues"
+  },
+  "homepage": "https://github.com/ethereum/portal-network-specs#readme",
+  "dependencies": {
+    "@open-rpc/schema-utils-js": "^1.15.0"
+  }
+}
