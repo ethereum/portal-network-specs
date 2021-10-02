@@ -1,0 +1,42 @@
+{
+  "bytes2": {
+    "title": "2 hex encoded bytes",
+    "type": "string",
+    "pattern": "^0x[0-9a-f]{4}$"
+  },
+  "bytes4": {
+    "title": "4 hex encoded bytes",
+    "type": "string",
+    "pattern": "^0x[0-9a-f]{8}$"
+  },
+  "bytes8": {
+    "title": "8 hex encoded bytes",
+    "type": "string",
+    "pattern": "^0x[0-9a-f]{16}$"
+  },
+  "bytes16": {
+    "title": "16 hex encoded bytes",
+    "type": "string",
+    "pattern": "^0x[0-9a-f]{32}$"
+  },
+  "bytes32": {
+    "title": "32 hex encoded bytes",
+    "type": "string",
+    "pattern": "^0x[0-9a-f]{64}$"
+  },
+  "bytes33": {
+    "title": "33 hex encoded bytes",
+    "type": "string",
+    "pattern": "^0x[0-9a-f]{66}$"
+  },
+  "hexString": {
+    "title": "Hex string",
+    "type": "string",
+    "pattern": "^0x[0-9a-f]$"
+  },
+  "uint": {
+    "title": "hex encoded unsigned integer",
+    "type": "string",
+    "pattern": "^0x[1-9a-f]+[0-9a-f]*$"
+  }
+}

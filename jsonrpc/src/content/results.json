@@ -1,0 +1,231 @@
+{
+  "AcceptResult": {
+    "name": "acceptResult",
+    "description": "Returns \"true\" upon successful uTP stream initialization",
+    "schema": {
+      "type": "boolean"
+    }
+  },
+  "SendAcceptResult": {
+    "name": "sendAcceptResult",
+    "description": "Returns the request-id assigned to the request message-data",
+    "schema": {
+      "title": "request-id",
+      "$ref": "#/components/schemas/bytes8"
+    }
+  },
+  "AddEnrResult": {
+    "name": "addEnrResult",
+    "description": "Returns boolean if the node record has been successfully saved.",
+    "schema": {
+      "type": "boolean"
+    }
+  },
+  "ContentResult": {
+    "name": "contentResult",
+    "description": "Returns \"true\" upon success",
+    "schema": {
+      "type": "boolean"
+    }
+  },
+  "SendContentResult": {
+    "name": "sendContentResult",
+    "description": "Returns the request-id assigned to the request message-data",
+    "schema": {
+      "title": "request-id",
+      "$ref": "#/components/schemas/bytes8"
+    }
+  },
+  "DeleteEnrResult": {
+    "name": "deleteEnrResult",
+    "description": "Returns boolean upon successful deletion of the node record.",
+    "schema": {
+      "type": "boolean"
+    }
+  },
+  "FindContentResult": {
+    "name": "findContentResult",
+    "description": "Returns CONTENT message with a content or, in case the recipient does not have the data, a list of ENR records of nodes that are closer than the recipient is to the requested content.",
+    "schema": {
+      "title": "CONTENT message",
+      "type": "object",
+      "properties": {
+        "connectionId": {
+          "description": "uTP connection ID",
+          "schema": {
+            "type": "number"
+          }
+        },
+        "content": {
+          "description": "Requested content",
+          "$ref": "#/components/schemas/hexString"
+        },
+        "enrs": {
+          "description": "list of ENR records of nodes that are closer than the recipient is to the requested content",
+          "type": "array",
+          "items": {
+            "$ref": "#/components/schemas/Enr"
+          }
+        }
+      }
+    }
+  },
+  "FindNodeResult": {
+    "name": "findNodeResult",
+    "description": "Returns nodes in a given distance",
+    "schema": {
+      "title": "NODES message",
+      "type": "array",
+      "items": {
+        "$ref": "#/components/schemas/Enr"
+      }
+    }
+  },
+  "GetEnrResult": {
+    "name": "getEnrResult",
+    "description": "Returns latest ENR associated with the given node ID.",
+    "schema": {
+      "title": "Ethereum node record",
+      "$ref": "#/components/schemas/Enr"
+    }
+  },
+  "LookupEnrResult": {
+    "name": "lookupEnrResult",
+    "description": "Returns ENR associated with the given node ID",
+    "schema": {
+      "title": "Ethereum node record",
+      "$ref": "#/components/schemas/Enr"
+    }
+  },
+  "OfferResult": {
+    "name": "offerResult",
+    "description": "Returns ACCEPT message",
+    "schema": {
+      "title": "ACCEPT message",
+      "type": "object",
+      "properties": {
+        "connectionId": {
+          "description": "Connection ID to set up a uTP stream to transmit the requested data",
+          "$ref": "#/components/schemas/bytes2"
+        },
+        "contentKeys": {
+          "description": "Signals which content keys are desired",
+          "$ref": "#/components/schemas/hexString"
+        }
+      }
+    }
+  },
+   "SendOfferResult": {
+    "name": "sendOfferResult",
+    "description": "Returns the request-id assigned to the request message-data",
+    "schema": {
+      "title": "request-id",
+      "$ref": "#/components/schemas/bytes8"
+    }
+  },
+  "PingResult": {
+    "name": "pingResult",
+    "description": "Returns PONG response",
+    "schema": {
+      "title": "PONG message",
+      "type": "object",
+      "required": [
+        "enrSeq",
+        "dataRadius"
+      ],
+      "properties": {
+        "enrSeq": {
+          "description": "ENR sequence number of sender",
+          "type": "number"
+        },
+        "dataRadius": {
+          "description": "Data radius value",
+          "$ref": "#/components/schemas/DataRadius"
+        }
+      }
+    }
+  },
+  "RecursiveFindNodeResult": {
+    "name": "recursiveFindNodeResult",
+    "schema": {
+      "type": "array",
+      "items": {
+        "$ref": "#/components/schemas/Enr"
+      }
+    }
+  },
+  "RoutingTableInfoResult": {
+    "name": "routingTableInfoResult",
+    "description": "history network routing table information",
+    "required": true,
+    "schema": {
+      "title": "routingTableInfoResults",
+      "description": "Routing table details",
+      "type": "object",
+      "required": [
+        "localNodeId",
+        "buckets"
+      ],
+      "properties": {
+        "localNodeId": {
+          "title": "nodeId",
+          "description": "The key identifying the local peer that owns the routing table.",
+          "$ref": "#/components/schemas/bytes32"
+        },
+        "buckets": {
+          "title": "kBucketsTable",
+          "description": "Represents a Kademlia routing table.",
+          "$ref": "#/components/schemas/kBuckets"
+        }
+      }
+    }
+  },
+  "SendFindNodeResult": {
+    "name": "sendFindNodeResult",
+    "description": "Returns the request-id assigned to the request message-data",
+    "schema": {
+      "title": "request-id",
+      "$ref": "#/components/schemas/bytes8"
+    }
+  },
+  "SendFindContentResult": {
+    "name": "sendFindContentResult",
+    "description": "Returns the request-id assigned to the request message-data",
+    "schema": {
+      "title": "request-id",
+      "$ref": "#/components/schemas/bytes8"
+    }
+  },
+  "SendNodesResult": {
+    "name": "sendNodesResult",
+    "description": "Returns the number of batches in which the given ENRs were divided and transmitted",
+    "schema": {
+      "title": "number of batches",
+      "type": "number"
+    }
+  },
+  "SendPingResult": {
+    "name": "sendPingResult",
+    "description": "Returns request-id element of message-data",
+    "schema": {
+      "title": "requestId",
+      "type": "object",
+      "required": [
+        "requestId"
+      ],
+      "properties": {
+        "requestId": {
+          "description": "Hex encoded RLP byte array of length <= 8 bytes",
+          "$ref": "#/components/schemas/bytes8"
+        }
+      }
+    }
+  },
+  "SendPongResult": {
+    "name": "sendPongResult",
+    "description": "Returns \"true\" upon success.",
+    "schema": {
+      "type": "boolean"
+    }
+  }
+}
