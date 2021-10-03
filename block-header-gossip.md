@@ -1,6 +1,46 @@
-# Block Header Gossip
+# Block header Gossip
+Joining the Ethereum network by running a node now is no trivial matter. With the increasing size of the states and history states, a new node will require a few days to catch up with the tip of the chain. With regards to storage, a new node will require around ~1TB of data at the point of writing. These may put people off in running their own node and I believe will encourage users to rely more on node services such as Infura for onchain data. With time, reducing the decentralization of the network as a whole.
 
-Block info that needs to be passed around
+The portal network has a goal in solving this issue. The ultimate target of the portal network is to allow anyone to sync up to the tip of the chain quicker, able to also contribute to the network thus improving the decentralization of the network in a significantly more lightweight method (think of hosting a working Ethereum node on a Raspberry Pi for example), lowering the barrier of hosting a full node by themselves which in turn will encourage many to join the portal network.
+
+The portal network's strategy is to distribute the load of hosting a single node to many other lightweight Portal network clients. Everyone stores a significantly smaller portion of the onchain data and everyone is able to ask each other for the data that they need.
+
+To ensure that the portal network clients is able to track the tip of the chain, each client still needs a way to get the latest block and store it locally in a economical fashion. 
+
+This write up hopes to provide a specification on how blocks are tracked and stored in each portal network clients, and how they are being 'gossipped' which each other so that all clients is able to obtain the latest block.
+
+
+## Block storage
+Each client will be storing blocks in two forms. As accumulators where the entire block history is recorded and as partial block headers where only a subset of the block header is stored. Partial block headers only stored for the most recent N number of blocks.
+
+### Accumulator
+Portal network's accumulator will be based on the [double-batched merkle log accumulator](https://ethresear.ch/t/double-batched-merkle-log-accumulator/571) 
+
+#### Epoch Accumulator
+A fixed sized accumulator of a proposed length of 2048. Block info will be added in into the SSZ list until it has filled up all 2048 of its entries. After which the next block will be included in a new epoch accumulator.
+
+SSZ sede structure:
+`List[Container[blockhash:bytes32, total_difficulty:uint256 ], 2048]`
+
+The root hash of an epoch will then be included as an entry in the master accumulator.
+
+Aside from the first epoch,each client will need to store the current epoch as well as the epoch before in case of reorgs and block sync.
+
+#### Master Accumulator
+
+An accumulator that increases in size with each epoch. The root hash of each epoch will be appended to the master accumulator
+
+SSZ sede structure:
+`List[epoch_root_hash:bytese32, <a_large_number>]`
+
+
+### Partial Block Header
+
+Client will need more information to verify the validity of the block. In the event of network latency, some clients may have missed out on the last few blocks and will need to request for the parital block header from its neighbours. 
+
+And so, each client number will also be required to store a certain amount of the most recent blocks.
+
+Partial Block Header will include:
 - Block Number
 - Block Hash
 - Difficulty
@@ -8,7 +48,9 @@ Block info that needs to be passed around
 - Mixhash
 - Previous Hash (may be required to determine longest, heaviest chain. to know if the current block is pointed to the previous block)
 
-Nonce and mixhash will be used to verify POW seal. (to be replaced after the merge?) along with block number and block hash
+
+
+# To Edit
 
 
 ## How does portal network gets to block header?
