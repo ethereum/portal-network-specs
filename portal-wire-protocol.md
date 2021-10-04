@@ -1,0 +1,163 @@
+# Portal Wire Protocol
+
+The Portal wire protocol is the base p2p protocol by which nodes communicate.
+
+The different Portal networks **MAY** use this base protocol, but they **MUST** remain separated per network.
+This is done at the [Node Discovery Protocol v5](https://github.com/ethereum/devp2p/blob/master/discv5/discv5-wire.md#talkreq-request-0x05) layer, by providing a different protocol bytestring, per network, in the `TALKREQ` message.
+
+The protocol bytestring in the `TALKREQ` message **MUST** have "portal-" as prefix then followed by the network name (e.g. "portal-state").
+
+Each network can specify which specific messages from the protocol it supports.
+
+## Messages
+
+All messages in the protocol are transmitted using the `TALKREQ` and `TALKRESP` messages from the base protocol.
+
+All messages have a `message_id` and `encoded_message` that are concatenated to form the `payload` for either a `TALKREQ` or `TALKRESP` message.
+
+```
+payload         := message_id | encoded_message
+message_id      := uint8
+encoded_message := bytes
+```
+
+The `encoded_message` component is the SSZ encoded payload for the message as is indicated by its `message_id`. Each message has its own `sedes` which dictates how it should be encoded and decoded.
+
+The SSZ sedes `ByteList` is used to alias `List[uint8, max_length=2048]`.
+
+All messages have a `type` which is either `request` or `response`.
+
+* `request` messages **MUST** be sent using a `TALKREQ`
+* `response` messages **MUST** be sent using a `TALKRESP`
+
+
+### Ping (0x01)
+
+Request message to check if a node is reachable, communicate basic information about our node, and request basic information about the recipient node.
+
+```
+message_id := 0x01
+type       := request
+sedes      := Container(enr_seq: uint64, data_radius: uint256, custom_payload: ByteList)
+```
+
+* `enr_seq`: The node's current sequence number of their ENR record.
+* `data_radius`: The nodes current maximum radius for data stored by this node.
+* `custom_payload`: Custom payload dependant on the network.
+
+
+### Pong (0x02)
+
+Response message to Ping(0x01)
+
+```
+message_id := 0x02
+type       := response
+sedes      := Container(enr_seq: uint64, data_radius: uint256)
+```
+
+* `enr_seq`: The node's current sequence number of their ENR record.
+* `data_radius`: The nodes current maximum radius for data stored by this node.
+* `custom_payload`: Custom payload dependant on the network.
+
+### Find Nodes (0x03)
+
+Request nodes from the peer's routing table at the given logarithmic distances.  The distance of `0` indicates a request for the peer's own ENR record.
+
+```
+message_id := 0x03
+type       := request
+sedes      := Container(distances: List[uint16, max_length=256])
+```
+
+* `distances`: a list of distances for which the node is requesting ENR records for.
+    * Each distance **MUST** be within the inclusive range `[0, 256]`
+    * Each distance in the list **MUST** be unique.
+
+### Nodes (0x04)
+
+Response message to FindNodes(0x03).
+
+```
+message_id := 0x04
+type       := response
+sedes      := Container(total: uint8, enrs: List[ByteList, max_length=32])
+```
+
+* `total`: The total number of `Nodes` response messages being sent.
+* `enrs`: List of bytestrings, each of which is an RLP encoded ENR record.
+    * Individual ENR records **MUST** correspond to one of the requested distances.
+    * It is invalid to return multiple ENR records for the same `node_id`.
+
+> Note: If the number of ENR records cannot be encoded into a single message, then they should be sent back using multiple messages, with the `total` field representing the total number of messages that are being sent.
+
+### Find Content (0x05)
+
+Request either the data payload for a specific piece of content on the network, **or** ENR records of nodes that are closer to the requested content.
+
+```
+message_id := 0x05
+type       := request
+sedes      := Container(content_key: ByteList)
+```
+
+* `content_key`: The key for the content being requested. The encoding of `content_key` is dependant on the network.
+
+### Found Content (0x06)
+
+Response message to Find Content (0x05).
+
+This message can contain either a uTP connection ID, a list of ENRs or the
+requested content.
+
+```
+message_id := 0x06
+type       := response
+sedes      := Union[connection-id: Bytes2, content: Bytes, enrs: List[ByteList, 32]]
+```
+
+* `connection_id`: Connection ID to set up a uTP stream to transmit the requested data.
+    * Connection ID values should be randomly generated.
+* `enrs`: List of bytestrings, each of which is an RLP encoded ENR record.
+    * Individual ENR records **MUST** be closer to the requested content than the responding node.
+    * It is invalid to return multiple ENR records for the same `node_id`.
+* `content`: bytestring of the requested content.
+    * This field **MUST** be used when the requested data can fit in this single response.
+
+If the node does not hold the requested content, and the node does not know of any nodes with eligible ENR values, then the node should return `enrs` as an empty list.
+
+
+### Offer (0x07)
+
+Offer a set of content keys that this node has proofs available for.
+
+```
+message_id := 0x07
+type       := request
+sedes      := Container(content_keys: List[ByteList, max_length=64])
+```
+
+* `content_keys`: A list of encoded `content_key` entries. The encoding of each `content_key` is dependant on the network.
+
+
+### Accept (0x08)
+
+Response message to Offer (0x07).
+
+Signals interest in receiving the offered data fro the corresponding Offer message.
+
+
+```
+message_id := 8
+type       := response
+sedes      := Container(connection_id: Bytes2, content_keys: BitList[max_length=64]]
+```
+
+* `connection_id`: Connection ID to set up a uTP stream to transmit the requested data.
+    * ConnectionID values should be randomly generated.
+* `content_keys`: Signals which content keys are desired.
+    * A bit-list corresponding to the offered keys with the bits in the positions of the desired keys set to `1`.
+
+Upon *sending* this message, the requesting node should *listen* for an incoming uTP stream with the generated `connection_id`.
+
+Upon *receiving* this message, the serving node should initiate a uTP stream.
