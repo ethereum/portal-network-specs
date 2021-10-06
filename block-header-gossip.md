@@ -45,7 +45,7 @@ Partial Block Header will include:
 ## DHT
 The block header gossip will be an overlay of [DiscV5](https://github.com/ethereum/devp2p/blob/master/discv5/discv5-theory.md).
 
-<u>Idea No.1</u>
+#### <u>Idea No.1</u>
 It is the responsibility of all clients in the portal network to have a local version of accumulator and block header. The block header gossip can reuse the ENR from the underlying DiscV5 protocol. The the maintenence of node liveness and node records are being done solely by DiscV5.
 
 Information that are required by Block header gossip can be passed onto the overlay block header gossip layer in TalkReq/TalkResp encapsulated message.
@@ -58,7 +58,7 @@ Cons:
 1. Could be potentially too tightly coupled
 
 
-<u>Idea No.2</u>
+#### <u>Idea No.2</u>
 A seperate DHT for ENR's are being maintained in the overlay network. Similar messages such as PING, PONG, FINDNODES and FOUNDNODES will be used to maintained node liveness in the DHT. 
 
 Pros:
