@@ -1,4 +1,4 @@
-# Block header gossip v2
+# Block header gossip 
 The document describes how the block information (accumulator & block headers) are exchanged between the portal network clients. 
 
 Each client has the responsibilty to track the tip of the chain and to store accumulators and block header information locally. Clients will be sharing the information with requesting clients in the network to maintain the health of the network as a whole
