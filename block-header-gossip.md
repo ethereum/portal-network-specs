@@ -1,13 +1,7 @@
-# Block header Gossip
-Joining the Ethereum network by running a node now is no trivial matter. With the increasing size of the states and history states, a new node will require a few days to catch up with the tip of the chain. With regards to storage, a new node will require around ~1TB of data at the point of writing. These may put people off in running their own node and I believe will encourage users to rely more on node services such as Infura for onchain data. With time, reducing the decentralization of the network as a whole.
+# Block header gossip v2
+The document describes how the block information (accumulator & block headers) are exchanged between the portal network clients. 
 
-The portal network has a goal in solving this issue. The ultimate target of the portal network is to allow anyone to sync up to the tip of the chain quicker, able to also contribute to the network thus improving the decentralization of the network in a significantly more lightweight method (think of hosting a working Ethereum node on a Raspberry Pi for example), lowering the barrier of hosting a full node by themselves which in turn will encourage many to join the portal network.
-
-The portal network's strategy is to distribute the load of hosting a single node to many other lightweight Portal network clients. Everyone stores a significantly smaller portion of the onchain data and everyone is able to ask each other for the data that they need.
-
-To ensure that the portal network clients is able to track the tip of the chain, each client still needs a way to get the latest block and store it locally in a economical fashion. 
-
-This write up hopes to provide a specification on how blocks are tracked and stored in each portal network clients, and how they are being 'gossipped' which each other so that all clients is able to obtain the latest block.
+Each client has the responsibilty to track the tip of the chain and to store accumulators and block header information locally. Clients will be sharing the information with requesting clients in the network to maintain the health of the network as a whole
 
 
 ## Block storage
@@ -31,12 +25,12 @@ Aside from the first epoch,each client will need to store the current epoch as w
 An accumulator that increases in size with each epoch. The root hash of each epoch will be appended to the master accumulator
 
 SSZ sede structure:
-`List[epoch_root_hash:bytese32, <a_large_number>]`
+`List[epoch_root_hash:bytes32, <a_large_number>]`
 
 
 ### Partial Block Header
 
-Client will need more information to verify the validity of the block. In the event of network latency, some clients may have missed out on the last few blocks and will need to request for the parital block header from its neighbours. 
+Client will need more information to verify the validity of the block. In the event of network latency, some clients may have missed out on the last few blocks and will need to request for the partial block header from its neighbours. 
 
 And so, each client number will also be required to store a certain amount of the most recent blocks.
 
@@ -48,71 +42,101 @@ Partial Block Header will include:
 - Mixhash
 - Previous Hash (may be required to determine longest, heaviest chain. to know if the current block is pointed to the previous block)
 
+## DHT
+The block header gossip will be an overlay of [DiscV5](https://github.com/ethereum/devp2p/blob/master/discv5/discv5-theory.md).
 
-## DHT 
+<u>Idea No.1</u>
+It is the responsibility of all clients in the portal network to have a local version of accumulator and block header. The block header gossip can reuse the ENR from the underlying DiscV5 protocol. The the maintenence of node liveness and node records are being done solely by DiscV5.
 
-Block header gossips will operate on [DiscV5](https://github.com/ethereum/devp2p/blob/master/discv5/discv5-theory.md).
+Information that are required by Block header gossip can be passed onto the overlay block header gossip layer in TalkReq/TalkResp encapsulated message.
 
-Each client will maintain a local DHT record. And the node records will be PING-ed for liveness. Node records that do not respond with a PONG within the timeframe will be dropped from the node record
+Pros:
+1. Able to reuse underlying DiscV5
+2. Pass the responsibility of node maintence to DiscV5 and reduce additional message exchange
+
+Cons:
+1. Could be potentially too tightly coupled
 
 
-### Distance
-The node records will be stored in a [Kademlia table](https://github.com/ethereum/devp2p/blob/master/discv4.md#kademlia-table) consisting of k-buckets (where k=16). 
+<u>Idea No.2</u>
+A seperate DHT for ENR's are being maintained in the overlay network. Similar messages such as PING, PONG, FINDNODES and FOUNDNODES will be used to maintained node liveness in the DHT. 
 
-The distance function between two nodes is currently defined as:
+Pros:
+1. Loosely coupled
+
+Cons:
+1. Repeat of DiscV5 since every client is expected to store the block header info anyway. Extra overhead
+
+### Distance function
+The distance function (if required if we opt for Idea no.2) will have the same definition as DiscV5
+
 `distance(n₁, n₂) = n₁ XOR n₂`
 
-n<sub>1</sub> and n<sub>2</sub> are node ids which are randomly generated by the client themselves and announced to other nodes when they join the network.
+
+## Wire Protocol
+Custom message types will be encapsulated in the DiscV5 TalkReq/TalkResponse message
+
+Custom message types are being proposed for the request and response of block header info
 
 
-### Message Types
-Payloads to maintain node records or to request for new node records
+### Message Type
 
-TODO: used in [overlay protocol](https://github.com/ethereum/portal-network-specs/blob/e734df52683d73aaaad0cefefccc64e33997ce28/TODO). 
+#### <u>RequestAccumulator</u>
+Request accumulator info from neighbour
 
-#### <u>PING Payload</u>
-Send to nodes in local record to check for liveness
+```
+ContentKey: start_block: uint 
+ContentId: TODO
+````
 
-#### <u>PONG Payload</u>
-Response to PING payload to inform requesting nodes of its liveness
+#### <u>ResponseAccumulator</u>
+Response to RequestAccumulator
 
-#### <u>FINDNODE Payload</u>
-Request to neighbouring nodes for ENR record
-
-#### <u>FOUNDNODE Payload</u>
-Respond to FINDNODE Payload and returns the local ENR record to the requesting node
+```
+ContentKey: payload
+ContentType: uint8 (0 for epoch, 1 for master)
 
 
+payload for content type 0: 0 | epoch_number:uint | List[Container[blockhash:bytes32, total_difficulty:uint256 ], 2048]
 
-*Add new message type to request/respond to accumulator request. To request/respond to new block header* 
+payload for content type 1 : 1 | List[epoch_root_hash:bytes32, <a_large_number>]
+```
 
-#### <u>Request for Accumulator</u>
-Used by node to request for master and epoch accumulator of neighbouring nodes.
+#### <u>RequestBlockHeaders</u>
+Used by nodes to request for lastest numbers of blocks from its neighbour. Only for the last N blocks. Otherwise, neigbour node will request for the requesting node to request for accumulator instead.
+```
+ContentKey: start_block:uint
+```
 
-Content Key:
-StartBlock- block to start syncing from (0 for new nodes)
+#### <u>ResponseBlockHeader</u>
+Response to the requesting node's request if block number is within N block range. Else, tells the request node to request for an accumulator instead as the node is too far behind
 
-#### <u>Respond Accumulator Request</u>
+```
+ContentKey: status | payload
 
-Content Key:
-Total messages- total response that the requesting node should expect
-current message number- the current message number, 
-accumulator_type- (0 for master accumulator, 1 for epoch accumulator)
-content- accumulator info
+status: 0 (to request for accumulator), 1 (successful request)
 
-#### <u>Request block header</u>
-Content Key:
-startBlock - block to start syncing from(not more then N blocks away)
+payload(not present when status is 0): List[Container[partial_block_header], N: uint256]
 
-#### <u>Response to block header request</u>
-Content Key:
-status- (0 when blocks has exceed N blocks away, 1 for successful block header response but node is expected to wait for more incoming blocks, 2 for succesful block header response and this is the last block that the node will receive from its neighbour)
+partial_block_header: structure TBD
 
-blocknumber - block number 
-blockheader- block header content
+```
 
-for unsuccessful request, the requesting node should then request for accumulator instead
 
+
+#### <u>OfferBlockHeader</u>
+Offer block header to its neighbour when the node comes to know of an existence of a new valid block.
+
+Neighbour will respond with RequestBlockHeader.
+
+Message will be dropped after no response after a certain time period
+
+```
+ContentKey: block_number:uint256
+```
+
+## Node Responsibilities
+WIP
 # To Edit
 
 
