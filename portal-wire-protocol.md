@@ -155,4 +155,4 @@ sedes      := Container(connection_id: Bytes2, content_keys: BitList[max_length=
 
 Upon *sending* this message, the requesting node **SHOULD** *listen* for an incoming uTP stream with the generated `connection_id`.
 
-Upon *receiving* this message, the serving node **SHOULD** initiate a uTP stream with the received `connection_id`.
+Upon *receiving* this message, the serving node **SHOULD** *initiate* a uTP stream with the received `connection_id`.
