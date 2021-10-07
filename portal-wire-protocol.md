@@ -140,7 +140,7 @@ sedes      := Container(content_keys: List[ByteList, max_length=64])
 
 Response message to Offer (0x07).
 
-Signals interest in receiving the offered data fro the corresponding Offer message.
+Signals interest in receiving the offered data from the corresponding Offer message.
 
 ```
 message_id := 8
