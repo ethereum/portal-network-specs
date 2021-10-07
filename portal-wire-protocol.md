@@ -7,7 +7,10 @@ This is done at the [Node Discovery Protocol v5](https://github.com/ethereum/dev
 
 The protocol bytestring in the `TALKREQ` message **MUST** have "portal-" as prefix then followed by the network name (e.g. "portal-state").
 
-Each network can specify which specific messages from the protocol it supports.
+Each network using the wire protocol **MUST** specify which messages are supported.
+
+Unsupported messages **SHOULD** receive a `TALKRESP` message with an empty payload.
+
 
 ## Messages
 
@@ -126,7 +129,7 @@ If the node does not hold the requested content, and the node does not know of a
 
 ### Offer (0x07)
 
-Offer a set of content keys that this node has proofs available for.
+Offer a set of content keys that this node has content available for.
 
 ```
 message_id := 0x07

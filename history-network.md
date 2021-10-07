@@ -103,7 +103,11 @@ The [Portal wire protocol](./portal-wire-protocol.md) is used as wire protocol f
 
 The `protocol-id` in the `TALKREQ` message is defined as "portal-state".
 
-All protocol messages are supported.
+The history network supports the following protocol messages:
+- `Ping` (0x01) - `Pong` (0x02)
+- `Find Nodes` (0x03) - `Nodes` (0x04)
+- `Find Content` (0x05) - `Found Content` (0x06)
+- `Offer` (0x07) - `Accept` (0x08)
 
 ## Algorithms and Data Structures
 
