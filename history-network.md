@@ -50,26 +50,21 @@ logdistance(n1, n2) = log2(distance(n1, n2))
 
 ### Content: Keys and Values
 
-The chain history DHT stores the following data items:
+The chain history DHT makes available the following data items:
 
 * Block headers
 * Block bodies
 * Receipts
+* Transactions
 
-Each of these data items are represented as a key-value pair. Denote the key for a data item by `content-key`. Denote the value for an item as `content`.
+For data in the history network, we derive a `content-id` from the `content-key` as follows:
 
-All `content` items are transmitted as RLP-encoded byte arrays.
+  1.) If the `content-key` has `content-type` 0x04, the `content-id` is `H(body-content-key)`
+  2.) Otherwise, the `content-id` is `H(content-key)`
 
-All `content-key` values are encoded and decoded according to SSZ sedes.
+  where `H` denotes the Sha256 hash function.
 
-In addition to the `content-key`, each piece of `content` has a corresponding `content-id`. The `content-id` is the 32 byte value that we use (along with the `node-id`) for `distance` calculations.
-
-We derive a `content-id` from the `content-key` as follows:
-
-  1.) If the `content-key` has `content-type` 0x04, change the `content-type` to 0x02 and remove the `transaction-hash` field.
-  2.) Calculate `H(content-key)` where `H` denotes the SHA-256 hash function.
-
-Step 1 is done so that a `content-key` for a single transaction maps to the same `content-id` as the entire block body that contains the desired transaction. The individual transaction can then be retrieved and sent over the wire by itself. Otherwise the network would need to store each transaction twice: individually, as well as within the block body. This, along with the required inclusion proofs, would roughly triple the required network storage space.
+Step 1 is done so that a `content-key` for a single transaction maps to the same `content-id` as the block body that contains the transaction. The transaction can then be found using its index within the block. The alternative is to store every transaction twice: once in a block body, and once individually.
 
 The `content-key` format for retrieving each type of `content` are defined as follows:
 
@@ -96,8 +91,10 @@ content-type = 0x03
 
 #### Transactions
 
+`body-content-key` is the content key for the block body that contains the transaction with index `transaction-index`.
+
 ```
-content-key = Container(chain-id: uint16, content-type: uint8, block-hash: Bytes32, transaction-hash: Bytes32)
+content-key = Container(chain-id: uint16, body-content-key: Container, transaction-index: uint32)
 content-type = 0x04
 ```
 
