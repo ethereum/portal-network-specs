@@ -1,22 +1,29 @@
 # Portal Wire Protocol
 
-The Portal wire protocol is the base p2p protocol by which nodes communicate.
+The Portal wire protocol is the default p2p protocol by which Portal nodes communicate.
 
-The different Portal networks **MAY** use this base protocol, but they **MUST** remain separated per network.
-This is done at the [Node Discovery Protocol v5](https://github.com/ethereum/devp2p/blob/master/discv5/discv5-wire.md#talkreq-request-0x05) layer, by providing a different protocol bytestring, per network, in the `TALKREQ` message.
+The different Portal networks **MAY** use this protocol, but they **MUST** remain separated per network.
+This is done at the [Node Discovery Protocol v5](https://github.com/ethereum/devp2p/blob/master/discv5/discv5-wire.md#talkreq-request-0x05) layer, by providing a different protocol byte string, per network, in the `TALKREQ` message.
 
-The protocol bytestring in the `TALKREQ` message **MUST** have "portal-" as prefix then followed by the network name (e.g. "portal-state").
+The protocol byte string in the `TALKREQ` message **MUST** have "prtl" as prefix then followed by a network identifier (e.g. "prtlstate").
 
 Each network using the wire protocol **MUST** specify which messages are supported.
 
 Unsupported messages **SHOULD** receive a `TALKRESP` message with an empty payload.
 
+## Content Keys and Content IDs
+
+Content keys are used to request or offer specific content data. As such the content key and content data can be represented as a key:value pair.
+
+Content keys are passed as byte strings to the messages defined in the Portal wire protocol. How they are encoded is defined per content network specification.
+
+Content IDs are derived from the content keys and are used to identify where the content is located in the network. The derivation is defined per content network specification.
 
 ## Messages
 
-All messages in the protocol are transmitted using the `TALKREQ` and `TALKRESP` messages from the base protocol.
+All messages in the protocol are transmitted using the `TALKREQ` and `TALKRESP` messages from the base [Node Discovery Protocol](https://github.com/ethereum/devp2p/blob/master/discv5/discv5-wire.md#talkreq-request-0x05).
 
-All messages have a `message_id` and `encoded_message` that are concatenated to form the `payload` for either a `TALKREQ` or `TALKRESP` message.
+All Portal wire protocol messages have a `message_id` and `encoded_message` that are concatenated to form the payload for either the request field for the `TALKREQ` message or the response field of `TALKRESP` message.
 
 ```
 payload         := message_id | encoded_message
@@ -86,7 +93,7 @@ sedes      := Container(total: uint8, enrs: List[ByteList, max_length=32])
 ```
 
 * `total`: The total number of `Nodes` response messages being sent.
-* `enrs`: List of bytestrings, each of which is an RLP encoded ENR record.
+* `enrs`: List of byte strings, each of which is an RLP encoded ENR record.
     * Individual ENR records **MUST** correspond to one of the requested distances.
     * It is invalid to return multiple ENR records for the same `node_id`.
 
@@ -119,10 +126,10 @@ sedes      := Union[connection-id: Bytes2, content: ByteList, enrs: List[ByteLis
 
 * `connection_id`: Connection ID to set up a uTP stream to transmit the requested data.
     * Connection ID values **SHOULD** be randomly generated.
-* `enrs`: List of bytestrings, each of which is an RLP encoded ENR record.
+* `enrs`: List of byte strings, each of which is an RLP encoded ENR record.
     * Individual ENR records **MUST** be closer to the requested content than the responding node.
     * The set of derived `node_id` values from the ENR records **MUST** be unique.
-* `content`: bytestring of the requested content.
+* `content`: byte string of the requested content.
     * This field **MUST** be used when the requested data can fit in this single response.
 
 If the node does not hold the requested content, and the node does not know of any nodes with eligible ENR values, then the node **MUST** return `enrs` as an empty list.

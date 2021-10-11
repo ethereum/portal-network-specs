@@ -30,8 +30,6 @@ We solve B with a structured gossip algorithm that distributes the individual tr
 
 Our DHT will be an overlay network on the existing [Discovery V5](https://github.com/ethereum/devp2p/blob/master/discv5/discv5.md) network.
 
-The identifier `portal-state` will be used as the `protocol_id` for TALKREQ and TALKRESP messages from the base discovery v5 protocol.
-
 Nodes **must** support the `utp` Discovery v5 sub-protocol to facilitate transmission of merkle proofs which will in most cases exceed the UDP packet size.
 
 We use a custom distance function defined below.
@@ -45,8 +43,6 @@ We use custom PING/PONG/FINDNODES/NODES messages which are transmitted over the 
 We use the same PING/PONG/FINDNODES/NODES rules from base discovery v5 protocol for management of the overlay routing table.
 
 ### Content Keys and Content IDs
-
-Content keys are used to request a specific package of data from a peer. Content IDs are used to identify the location in the network where the content is located.
 
 The network supports the following schemes for addressing different types of content.
 
@@ -177,7 +173,7 @@ A node is said to be *"interested"* in a piece of content if `distance(node_id, 
 
 The [Portal wire protocol](./portal-wire-protocol.md) is used as wire protocol for the state network.
 
-The `protocol-id` in the `TALKREQ` message is defined as "portal-state".
+The `protocol` field in the `TALKREQ` message is defined as "prtlstate".
 
 The state network supports the following protocol messages:
 - `Ping` (0x01) - `Pong` (0x02)
