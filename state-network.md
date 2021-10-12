@@ -181,6 +181,12 @@ The state network supports the following protocol messages:
 - `Find Content` (0x05) - `Found Content` (0x06)
 - `Offer` (0x07) - `Accept` (0x08)
 
+In the state network the `custom_payload` field of the `Ping` (0x01) and `Pong` (0x02) messages is the serialization of an SSZ Container specified as `custom_data`:
+```
+custom_data = Container(data_radius: uint256)
+custom_payload = serialize(custom_data)
+```
+
 ## Gossip
 
 The state network will use a multi stage mechanism to store new and updated state data.

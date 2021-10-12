@@ -47,12 +47,11 @@ Request message to check if a node is reachable, communicate basic information a
 ```
 message_id := 0x01
 type       := request
-sedes      := Container(enr_seq: uint64, data_radius: uint256, custom_payload: ByteList)
+sedes      := Container(enr_seq: uint64, custom_payload: ByteList)
 ```
 
 * `enr_seq`: The node's current sequence number of their ENR record.
-* `data_radius`: The nodes current maximum radius for data stored by this node.
-* `custom_payload`: Custom payload dependant on the network.
+* `custom_payload`: Custom payload specified per the network.
 
 ### Pong (0x02)
 
@@ -61,12 +60,11 @@ Response message to Ping(0x01)
 ```
 message_id := 0x02
 type       := response
-sedes      := Container(enr_seq: uint64, data_radius: uint256, custom_payload: ByteList)
+sedes      := Container(enr_seq: uint64, custom_payload: ByteList)
 ```
 
 * `enr_seq`: The node's current sequence number of their ENR record.
-* `data_radius`: The nodes current maximum radius for data stored by this node.
-* `custom_payload`: Custom payload dependant on the network.
+* `custom_payload`: Custom payload specified per the network.
 
 ### Find Nodes (0x03)
 
