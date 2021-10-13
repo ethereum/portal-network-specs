@@ -5,11 +5,23 @@ The Portal wire protocol is the default p2p protocol by which Portal nodes commu
 The different Portal networks **MAY** use this protocol, but they **MUST** remain separated per network.
 This is done at the [Node Discovery Protocol v5](https://github.com/ethereum/devp2p/blob/master/discv5/discv5-wire.md#talkreq-request-0x05) layer, by providing a different protocol byte string, per network, in the `TALKREQ` message.
 
-The protocol byte string in the `TALKREQ` message **MUST** have "prtl" as prefix then followed by a network identifier (e.g. "prtlstate").
+The value for the protocol byte string in the `TALKREQ` message is specified as protocol identifier per network.
 
 Each network using the wire protocol **MUST** specify which messages are supported.
 
 Unsupported messages **SHOULD** receive a `TALKRESP` message with an empty payload.
+
+## Protocol identifiers
+
+All protocol identifiers consist of two bytes. The first byte is "`P`" (`0x50`), to indicate "the Portal network", the second byte is a specific network identifier.
+
+Currently defined protocol identifiers:
+- Inclusive range of `0x5000` - `0x5009`: Reserved for future networks or network upgrades
+- `0x500A`: State Network
+- `0x500B`: History Network
+- `0x500C`: Transaction Gossip Network
+- `0x500D`: Header Gossip Network
+- `0x500E`: Canonical Indices Network
 
 ## Content Keys and Content IDs
 

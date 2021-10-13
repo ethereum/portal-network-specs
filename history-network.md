@@ -101,7 +101,7 @@ A node is expected to maintain `radius` information for each node in its local n
 
 The [Portal wire protocol](./portal-wire-protocol.md) is used as wire protocol for the state network.
 
-The `protocol` field in the `TALKREQ` message is defined as "prtlhist".
+As specified in the [Protocol identifiers](./portal-wire-protocol.md#protocol-identifiers) section of the Portal wire protocol, the `protocol` field in the `TALKREQ` message **MUST** contain the value of `0x500B`.
 
 The history network supports the following protocol messages:
 - `Ping` (0x01) - `Pong` (0x02)

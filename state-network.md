@@ -173,7 +173,7 @@ A node is said to be *"interested"* in a piece of content if `distance(node_id, 
 
 The [Portal wire protocol](./portal-wire-protocol.md) is used as wire protocol for the state network.
 
-The `protocol` field in the `TALKREQ` message is defined as "prtlstate".
+As specified in the [Protocol identifiers](./portal-wire-protocol.md#protocol-identifiers) section of the Portal wire protocol, the `protocol` field in the `TALKREQ` message **MUST** contain the value of `0x500A`.
 
 The state network supports the following protocol messages:
 - `Ping` (0x01) - `Pong` (0x02)
