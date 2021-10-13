@@ -30,8 +30,6 @@ We solve B with a structured gossip algorithm that distributes the individual tr
 
 Our DHT will be an overlay network on the existing [Discovery V5](https://github.com/ethereum/devp2p/blob/master/discv5/discv5.md) network.
 
-The identifier `portal-state` will be used as the `protocol_id` for TALKREQ and TALKRESP messages from the base discovery v5 protocol.
-
 Nodes **must** support the `utp` Discovery v5 sub-protocol to facilitate transmission of merkle proofs which will in most cases exceed the UDP packet size.
 
 We use a custom distance function defined below.
@@ -45,8 +43,6 @@ We use custom PING/PONG/FINDNODES/NODES messages which are transmitted over the 
 We use the same PING/PONG/FINDNODES/NODES rules from base discovery v5 protocol for management of the overlay routing table.
 
 ### Content Keys and Content IDs
-
-Content keys are used to request a specific package of data from a peer. Content IDs are used to identify the location in the network where the content is located.
 
 The network supports the following schemes for addressing different types of content.
 
@@ -175,157 +171,21 @@ A node is said to be *"interested"* in a piece of content if `distance(node_id, 
 
 ### Wire Protocol
 
-All messages in the protocol are transmitted using the `TALKREQ` and `TALKRESP` messages from the base protocol.
+The [Portal wire protocol](./portal-wire-protocol.md) is used as wire protocol for the state network.
 
-All messages have a `message_id` and `encoded_message` that are concatenated to form the `payload` for either a `TALKREQ` or `TALKRESP` message.
+As specified in the [Protocol identifiers](./portal-wire-protocol.md#protocol-identifiers) section of the Portal wire protocol, the `protocol` field in the `TALKREQ` message **MUST** contain the value of `0x500A`.
 
+The state network supports the following protocol messages:
+- `Ping` (0x01) - `Pong` (0x02)
+- `Find Nodes` (0x03) - `Nodes` (0x04)
+- `Find Content` (0x05) - `Found Content` (0x06)
+- `Offer` (0x07) - `Accept` (0x08)
+
+In the state network the `custom_payload` field of the `Ping` (0x01) and `Pong` (0x02) messages is the serialization of an SSZ Container specified as `custom_data`:
 ```
-payload         := message_id | encoded_message
-message_id      := uint8
-encoded_message := bytes
+custom_data = Container(data_radius: uint256)
+custom_payload = serialize(custom_data)
 ```
-
-The `encoded_message` component is the SSZ encoded payload for the message type as indicated by the `message_id`.  Each message has its own `sedes` which dictates how it should be encoded and decoded.
-
-The SSZ sedes `byte_list` is used to alias `List[uint8, max_length=2048]`.
-
-All messages have a `type` which is either `request` or `response`.
-
-* `request` messages **MUST** be sent using a `TALKREQ`
-* `response` messages **MUST** be sent using a `TALKRESP`
-
-
-#### Ping (0x01)
-
-Request message to check if a node is reachable, communicate basic information about our node, and request basic information about the other node.
-
-
-```
-message_id := 0x01
-type       := request
-sedes      := Container(enr_seq: uint64, data_radius: uint256)
-```
-
-* `enr_seq`: The node's current sequence number of their ENR record
-* `data_radius`: The nodes current maximum radius for data stored by this node.
-
-
-#### Pong (0x02)
-
-Response message to Ping(0x01)
-
-```
-message_id := 0x02
-type       := response
-sedes      := Container(enr_seq: uint64, data_radius: uint256)
-```
-
-* `enr_seq`: The node's current sequence number of their ENR record
-* `data_radius`: The nodes current maximum radius for data stored by this node.
-
-#### Find Nodes (0x03)
-
-Request nodes from the peer's routing table at the given logarithmic distances.  The distance of `0` indicates a request for the peer's own ENR record.
-
-```
-message_id := 0x03
-type       := request
-sedes      := Container(distances: List[uint16, max_length=256])
-```
-
-* `distances` is a list of distances for which the node is requesting ENR records for.
-    * Each distance **MUST** be within the inclusive range `[0, 256]`
-    * Each distance in the list **MUST** be unique.
-
-#### Nodes (0x04)
-
-Response message to FindNodes(0x03).
-
-```
-message_id := 0x04
-type       := response
-sedes      := Container(total: uint8, enrs: List[byte_list, max_length=32])
-```
-
-* `total`: The total number of `Nodes` response messages being sent.
-* `enrs`: List of bytestrings, each of which is an RLP encoded ENR record.
-    * Individual ENR records **MUST** correspond to one of the requested distances.
-    * It is invalid to return multiple ENR records for the same `node_id`.
-
-> Note: If the number of ENR records cannot be encoded into a single message, then they should be sent back using multiple messages, with the `total` field representing the total number of messages that are being sent.
-
-#### Find Content (0x05)
-
-Request either the data payload for a specific piece of content on the network, **or** ENR records of nodes that are closer to the requested content.
-
-```
-message_id := 0x05
-type       := request
-sedes      := Container(content_key: byte_list)
-```
-
-* `content_key` the pre-image key for the content being requested..
-
-
-#### Found Content (0x06)
-
-Response message to Find Content (0x05).
-
-This message can contain **either** the data payload for the requested content *or* a list of ENR records that are closer to the content than the responding node.
-
-```
-message_id := 0x06
-type       := response
-sedes      := Container(enrs: List[byte_list, max_length=32], payload: byte_list)
-```
-
-* `enrs`: List of bytestrings, each of which is an RLP encoded ENR record.
-    * Individual ENR records **MUST** be closer to the requested content than the responding node.
-    * It is invalid to return multiple ENR records for the same `node_id`.
-    * This field **must** be empty if `payload` is non-empty.
-* `payload`: bytestring of the requested content.
-    * This field **must** be empty if `enrs` is non-empty.
-    
-> A response with an empty `payload` and empty `enrs` indicates that the node is not aware of any closer nodes, *nor* does the node have the requested content.
-
-
-#### Offer (0x07)
-
-Offer a set of content keys that this node has proofs available for.
-
-```
-message_id := 0x07
-type       := request
-sedes      := Container(content_keys: List[byte_list, max_length=64])
-```
-
-The payload of this message is a list of encoded `content_key` entries.
-
-
-#### Accept (0x08)
-
-Response message to Offer (0x07).
-
-Signals interest in receiving the offered data fro the corresponding Offer message.
-
-
-```
-message_id := 8
-type       := response
-sedes      := Container(connection_id: bytes4, content_keys: BitList[max_length=64]]
-```
-
-* `connection_id`: ConnectionID to be used for a uTP stream
-    * ConnectionID values should be randomly generated.
-* `content_keys`: Signals which content keys are desired
-    * A bit-list corresponding to the offered keys with the bits in the positions of the desired keys set to `1`.
-
-Upon *sending* this message, the requesting node should *listen* for an incoming uTP stream with the generated `connection_id`.
-
-Upon *receiving* this message, the serving node should initiate a uTP stream.
-
-> TODO: how does message framing across the stream work for individual messages.
-
 
 ## Gossip
 
