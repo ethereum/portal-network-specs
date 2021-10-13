@@ -303,19 +303,25 @@ Upon encountering a FOUNDCONTENT response that contains the actual content paylo
 
 Upon encountering a FOUNDCONTENT response that contains a uTP `connection-id`, the client can listen for and receive the content payload over the uTP stream.
 
-## G.4 - Gossip via OFFER/ACCEPT/STORE
+## G.4 - Gossip via OFFER/ACCEPT & uTP
 
-Support for the base gossip protocol implemented on top of OFFER/ACCEPT messages.
+Support for receipt of content using the GOSSIP/ACCEPT messages and uTP sub protocol.
 
 ### G.4.a - Handle incoming gossip
 
-Client can listen for incoming OFFER messages, responding with an ACCEPT message for any offered content which is of interest to the client.  The client would then listen for the corresponding STORE request which will either contain the full payload in the case that it fits within the packet, **or** extract the `connection_id` for use with a uTP based data stream between the two nodes.
+Client can listen for incoming OFFER messages, responding with an ACCEPT message for any offered content which is of interest to the client.  
 
-Upon receiving the content payload which should be a merkle proof against a leaf of the trie, the proof should be verified, the content stored.
+#### G.4.a.1 - Receipt via uTP
 
-### G.4.b - Propogate incoming gossip
+After sending an ACCEPT response to an OFFER request the client listens for an inbound uTP stream with the `connection-id` that was sent with the ACCEPT response.
 
-Upon receiving and validating content from an OFFER/ACCEPT/STORE set of messages, the content should then be gossiped to some set of neighboring peers using the same mechanism.
+### G.4.b - Neighborhood Gossip Propogation
+
+Upon receiving and validating gossip content, the content should then be gossiped to some set of interested nearby peers.
+
+#### G.4.b.1 - Sending content via uTP
+
+Upon receiving an ACCEPT message in response to our own OFFER message the client can initiate a uTP stream with the other node and can send the content payload across the stream.
 
 
 ## G.5 - Serving Content
@@ -327,28 +333,8 @@ When a FINDCONTENT message is received either the requested content or the nodes
 
 # H - JSON-RPC
 
-Endpoints that require state access
+Endpoints that require for the portal network wire protocol.
 
-## H.1 - `eth_balance`
-
-TODO
-
-## H.2 - `eth_getTransactionCount`
-
-TODO
-
-## H.3 - `eth_getCode`
-
-TODO
-
-## H.4 - `eth_getStorage`
-
-TODO
-
-## H.5 - `eth_call`
-
-TODO
-
-## H.6 - `eth_estimateGas`
+## H.1 - `TODO`
 
 TODO
