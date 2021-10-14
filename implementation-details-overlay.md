@@ -241,7 +241,7 @@ The client tracks *liveliness* of nodes in its routing table and periodically ch
 
 ### E.3.a - Rate Limiting Liviliness Checks
 
-The liviliness checks for any individual node are rate limited as to not spam individual nodes with lots of PING messages when the routing table is sparse.
+The liveliness checks for any individual node are rate limited as to not spam individual nodes with lots of PING messages when the routing table is sparse.
 
 # F - Content Database
 
