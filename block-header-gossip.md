@@ -14,7 +14,7 @@ Portal network's accumulator will be based on the [double-batched merkle log acc
 A fixed sized accumulator of a proposed length of 2048. Block info will be added in into the SSZ list until it has filled up all 2048 of its entries. After which the next block will be included in a new epoch accumulator.
 
 SSZ sede structure:
-`List[Container[blockhash:bytes32, total_difficulty:uint256 ], 2048]`
+`List[Container[blockhash:bytes32, total_difficulty:uint256], max_length=2048]`
 
 The root hash of an epoch will then be included as an entry in the master accumulator.
 
