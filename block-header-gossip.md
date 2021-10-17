@@ -18,7 +18,7 @@ SSZ sede structure:
 
 The root hash of an epoch will then be included as an entry in the master accumulator.
 
-Aside from the first epoch,each client will need to store the current epoch as well as the epoch before in case of reorgs and block sync.
+Aside from the first epoch, each client will need to store the current epoch as well as the epoch before in case of reorgs and block sync.
 
 #### Master Accumulator
 
@@ -68,7 +68,7 @@ Cons:
 1. Repeat of DiscV5 since every client is expected to store the block header info anyway. Extra overhead
 
 ### Distance function
-The distance function (if required if we opt for Idea no.2) will have the same definition as DiscV5
+The distance function (will be required if we opt for Idea no.2) will have the same definition as in DiscV5
 
 `distance(n₁, n₂) = n₁ XOR n₂`
 
@@ -85,7 +85,7 @@ Custom message types are being proposed for the request and response of block he
 Request accumulator info from neighbour
 
 ```
-ContentKey: start_block: uint 
+ContentKey: N/A
 ContentId: TODO
 ````
 
@@ -127,7 +127,7 @@ partial_block_header: structure TBD
 #### <u>OfferBlockHeader</u>
 Offer block header to its neighbour when the node comes to know of an existence of a new valid block.
 
-Neighbour will respond with RequestBlockHeader.
+Interested neighbours will respond with `RequestBlockHeader`.
 
 Message will be dropped after no response after a certain time period
 
@@ -136,91 +136,52 @@ ContentKey: block_number:uint256
 ```
 
 ## Node Responsibilities
-All nodes are required to store and manage their local copy of the master and epoch accumulators. <br/>
-Each block that the node receives must be validated by checking the POW seal. <br/>
-Nodes are also required to store N most recent partial valid block headers and share this information to neighbour nodes who will be asking for them. <br/>
-Nodes will `OfferBlockHeader` to other nodes in the DHT once a block has been validated and added to the accumulator <br/>
+- All nodes are required to store and manage their local copy of the master and epoch accumulators. 
+- Each node will need to store the master accumulator and 2 latest epoch accumulators. 
+- Each block that the node receives must be validated by checking the POW seal.
+- Nodes are also required to store N most recent partial valid block headers and share this information to neighbour nodes who will be asking for them.
+- Nodes will `OfferBlockHeader` to other nodes in the DHT once a block has been validated and added to its accumulator 
+
+### Gossip rules
+
 
 WIP
-# To Edit
+
+### Accumulator handling
+Describes how accumulator is shared when a node first joined the portal network or when a node tried to catch up to the tip of the chain after being N blocks away 
+
+1. Nodes request for accumulator will `RequestAccumulator` from more than 1 node in its DHT.
+
+2. Node that receives `RequestAccumulator` will respond with 3 `ResponseAccumulator` responses. 1 for the master accumulator and the other 2 for the 2 latest epoch accumulator it currently stores. A node that receives too many  `RequestAccumulator` from the same node within a short time span may choose to drop the request for DOS protection.
+
+3. Requesting node will compare the master accumulator response and determined the 'correct' master accumulator via a heuristic approach. The last entry of the master accumulator will not be taken in account as network latency will result in some differences in the last few blocks
+
+4. The epoch accumulator associated the 2nd last entry of the master accumulator is validated by checking the root hash and is accepted and stored. 
+
+5. The correctness epoch accumulator associated to the last entry of master accumulator is also determined heuristically. 
+A common length and block hash that the majority of the neighbour nodes shared will be accepted and stored.
+
+6. The node will proceed to sync the later blocks through the normal process
+
+### Incoming blocks handling
+Describes how new blocks are being shared among nodes. 
+
+1. New blocks originate from bridge nodes and the full block header is stripped to contain only information that is needed for block validation. Refer <u>Partial Block Header</u> section. 
+
+2. New validated blocks are offered to neighbour nodes (not including nodes which the block is received from) via  `OfferBlockHeader`
+
+3. Nodes receiving the `OfferBlockHeader` will check to see if the blocknumber being offered is currently than that it currently stores
+
+4. Nodes who are interested in the new block will `RequestBlockHeaders` to the offering node and includes a starting block number. 
+
+5. Offering node will respond the partial block headers starting from the requested starting block number via `ResponseBlockHeader`.
+
+6. Receiving nodes will validate the blocks and include them into the accumulator. It will send out `OfferBlockHeader` of the latest block only to other nodes in its DHT.
 
 
-## How does portal network gets to block header?
-Bridge nodes which are joining the existing devp2p network will also be joining the portal network and will be responsible in 'pumping' in incoming block data.
+### Reorg handling
+Describes how a node handles reorg. Occurs when a node realizes a longer valid chain that has a different parent block hash.
+
+WIP
 
 
-## General idea
-1. Bridge nodes will send block info to nodes within its radius
-2. Nodes in turn will confirm if the block is valid (in the canonical chain and has a valid POW seal), add it to to running accumulator and propograte it to other nodes within its radius.
-3. Nodes that received block info will not resend info back to nodes that provide this info
-
-
-## Requirements
-- Nodes need to have the ability to get info of master accumulator and epoch accumulator from other nodes. (hash and encoded ssz)
-
-
-## Syncing process
-
-There are 3 different scenarios of which a node may encounter
-
-N is defined as the number of block headers which should be stored by each nodes in the portal network
-
-- sync from the start (new nodes)
-- Sync from only a few blocks away or when node has fully caught up to the chain tip (within N blocks away)
-- Sync from more than N blocks away from the chaintip
-
-
-## Sync for new nodes 
-- Generate a random node id, and retrieve master and last 2 epoch acumulators from x number of nodes within a its distance
-(* nodes should be storing the current epoch accumulator and the previous epoch accumulator)
-
-- ![](https://i.imgur.com/DHASZSo.png)
-
-neigboring nodes made returns epoch / master accumulators which can be longer or shorter
-
-for majority of the case, the length of the master accumulator may be the same however the value in the last entry may be different (due to epoch accumulators not being filled up equally by all neigboring nodes, which is why i think getting the last 2 epoch accumulator is required)
-
-
-compare the hashes of the epoch accumulator and master accumulator to ensure that the information we received are valid. 
-
-in the lastest epoch, as the heights may not be the same due to network latency, we will try to find a common hash of the majority and store it
-
-Where the common majority hash is in the same epoch
-![](https://i.imgur.com/hVe20tP.png)
-
-
-Where the common majority hash is in the previous epoch
-![](https://i.imgur.com/PSswoId.png)
-
-
-
-Heuristic approach is to 'trust' the result from majority of the nodes from which we verify that the hashes are valid.
-
-The node will now have the information of the latest epoch accumulator (probably just a few blocks behind) and can start to ask or to receiving latest blocks from neighboring nodes. 
-
-## Sync from only a few blocks away or when node has fully caught up to the chain tip
-
-In this process, the block validity (POW seal) will be checked. 
-
-Nodes are expected to store the current block header as well as the past N number of block headers in case other nodes may ask for blocks which are slightly away from the chain tip.
-
-Each node thats receives a new block will validate the block's POW seal and add it into the latest epoch accumulator.
-
-A block that has been successfully added will then be broadcasted to its neighbouring blocks to 'pass on' the message
-
-If a receiving node receives a block which is slightly away, from its chain tip, the receiving node will request for blocknumber -1 until a common parent hash has been obtained. (Not more than N). Each blocks will then checked for its validity and be added to the epoch accumulator if its valid. 
-
-If the receiving node already has a few blocks on top of the common parent hash, a reorg has occured and the reorged blocks will be purged from the epoch accumulator and the new master hash will be calculated and stored
-
-
-
-If nodes ask for blocks with are more than N away from the chain tip (beyond the block header storage), nodes should indicate to the requesting node that a batch sync needs to take place.
-
-
-## Sync from more than N blocks away from the chaintip
-When a node realizes that the neighbouring node is asking
-for a block that is N away from the chaintip, it will respond to the neighbour node to tell it to perform a 'batch sync'.
-
-A batch sync will require that the node to request for epoch and master accumulator data similar to how a new node works. 
-
-When the node is back within the N block range, it will then continue to request and validate the block headers
