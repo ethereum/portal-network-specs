@@ -136,6 +136,11 @@ ContentKey: block_number:uint256
 ```
 
 ## Node Responsibilities
+All nodes are required to store and manage their local copy of the master and epoch accumulators
+Each block that the node receives must be validated by checking the POW seal. 
+Nodes are also required to store N most recent partial valid block headers and share this information to neighbour nodes who will be asking for them.
+Nodes will `OfferBlockHeader` to other nodes in the DHT once a block has been validated and added to the accumulator
+
 WIP
 # To Edit
 
