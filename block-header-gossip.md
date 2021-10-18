@@ -5,7 +5,7 @@ Each client has the responsibilty to track the tip of the chain and to store acc
 
 
 ## Block storage
-Each client will be storing blocks in two forms. As accumulators where the entire block history is recorded and as partial block headers where only a subset of the block header is stored. Partial block headers only stored for the most recent N number of blocks.
+Each client will be storing blocks in two forms. As accumulators where the entire block history is recorded and as partial block headers where only a subset of the block header is stored. Partial block headers are only stored for the most recent N number of blocks.
 
 ### Accumulator
 Portal network's accumulator will be based on the [double-batched merkle log accumulator](https://ethresear.ch/t/double-batched-merkle-log-accumulator/571) 
@@ -25,12 +25,12 @@ Aside from the first epoch, each client will need to store the current epoch as 
 An accumulator that increases in size with each epoch. The root hash of each epoch will be appended to the master accumulator
 
 SSZ sede structure:
-`List[epoch_root_hash:bytes32, <a_large_number>]`
+`List[epoch_root_hash:bytes32, max_length=<a_large_number>]`
 
 
 ### Partial Block Header
 
-Client will need more information to verify the validity of the block. In the event of network latency, some clients may have missed out on the last few blocks and will need to request for the partial block header from its neighbours. 
+Clients will need more information to verify the validity of the block. In the event of network latency, some clients may have missed out on the last few blocks and will need to request for the partial block header from its neighbours. 
 
 And so, each client number will also be required to store a certain amount of the most recent blocks.
 
@@ -46,7 +46,7 @@ Partial Block Header will include:
 The block header gossip will be an overlay of [DiscV5](https://github.com/ethereum/devp2p/blob/master/discv5/discv5-theory.md).
 
 #### <u>Idea No.1</u>
-It is the responsibility of all clients in the portal network to have a local version of accumulator and block header. The block header gossip can reuse the ENR from the underlying DiscV5 protocol. The the maintenence of node liveness and node records are being done solely by DiscV5.
+It is the responsibility of all clients in the portal network to have a local version of accumulator and block header. The block header gossip can reuse the ENR from the underlying DiscV5 protocol. The maintenence of node liveness and node records are being done solely by DiscV5.
 
 Information that are required by Block header gossip can be passed onto the overlay block header gossip layer in TalkReq/TalkResp encapsulated message.
 
@@ -105,7 +105,7 @@ payload for content type 1 : 1 | List[epoch_root_hash:bytes32, <a_large_number>]
 #### <u>RequestBlockHeaders</u>
 Used by nodes to request for lastest numbers of blocks from its neighbour. Only for the last N blocks. Otherwise, neigbour node will request for the requesting node to request for accumulator instead.
 ```
-ContentKey: start_block:uint
+ContentKey: start_block:uint | number_of_blocks_from_start_block:uint
 ```
 
 #### <u>ResponseBlockHeader</u>
@@ -122,8 +122,6 @@ partial_block_header: structure TBD
 
 ```
 
-
-
 #### <u>OfferBlockHeader</u>
 Offer block header to its neighbour when the node comes to know of an existence of a new valid block.
 
@@ -135,6 +133,7 @@ Message will be dropped after no response after a certain time period
 ContentKey: block_number:uint256
 ```
 
+
 ## Node Responsibilities
 - All nodes are required to store and manage their local copy of the master and epoch accumulators. 
 - Each node will need to store the master accumulator and 2 latest epoch accumulators. 
@@ -144,11 +143,10 @@ ContentKey: block_number:uint256
 
 ### Gossip rules
 
-
 WIP
 
 ### Accumulator handling
-Describes how accumulator is shared when a node first joined the portal network or when a node tried to catch up to the tip of the chain after being N blocks away 
+Describes how accumulator is shared when a node first joined the portal network or when a node tries to catch up to the tip of the chain after being N blocks away 
 
 1. Nodes request for accumulator will `RequestAccumulator` from more than 1 node in its DHT.
 
@@ -180,8 +178,21 @@ Describes how new blocks are being shared among nodes.
 
 
 ### Reorg handling
-Describes how a node handles reorg. Occurs when a node realizes a longer valid chain that has a different parent block hash.
+Describes how a node handles reorg. Occurs when a node realizes a longer valid chain has a different canonical parent block hash.
 
-WIP
+1. When a node receives partial block header from `ResponseBlockHeader` it checks to see if it has a canonical parant block hash. A reorg will occur if the parent block hash expected by the new block does not match the block hash of the previous block from the new block.
 
+e.g. 
+| New block | Previous block |
+|-----------|----------------|
+| number:100| number:99      |
+| hash: irrelevant | hash: 0xbb|
+| parenthash: 0xbc | parenthash: irrelevant|
+
+
+2. A node will `RequestBlockHeaders` and setting the starting block number to a few blocks behind the current block in an attempt to determine the canonical block.
+
+3. If the canonical block is beyond the range of the selected starting block number, the node will `RequestBlockHeaders` again until a canonical block hash is found or the requested block header is beyond N blocks away
+
+4. If block header requested is N blocks away, the node will need to `RequestAccumulator` to resync its accumulator. If it is within N blocks, the entries of the accumulator in the node's local storage will be replaced with the new block hashes
 
