@@ -50,6 +50,8 @@ The `serialized_message` is the payload passed to the `request` field of the `TA
 
 The type values for the `Union` are the SSZ Containers specified per message type.
 
+The transmission of `content` data that is too large to fit a single packet is done over [uTP](./discv5-utp.md).
+
 ### Aliases
 
 For convenience we alias:
@@ -130,7 +132,7 @@ requested content.
 
 ```
 selector     = 0x06
-content      = Union[connection-id: Bytes2, content: ByteList, enrs: List[ByteList, 32]]
+content      = Union[connection_id: Bytes2, content: ByteList, enrs: List[ByteList, 32]]
 ```
 
 * `connection_id`: Connection ID to set up a uTP stream to transmit the requested data.
@@ -142,6 +144,10 @@ content      = Union[connection-id: Bytes2, content: ByteList, enrs: List[ByteLi
     * This field **MUST** be used when the requested data can fit in this single response.
 
 If the node does not hold the requested content, and the node does not know of any nodes with eligible ENR values, then the node **MUST** return `enrs` as an empty list.
+
+Upon *sending* this message with a `connection_id`, the sending node **SHOULD** *listen* for an incoming uTP stream with the generated `connection_id`.
+
+Upon *receiving* this message with a `connection_id`, the receiving node **SHOULD** *initiate* a uTP stream with the received `connection_id`.
 
 #### Offer (0x07)
 
