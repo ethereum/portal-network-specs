@@ -220,9 +220,6 @@ The routing table can return the nodes closest to a provided `node_id`.
 
 Functionality related to managing a node's view of the overlay network.
 
-## E.1 - Sup Protocol Specific Bootnodes
-
-
 ## E.1 - Bootstrapping via Bootnodes
 
 The client uses a set of bootnodes to acquire an initial view of the network.
@@ -285,7 +282,7 @@ The ability to listening for an inbound connection fromm another node with a `co
 
 ## G.2 - Enforcement of maximum stored content size
 
-When the total size of stored content exceeds the configured maximum content storage size the content which is furthest from the local `node_id` is evicted in a timely manner.
+When the total size of stored content exceeds the configured maximum content storage size the content which is furthest from the local `node_id` is evicted in a timely manner.  This should also result in any "data radius" values relevant to this network being adjusted.
 
 ## G.3 - Retrieval via FINDCONTENT/FOUNDCONTENT & uTP
 
@@ -301,7 +298,7 @@ Upon encountering a FOUNDCONTENT response that contains the actual content paylo
 
 ### G.3.b - Receipt via uTP
 
-Upon encountering a FOUNDCONTENT response that contains a uTP `connection-id`, the client can listen for and receive the content payload over the uTP stream.
+Upon encountering a FOUNDCONTENT response that contains a uTP `connection-id`, the client should initiate a uTP stream with the provided `connection-id` and receive the full data payload over that stream.
 
 ## G.4 - Gossip via OFFER/ACCEPT & uTP
 
