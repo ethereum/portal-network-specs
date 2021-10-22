@@ -27,6 +27,13 @@ Bob, upon receiving the `Data` message containing the `connection_id` will
 When this new connection is opened, Alice can then read the bytes from the stream
 until the connection closes.
 
+### Message format
+
+| Bytes | Fields     | Description                            |
+|-------|------------|----------------------------------------|
+| 4     | length     | length of the payload in BE format     |
+| ?     | payload    | bytelist of data                       |
+
 ## BEP29
 
 https://www.bittorrent.org/beps/bep_0029.html
