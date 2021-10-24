@@ -22,6 +22,9 @@ Currently defined protocol identifiers:
 - `0x500C`: Transaction Gossip Network
 - `0x500D`: Header Gossip Network
 - `0x500E`: Canonical Indices Network
+- `0x501A`: gossip channel: bc-light-client-snapshot
+- `0x501B`: gossip channel: bc-light-client-update
+- `0x501C`: DHT network: beacon-state
 
 ## Content Keys and Content IDs
 
