@@ -78,4 +78,3 @@ payload := serialize(BeaconStateProof, beacon_state_proof)
 - Determine if the message type `BeaconStateProof` needs to be gossiped as well.
 - The DHT algorithm for `FINDCONTENT` might not reach large radius node, and hence it would fail to find some available contents. See the [discussion](https://github.com/ethereum/portal-network-specs/issues/91)
 
-

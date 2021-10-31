@@ -1,3 +1,6 @@
+## Status
+>  This specification is a work-in-progress and should be considered preliminary.
+
 ## Overview
 A beacon chain client could sync committee to perform [state updates](https://github.com/ethereum/consensus-specs/blob/dev/specs/altair/sync-protocol.md). The data object [LightClientSnapshot](https://github.com/ethereum/consensus-specs/blob/dev/specs/altair/sync-protocol.md#lightclientsnapshot) allows a client to quickly sync to a particular header. Once the client establishes a valid header, it could sync to other headers by processing [LightClientUpdates](https://github.com/ethereum/consensus-specs/blob/dev/specs/altair/sync-protocol.md#lightclientupdate). These two data types allow a client to stay up-to-date with the beacon chain.
 
