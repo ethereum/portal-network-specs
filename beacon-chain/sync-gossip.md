@@ -53,9 +53,9 @@ class LightClientSnapshot(Container):
 
 Finally, we define the necessary encodings. Note that one could not construct the `content_key` without knowing having already has the object. It might be advantageous to allow `content_key` to retain information about its epoch or slot, but none of the those markers would be able to uniquely identifies a snapshot object. Using a content addressable hash as the `content_key` is choice for simplicity.
 ```python
-content_key := hash_tree_root(LightClientSnapshot, light_client_snapshot)
-content_id := content_key
-payload := serialize(LightClientSnapshot, light_client_snapshot)
+content_key = hash_tree_root(LightClientSnapshot, light_client_snapshot)
+content_id = content_key
+payload = serialize(LightClientSnapshot, light_client_snapshot)
 ```
 
 
@@ -82,9 +82,9 @@ class LightClientUpdate(Container):
 
 Finally, we define the necessary encodings.
 ```python
-content_key := hash_tree_root(LightClientUpdate, light_client_update)
-content_id := content_key
-payload := serialize(LightClientUpdate, light_client_update)
+content_key = hash_tree_root(LightClientUpdate, light_client_update)
+content_id = content_key
+payload = serialize(LightClientUpdate, light_client_update)
 ```
 
 ## TODOs

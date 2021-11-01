@@ -68,9 +68,9 @@ def get_content_key(root: Bytes323, paths: Sequence[Sequence[[Union[int, SSZVari
     return serialize(BeaconStateProofKey, proof_key)
 
 
-content_key := get_content_key(root, paths)
-content_id := hash_tree_root(BeaconStateProof, beacon_state_proof)
-payload := serialize(BeaconStateProof, beacon_state_proof)
+content_key = get_content_key(root, paths)
+content_id = hash_tree_root(BeaconStateProof, beacon_state_proof)
+payload = serialize(BeaconStateProof, beacon_state_proof)
 ```
 
 
