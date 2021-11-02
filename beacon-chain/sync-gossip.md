@@ -2,9 +2,9 @@
 >  This specification is a work-in-progress and should be considered preliminary.
 
 ## Overview
-A beacon chain client could sync committee to perform [state updates](https://github.com/ethereum/consensus-specs/blob/dev/specs/altair/sync-protocol.md). The data object [LightClientSnapshot](https://github.com/ethereum/consensus-specs/blob/dev/specs/altair/sync-protocol.md#lightclientsnapshot) allows a client to quickly sync to a particular header. Once the client establishes a valid header, it could sync to other headers by processing [LightClientUpdates](https://github.com/ethereum/consensus-specs/blob/dev/specs/altair/sync-protocol.md#lightclientupdate). These two data types allow a client to stay up-to-date with the beacon chain.
+A beacon chain client could sync committee to perform [state updates](https://github.com/ethereum/consensus-specs/blob/dev/specs/altair/sync-protocol.md). The data object [LightClientSkipSyncUpdate](skip-sync-network) allows a client to quickly sync to a reasonably recent header. Once the client establishes a recent header, it could sync to other headers by processing [LightClientUpdates](https://github.com/ethereum/consensus-specs/blob/dev/specs/altair/sync-protocol.md#lightclientupdate). These two data types allow a client to stay up-to-date with the beacon chain.
 
-These two data types are placed into separate gossip topics. A light client only needs to connects to `bc-light-client-snapshot` briefly at the start of the sync to get a reasonably recent beacon chain header. The client uses messages in the topic `bc-light-client-update` to advance its header.
+These two data types are placed into separate gossip topics. A light client make find-content requests on `skip-sync-network` at start of the sync to get a reasonably recent beacon chain header. The client uses messages in the gossip topic `bc-light-client-update` to advance its header.
 
 The gossip topics described in this document is part of a [proposal](https://ethresear.ch/t/a-beacon-chain-light-client-proposal/11064) for a beacon chain light client.
 
@@ -38,28 +38,6 @@ def hash_tree_root(typ: SszType, obj: SszObject) -> bytes
 
 See [serialization](https://github.com/ethereum/consensus-specs/blob/dev/ssz/simple-serialize.md#serialization) and [merkleiation]((https://github.com/ethereum/consensus-specs/blob/dev/ssz/simple-serialize.md#merkleization)) for more details.
 
-#### bc-light-client-snapshot
-The subprotocol id is: `0x501A`.
-
-The content of the message is the [snapshot container](https://github.com/ethereum/consensus-specs/blob/dev/specs/altair/sync-protocol.md#lightclientsnapshot) object.
-```python
-class LightClientSnapshot(Container):
-    # Beacon block header
-    header: BeaconBlockHeader
-    # Sync committees corresponding to the header
-    current_sync_committee: SyncCommittee
-    next_sync_committee: SyncCommittee
-```
-
-Finally, we define the necessary encodings. Note that one could not construct the `content_key` without knowing having already has the object. It might be advantageous to allow `content_key` to retain information about its epoch or slot, but none of the those markers would be able to uniquely identifies a snapshot object. Using a content addressable hash as the `content_key` is choice for simplicity.
-```python
-content_key = hash_tree_root(LightClientSnapshot, light_client_snapshot)
-content_id = content_key
-payload = serialize(LightClientSnapshot, light_client_snapshot)
-```
-
-
-#### bc-light-client-update
 The subprotocol id is: `0x502A`.
 
 The content of the message is the [update container](https://github.com/ethereum/consensus-specs/blob/dev/specs/altair/sync-protocol.md#lightclientupdate).
@@ -88,8 +66,6 @@ payload = serialize(LightClientUpdate, light_client_update)
 ```
 
 ## TODOs
-- A client should receive at least one LightClientSnapshot message within a sync committee period. There should be a minimal radius recommended such that the client rarely has to connect to `bc-light-client-snapshot` to update its head due to missing an entire sync committee period. This value could be determined empirically.
-
 - It makes sense that there should a single distance function that works for all portal network subnetworks. The proposed [distance function](https://github.com/ethereum/portal-network-specs/blob/master/state-network.md#distance-function) is defined to be the distance in a ring might not [work well](https://github.com/ethereum/portal-network-specs/issues/90) for a Kademlia DHT.
 
 - Define the routing table algorithm. If the distance measure is XOR, the routing table should be maintained as Kademlia routing table. Otherwise, define how the routing table is maintained.
