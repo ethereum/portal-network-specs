@@ -1,51 +1,40 @@
 # Portal Network: Transaction Gossip Network
 
+> NOTE: This specification is a work in progress.
+
 This document is the specifcation for the "Transaction Gossip" portion of the portal network.  The network is designed to enable participants to broadcast transactions which can be picked up by miners for inclusion in future blocks.
 
-## Unresolved Issues
-
-### Content Key and Content ID
-
-At present, the `content-id` derivation for a transaction is simply its transaction hash. One option we may want to consider is inclusion of the `proof_state_root` in the derivation of `content-id` which would mean that the same transaction could shift locations around the network as its proof is updated.  This increases the DOS vector since someone could publish many copies of the same transaction anchored to different state roots and all of them would be valid.
-
-The *benefit* of such a scheme is that the location of a transaction would shift as its proof gets updated.  This would be a natural mechanism to address the issue of reliable delivery of transactions to full width nodes.  Each time the proof gets updated, the transaction will land in a new part of the DHT and have another chance to be picked up by a full width node.
-
-### DOS Mitigation
-
-One DOS vector that results from allowing nodes to only process a portion of the transaction pool is that nodes lose some ability to remove duplicate transactions from the overall pool.  In ideal situations, two transactions from the same sender with the same `nonce` should result in one of those transactions being discarded.  However, since some of our nodes will only process a portion of the pool, if there are two such transactions and a node only has visibility into one of them, they will not have enough information to properly discard one of the duplicates.
-
-As transactions flow towards nodes with higher radius values, these duplicates will eventually be discarded as they reach nodes with broader visibility into the full transaction pool.
-
-The ideal solution would be a mechanism through which low radius nodes would be able to assist with mitigating this type of DOS attack.
-
-### Reliable Delivery to Full Radius Nodes
-
-The current gossip design does not provide reliable guarantees that transactions broadcast by low radius nodes will successfully be gossiped to full radius nodes.
 
 ## Design
 
 The transaction gossip network is designed with the following requirements.
 
-- Participants who are interested in observing the full transaction pool are able to gain visibility into the full set of valid pending transactions
+- Valid transactions that are broadcast in the network will reliably reach the DHT nodes who are interested in observing the full transaction pool.
 - Participants are not required to process the full pool and can control the total percentage of the transaction pool they wish to process
 - Participants can check transaction validity without access to the full ethereum state.
 
 
 ## Wire Protocol
 
-The transaction gossip network uses the PING/PONG/FINDNODES/FOUNDNODES/OFFER/ACCEPT messages from the generic [overlay protocol](./TODO).
+The Transaction Gossip Network uses the PING/PONG/FINDNODES/FOUNDNODES/OFFER/ACCEPT messages from the [Portal Wire Protocol](./portal-wire-protocol.md).
 
 ### Distance Function
 
-TODO
+The Transaction Gossip Network uses the standard XOR distance function.
 
 ### PING payload
 
-TODO: radius
+```
+Ping.custom_payload := ssz_serialize(custom_data)
+custom_data         := Container(transaction_radius: uint256)
+```
 
 ### PONG payload
 
-TODO: radius
+```
+Pong.custom_payload := ssz_serialize(custom_data)
+custom_data         := Container(transaction_radius: uint256)
+```
 
 ## Content Keys
 
@@ -53,7 +42,7 @@ TODO: radius
 
 ```
 content_key  := Container(content_type: uint8, transaction_hash: Bytes32, proof_state_root: Bytes32)
-content_type := 0xTODO
+content_type := 0x01
 content_id   := transaction_hash
 ```
 
@@ -65,14 +54,30 @@ proof       := TODO
 transaction := TODO
 ```
 
+## Secondary Routing Table
+
+Clients in the Transaction Gossip Network are expected to maintain both the standard routing table and a secondary routing table that is anchored to node radius values.
+
+The secondary routing table is subject to all of the same maintenance and management rules as the primary table.  Any node that is added to the secondary routing table must also satisfy the following validity condition:
+
+```
+node.transaction_radius >= distance(node.node_id, self.node_id)
+```
+
+The additional validity rule aims to ensure that the table is populated with nodes will have shared interest in mostly the same transactions as us.
+
 
 ## Gossip Algorithm
 
-The gossip mechanism for transactions is designed to allow nodes to decide how much of the transaction pool they wish to process.
+The gossip mechanism for transactions is designed to allow DHT nodes to control what percentage of the transaction pool they wish to process.
 
 ### Radius
 
-All DHT nodes in the network will maintain a `radius` which communicates how much of the transaction pool they process.  This value is a 256 bit integer.  A DHT node is expected to process transactions for which `distance(node_id, content_id) <= radius`.
+We use the term "radius" to refer to the mechanism through which a node may limit how much of the transaction pool they wish to process.  The `radius` is a 256 bit integer.  
+
+A DHT node that wishes to process the full transaction pool would publis a radius value of `2**256-1`. We refer to such a DHT node as a "full radius node".
+
+A DHT node is expected to process transactions that satisfy the condition: `distance(node_id, content_id) <= radius`
 
 Each DHT node includes their current `radius` value in both PING and PONG messages.
 
@@ -97,7 +102,12 @@ The proof **must** show that:
 
 ### Gossip Rules
 
-Nodes should OFFER transactions to the DHT nodes in their routing table.  A DHT node should only be offer'd a transaction that is inside of its radius.
+Nodes should OFFER transactions to the DHT nodes sourced from their secondary routing table.
+
+A DHT node should only be offer'd a transaction that is inside of its radius.
+
+A node should only OFFER any individual transaction to a DHT node once.
+
 
 ### Proof Updating
 
