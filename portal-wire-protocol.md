@@ -140,17 +140,39 @@ content      = Union[connection_id: Bytes2, content: ByteList, enrs: List[ByteLi
 
 * `connection_id`: Connection ID to set up a uTP stream to transmit the requested data.
     * Connection ID values **SHOULD** be randomly generated.
+*  `content`: byte string of the requested content.
+    * This field **MUST** be used when the requested data can fit in this single response.
 * `enrs`: List of byte strings, each of which is an RLP encoded ENR record.
     * Individual ENR records **MUST** be closer to the requested content than the responding node.
     * The set of derived `node_id` values from the ENR records **MUST** be unique.
-* `content`: byte string of the requested content.
-    * This field **MUST** be used when the requested data can fit in this single response.
 
 If the node does not hold the requested content, and the node does not know of any nodes with eligible ENR values, then the node **MUST** return `enrs` as an empty list.
 
 Upon *sending* this message with a `connection_id`, the sending node **SHOULD** *listen* for an incoming uTP stream with the generated `connection_id`.
 
 Upon *receiving* this message with a `connection_id`, the receiving node **SHOULD** *initiate* a uTP stream with the received `connection_id`.
+
+##### `content` Union Definition
+
+The `Union` defined in the `content` field of the `Content (0x06)` message is defined as below:
+
+**`content-id`**
+```
+selector = 0x00
+value = Bytes2
+```
+
+**`content`**
+```
+selector = 0x01
+value = ByteList
+```
+
+**`enrs`**
+```
+selector = 0x02
+value = List[ByteList, 32]]
+```
 
 #### Offer (0x07)
 
