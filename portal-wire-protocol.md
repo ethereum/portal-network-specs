@@ -159,7 +159,7 @@ The `Union` defined in the `content` field of the `Content (0x06)` message is de
 **`content-id`**
 ```
 selector = 0x00
-value = Bytes2
+ssz-type = Bytes2
 ```
 
 **`content`**
