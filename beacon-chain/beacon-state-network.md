@@ -32,6 +32,7 @@ LEAVE_ITEM_LIMIT = 128
 # Note that max_chuck_count() is recursively apply chunk_count() on all possible paths of the BeaconState.
 HELPER_INDICES_LIMIT = LEAVE_ITEM_LIMIT * log(max_chuck_count(BeaconState))  
 
+
 class BeaconStateProof(Container):
     """
     See: https://github.com/ethereum/consensus-specs/blob/dev/ssz/merkle-proofs.md#merkle-multiproofs
@@ -39,7 +40,7 @@ class BeaconStateProof(Container):
     root: Bytes323
     leave_indices: List[unit64, LEAVE_ITEM_LIMIT]  # GeneralizedIndex is represented by unit64
     leaves: List[Bytes32, LEAVE_ITEM_LIMIT]
-    proof_nodes: List[Bytes32, HELPER_INDICES_LIMIT]
+    branches: List[Bytes32, HELPER_INDICES_LIMIT]
 ```
 
 Finally, we define the necessary encodings. A light client only knows the root of the beacon state. The client wants to know the details of some leave nodes. The client has to be able to construct the `content_key` only knowing the root and which leave nodes it wants see. The `content_key` is the ssz serialization of the paths. The paths represent the part of the beacon state that one wants to know about. The paths are represented by generalized indices. Note that `hash_tree_root` and `serialize` are the same as those defined in [sync-gossip](sync-gossip.md). 
