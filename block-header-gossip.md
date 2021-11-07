@@ -11,7 +11,11 @@ Each client will be storing blocks in two forms. As accumulators where the entir
 Portal network's accumulator will be based on the [double-batched merkle log accumulator](https://ethresear.ch/t/double-batched-merkle-log-accumulator/571) 
 
 #### Epoch Accumulator
-A fixed sized accumulator of a proposed length of 2048. Block info will be added in into the SSZ list until it has filled up all 2048 of its entries. After which the next block will be included in a new epoch accumulator.
+EPOCH_SIZE = 2048
+
+A fixed sized accumulator of length 2048.
+
+Block info will be added in into the SSZ list until it has filled up all 2048 of its entries. After which the next block will be included in a new epoch accumulator.
 
 SSZ sede structure:
 `List[Container[blockhash:bytes32, total_difficulty:uint256], max_length=2048]`
@@ -42,23 +46,10 @@ Partial Block Header will include:
 - Mixhash
 - Previous Hash (may be required to determine longest, heaviest chain. to know if the current block is pointed to the previous block)
 
-## DHT
+## Wire Protocol
+
 The block header gossip will be an overlay of [DiscV5](https://github.com/ethereum/devp2p/blob/master/discv5/discv5-theory.md).
 
-#### <u>Idea No.1</u>
-It is the responsibility of all clients in the portal network to have a local version of accumulator and block header. The block header gossip can reuse the ENR from the underlying DiscV5 protocol. The maintenence of node liveness and node records are being done solely by DiscV5.
-
-Information that are required by Block header gossip can be passed onto the overlay block header gossip layer in TalkReq/TalkResp encapsulated message.
-
-Pros:
-1. Able to reuse underlying DiscV5
-2. Pass the responsibility of node maintence to DiscV5 and reduce additional message exchange
-
-Cons:
-1. Could be potentially too tightly coupled
-
-
-#### <u>Idea No.2</u>
 A seperate DHT for ENR's are being maintained in the overlay network. Similar messages such as PING, PONG, FINDNODES and FOUNDNODES will be used to maintained node liveness in the DHT. 
 
 Pros:
@@ -72,8 +63,6 @@ The distance function (will be required if we opt for Idea no.2) will have the s
 
 `distance(n₁, n₂) = n₁ XOR n₂`
 
-
-## Wire Protocol
 Custom message types will be encapsulated in the DiscV5 TalkReq/TalkResponse message
 
 Custom message types are being proposed for the request and response of block header info
