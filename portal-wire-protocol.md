@@ -156,7 +156,7 @@ Upon *receiving* this message with a `connection_id`, the receiving node **SHOUL
 
 The `Union` defined in the `content` field of the `Content (0x06)` message is defined as below:
 
-**`content-id`**
+**`connection_id`**
 ```
 selector = 0x00
 ssz-type = Bytes2
@@ -165,13 +165,13 @@ ssz-type = Bytes2
 **`content`**
 ```
 selector = 0x01
-value = ByteList
+ssz-type = ByteList
 ```
 
 **`enrs`**
 ```
 selector = 0x02
-value = List[ByteList, 32]]
+ssz-type = List[ByteList, 32]
 ```
 
 #### Offer (0x07)
