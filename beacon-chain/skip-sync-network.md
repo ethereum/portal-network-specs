@@ -34,15 +34,13 @@ class LightClientSkipSyncUpdate(Container):
 
 class SkipSyncUpdateKey(Container):
     epoch: Epoch
-    current_sync_committee: SyncCommittee
     next_sync_committee: SyncCommittee
     fork_version: Version
 
-def get_content_key(epoch: Epoch, current_sync_committee SyncCommittee, next_sync_committee SyncCommittee, fork_version Version) -> bytes:
+def get_content_key(epoch: Epoch, next_sync_committee SyncCommittee, fork_version Version) -> bytes:
     indices = [get_generalized_index(BeaconSate, path) for path in paths]
     key = SkipSyncUpdateKey()
     key.epoch = epoch
-    key.current_sync_committee = current_sync_committee
     key.next_sync_committee = next_sync_committee
     key.fork_version = fork_version
 
