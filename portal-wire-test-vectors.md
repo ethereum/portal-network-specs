@@ -14,7 +14,7 @@ primarily verify the SSZ encoding and decoding of each protocol message.
 #### Input Parameters
 ```
 enr_seq = 1
-data_radius = uint256.high() - 1
+data_radius = 2^256 - 2 # Maximum value - 1
 custom_payload = serialize(Container(data_radius))
 ```
 
@@ -28,7 +28,7 @@ message = 0x0101000000000000000c000000feffffffffffffffffffffffffffffffffffffffff
 #### Input Parameters
 ```
 enr_seq = 1
-data_radius = uint256.high() / 2
+data_radius = (2^256 - 1) / 2 # Maximum value / 2
 custom_payload = serialize(Container(data_radius))
 ```
 
