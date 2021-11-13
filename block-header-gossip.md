@@ -185,3 +185,20 @@ e.g.
 
 4. If block header requested is N blocks away, the node will need to `RequestAccumulator` to resync its accumulator. If it is within N blocks, the entries of the accumulator in the node's local storage will be replaced with the new block hashes
 
+## Analysis on storage growth for different epoch size
+
+*Assuming block time of 15secs
+
+
+| Epoch size | 2048 | 8192 |
+| --- | --- | --- |
+| Size of fully filled epoch file | 131,072 bytes | 524,288 byte |
+| Rate of Growth of master accumulator | 3.75 bytes/hr | 0.9375 bytes/hr |
+| Size of master accumulator at block 1000 | 32 bytes | 32 bytes |
+| Size of master accumulator at block 5000 | 96 bytes | 32 bytes |
+| Size of master accumulator at block 10,000 | 160 bytes | 64 bytes |
+| Size of master accumulator at block 15,000 | 256 bytes | 64 bytes |
+
+
+
+
