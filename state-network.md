@@ -176,12 +176,12 @@ The [Portal wire protocol](./portal-wire-protocol.md) is used as wire protocol f
 As specified in the [Protocol identifiers](./portal-wire-protocol.md#protocol-identifiers) section of the Portal wire protocol, the `protocol` field in the `TALKREQ` message **MUST** contain the value of `0x500A`.
 
 The state network supports the following protocol messages:
-- `Ping` (0x01) - `Pong` (0x02)
-- `Find Nodes` (0x03) - `Nodes` (0x04)
-- `Find Content` (0x05) - `Found Content` (0x06)
-- `Offer` (0x07) - `Accept` (0x08)
+- `Ping` - `Pong`
+- `Find Nodes` - `Nodes`
+- `Find Content` - `Found Content`
+- `Offer` - `Accept`
 
-In the state network the `custom_payload` field of the `Ping` (0x01) and `Pong` (0x02) messages is the serialization of an SSZ Container specified as `custom_data`:
+In the state network the `custom_payload` field of the `Ping` and `Pong` messages is the serialization of an SSZ Container specified as `custom_data`:
 ```
 custom_data = Container(data_radius: uint256)
 custom_payload = serialize(custom_data)

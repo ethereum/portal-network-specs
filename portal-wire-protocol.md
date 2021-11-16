@@ -62,36 +62,36 @@ For convenience we alias:
 
 ### Message Types
 
-#### Ping (0x01)
+#### Ping (0x00)
 
 Request message to check if a node is reachable, communicate basic information about our node, and request basic information about the recipient node.
 
 ```
-selector     = 0x01
+selector     = 0x00
 ping         = Container(enr_seq: uint64, custom_payload: ByteList)
 ```
 
 * `enr_seq`: The node's current sequence number of their ENR record.
 * `custom_payload`: Custom payload specified per the network.
 
-#### Pong (0x02)
+#### Pong (0x01)
 
-Response message to Ping(0x01)
+Response message to Ping(0x00)
 
 ```
-selector     = 0x02
+selector     = 0x01
 pong         = Container(enr_seq: uint64, custom_payload: ByteList)
 ```
 
 * `enr_seq`: The node's current sequence number of their ENR record.
 * `custom_payload`: Custom payload specified per the network.
 
-#### Find Nodes (0x03)
+#### Find Nodes (0x02)
 
 Request message to get ENR records from the recipient's routing table at the given logarithmic distances. The distance of `0` indicates a request for the recipient's own ENR record.
 
 ```
-selector     = 0x03
+selector     = 0x02
 find_nodes   = Container(distances: List[uint16, max_length=256])
 ```
 
@@ -99,12 +99,12 @@ find_nodes   = Container(distances: List[uint16, max_length=256])
     * Each distance **MUST** be within the inclusive range `[0, 256]`
     * Each distance in the list **MUST** be unique.
 
-#### Nodes (0x04)
+#### Nodes (0x03)
 
-Response message to FindNodes(0x03).
+Response message to FindNodes(0x02).
 
 ```
-selector     = 0x04
+selector     = 0x03
 nodes        = Container(total: uint8, enrs: List[ByteList, max_length=32])
 ```
 
@@ -115,26 +115,26 @@ nodes        = Container(total: uint8, enrs: List[ByteList, max_length=32])
 
 > Note: If the number of ENR records cannot be encoded into a single message, then they should be sent back using multiple messages, with the `total` field representing the total number of messages that are being sent.
 
-#### Find Content (0x05)
+#### Find Content (0x04)
 
 Request message to get the `content` with `content_key`, **or**, in case the recipient does not have the data, a list of ENR records of nodes that are closer than the recipient is to the requested content.
 
 ```
-selector     = 0x05
+selector     = 0x04
 find_content = Container(content_key: ByteList)
 ```
 
 * `content_key`: The key for the content being requested. The encoding of `content_key` is specified per the network.
 
-#### Content (0x06)
+#### Content (0x05)
 
-Response message to Find Content (0x05).
+Response message to Find Content (0x04).
 
 This message can contain either a uTP connection ID, a list of ENRs or the
 requested content.
 
 ```
-selector     = 0x06
+selector     = 0x05
 content      = Union[connection_id: Bytes2, content: ByteList, enrs: List[ByteList, 32]]
 ```
 
@@ -154,7 +154,7 @@ Upon *receiving* this message with a `connection_id`, the receiving node **SHOUL
 
 ##### `content` Union Definition
 
-The `Union` defined in the `content` field of the `Content (0x06)` message is defined as below:
+The `Union` defined in the `content` field of the `Content (0x05)` message is defined as below:
 
 **`connection_id`**
 ```
@@ -174,25 +174,25 @@ selector = 0x02
 ssz-type = List[ByteList, 32]
 ```
 
-#### Offer (0x07)
+#### Offer (0x06)
 
 Request message to offer a set of `content_keys` that this node has `content` available for.
 
 ```
-selector     = 0x07
+selector     = 0x06
 offer        = Container(content_keys: List[ByteList, max_length=64])
 ```
 
 * `content_keys`: A list of encoded `content_key` entries. The encoding of each `content_key` is specified per the network.
 
-#### Accept (0x08)
+#### Accept (0x07)
 
-Response message to Offer (0x07).
+Response message to Offer (0x06).
 
 Signals interest in receiving the offered data from the corresponding Offer message.
 
 ```
-selector     = 0x08
+selector     = 0x07
 accept       = Container(connection_id: Bytes2, content_keys: BitList[max_length=64]]
 ```
 
