@@ -204,3 +204,8 @@ accept       = Container(connection_id: Bytes2, content_keys: BitList[max_length
 Upon *sending* this message, the requesting node **SHOULD** *listen* for an incoming uTP stream with the generated `connection_id`.
 
 Upon *receiving* this message, the serving node **SHOULD** *initiate* a uTP stream with the received `connection_id`.
+
+### Test Vectors
+
+A collection of test vectors for this specification can be found in the
+[Portal wire test vectors](./portal-wire-test-vectors.md) document.
