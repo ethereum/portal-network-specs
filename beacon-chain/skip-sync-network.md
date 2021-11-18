@@ -52,6 +52,6 @@ payload = serialize(SkipSyncUpdate, skip_sync_update)
 - The rule for picking the update within a sync period is as followed:
     1. The finalized update with the highest participation
     2. The update with highest participation
-    3. Prefer the most recent update
-- Clients do not need to retrieve the exact same `skip_sync_update` while making requests with the same `skip_sync_update_key`. They only need to receive a valid `skip_sync_update` that allows them to advance their head to the next sync committee.
+    3. Prefer the oldest update
+- Clients do not need to retrieve the exact same `skip_sync_update` while making requests with the same `skip_sync_update_key`. They only need to receive a valid `skip_sync_update` that allows them to advance their head to the next sync committee period.
 - `SkipSyncUpdate` is different from `LightClientUpdate` in that `sync_committee` is present in the skip sync update message. This inclusion allows portal network nodes to validate the message without any external dependencies. The original data lookup requester has the sync-committee, but network nodes are not required to keep the database of historical `SkipSyncUpdate`. If a portal network node does not validate `SkipSyncUpdate` messages before propagating, the DHT could be easily polluted with key-value pair (`skip_sync_update_key`, `skip_sync_update`) that are not internally consistent. Even a small number of bad messages could amplify to be the dominant answers of a data lookup if those bad messages were the first messages to enter the DHT.
