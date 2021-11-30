@@ -44,10 +44,6 @@ The ability to receive PING messages
 
 Support for the PONG message type
 
-#### B.1.b.1 - PONG message support
-
-Support for the PONG message type
-
 #### B.1.b.1 - PONG sending
 
 The ability to send a PONG message
@@ -77,10 +73,6 @@ The ability to send a FINDNODES message
 The ability to receive FINDNODES messages
 
 ### B.2.b - FOUNDNODES message support
-
-Support for the FOUNDNODES message type
-
-#### B.2.b.1 - FOUNDNODES message support
 
 Support for the FOUNDNODES message type
 
@@ -257,12 +249,12 @@ Given a known `content_id` the corresponding content payload can be retrieved.
 Content can be removed.
 
 
-## F.3 - Query furthest by distance
+## F.4 - Query furthest by distance
 
 Retrieval of the content from the database which is furthest from a provided `node_id` using the custom distance function.
 
 
-## F.4 - Total size of stored content
+## F.5 - Total size of stored content
 
 Retrieval of the total number of bytes stored.
 
@@ -278,7 +270,7 @@ The ability to establish a new outbound connection with another node with a spec
 
 ### G.1.a - Support for inbound streams
 
-The ability to listening for an inbound connection fromm another node with a `connection-id` that is known in advance.
+The ability to listening for an inbound connection from another node with a `connection-id` that is known in advance.
 
 ## G.2 - Enforcement of maximum stored content size
 
@@ -296,7 +288,7 @@ The client can use the FINDCONTENT and FOUNDCONTENT messages to traverse the DHT
 
 Upon encountering a FOUNDCONTENT response that contains the actual content payload, the client can return the payload.
 
-### G.3.b - Receipt via uTP
+### G.3.c - Receipt via uTP
 
 Upon encountering a FOUNDCONTENT response that contains a uTP `connection-id`, the client should initiate a uTP stream with the provided `connection-id` and receive the full data payload over that stream.
 
