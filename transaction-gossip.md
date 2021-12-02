@@ -1,4 +1,4 @@
-# Portal Network: Transaction Gossip Network
+# Portal Network: Transaction Gossip
 
 > NOTE: This specification is a work in progress.
 

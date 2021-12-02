@@ -1,14 +1,52 @@
-# Block header gossip 
-The document describes how the block information (accumulator & block headers) are exchanged between the portal network clients. 
+# Portal Network: Header Gossip
 
-Each client has the responsibilty to track the tip of the chain and to store accumulators and block header information locally. Clients will be sharing the information with requesting clients in the network to maintain the health of the network as a whole
+This document is the specification for the "Header Gossip" network which is responsible for providing access to recent headers, dissemination of new headers as new blocks are mined, and  transmission of recent snapshots of the "Header Accumulator" data structure which all nodes on the network are expected to maintain.
+
+## Design Requirements
+
+The network functionality has been designed around the following requirements.
+
+- A DHT node can reliably receive the headers for new blocks via the gossip mechanism in a timely manner.
+- A DHT node can retrieve a recent snapshot of another DHT node's "Header Accumulator"
+- A DHT node can retrieve recent headers identified by their hash from other nodes.
+
+We define the constant `RECENT_BLOCK_RETENTION_PERIOD = 256`. The term *"recent"* is defined to mean any header within the most recent `RECENT_BLOCK_RETENTION_PERIOD` number of blocks.
+
+## The "Header Accumulator"
+
+The "Header Accumulator" is based on the [double-batched merkle log accumulator](https://ethresear.ch/t/double-batched-merkle-log-accumulator/571) that is currently used in the beacon chain.  This data structure is designed to allow nodes in the network to "forget" the deeper history of the chain, while still being able to reliably receive historical headers with a proof that the received header is indeed from the canonical chain (as opposed to an uncle mined at the same block height).
+
+The accumulator is defined as an [SSZ](https://ssz.dev/) data structure with the following schema:
+
+```python
+EPOCH_SIZE = 8192
+MAX_EPOCH_COUNT = XXXX
+
+# The verbose version of the accumulator
+MasterAccumulator = List[EpochAccumulator, max_length=MAX_EPOCH_COUNT]
+
+# An equivalent version of the `MasterAccumulator` which references the individual EpochAccumulator values by their ssz merkle root hash.
+ConciseAccumulator = List[bytes32, max_length=MAX_EPOCH_COUNT]
+
+# The records of the headers from within a single epoch
+EpochAccumulator = List[HeaderRecord, max_length=EPOCH_SIZE]
+
+# An individual record for a historical header.
+HeaderRecord = Container[block_hash: bytes32, total_difficulty: uint256]
+```
+
+The `MasterAccumulator` schema above is included for explanatory purposes, however clients of the network will not actually maintain this data structure, but the schema-equivalent `ConciseAccumulator`.  The `MasterAccumulator` would require retaining a large amount of historical header data which would exceed the storage limits of resource constrained devices.  The `ConciseAccumulator` is designed to leverage the SSZ merkle hashing, storing only the ssz merkle hash of the individual `EpochAccumulator` entries as opposed to the full epoch information.
+
+TODO: how
+
+
 
 
 ## Block storage
+
 Each client will be storing blocks in two forms. As accumulators where the entire block history is recorded and as partial block headers where only a subset of the block header is stored. Partial block headers are only stored for the most recent N number of blocks.
 
 ### Accumulator
-Portal network's accumulator will be based on the [double-batched merkle log accumulator](https://ethresear.ch/t/double-batched-merkle-log-accumulator/571) 
 
 #### Epoch Accumulator
 EPOCH_SIZE = 2048
