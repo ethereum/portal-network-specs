@@ -2,16 +2,16 @@
 
 > NOTE: This specification is a work in progress.
 
-This document is the specifcation for the "Transaction Gossip" portion of the portal network.  The network is designed to enable participants to broadcast transactions which can be picked up by miners for inclusion in future blocks.
+This document is the specification for the "Transaction Gossip" portion of the portal network.  The network is designed to enable participants to broadcast transactions which can be picked up by miners for inclusion in future blocks.
 
 
-## Design
+## Design Requirements
 
 The transaction gossip network is designed with the following requirements.
 
-- Valid transactions that are broadcast in the network will reliably reach the DHT nodes who are interested in observing the full transaction pool.
-- Participants are not required to process the full pool and can control the total percentage of the transaction pool they wish to process
-- Participants can check transaction validity without access to the full ethereum state.
+- Transaction payloads that are being passed around the network are "self validating", meaning that they include both the transaction object and a proof against the ethereum state adequate to validate `sender.balance` and `sender.nonce` values.
+- Under normal network conditions, nodes that are interested in observing the full transaction pool will reliably receive the full set of valid transactions currently being gossiped.
+- Participants are not required to process the full pool and can control the total percentage of the transaction pool they wish to process.
 
 
 ## Wire Protocol
@@ -102,13 +102,15 @@ The proof **must** show that:
 
 ### Gossip Rules
 
-Nodes should OFFER transactions to the DHT nodes sourced from their secondary routing table.
-
 A DHT node should only be offer'd a transaction that is inside of its radius.
 
-A node should only OFFER any individual transaction to a DHT node once.
+A DHT node should OFFER transactions to all of the DHT nodes present in their secondary routing table (skipping any nodes for whom the transaction is outside of their radius).
+
+A DHT node should only OFFER any individual transaction to a DHT node once.
 
 
 ### Proof Updating
 
 A DHT Node which encounters a transaction with a proof that is outdated **may** update that proof.
+
+Lightweight nodes are encouraged to allocate a small amount of processing power towards this altruistic proof updating as a way to help contribute to the overall health of the network.
