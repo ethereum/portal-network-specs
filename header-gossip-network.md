@@ -1,6 +1,6 @@
 # Portal Network: Header Gossip
 
-This document is the specification for the "Header Gossip" network which is responsible for providing access to recent headers, dissemination of new headers as new blocks are mined, and  transmission of recent snapshots of the "Header Accumulator" data structure which all nodes on the network are expected to maintain.
+This document is the specification for the "Header Gossip" network which is responsible for dissemination of new headers as new blocks are mined and  transmission of recent snapshots of the "Header Accumulator" data structure which all nodes on the network are expected to maintain.
 
 ## Design Requirements
 
@@ -8,9 +8,7 @@ The network functionality has been designed around the following requirements.
 
 - A DHT node can reliably receive the headers for new blocks via the gossip mechanism in a timely manner.
 - A DHT node can retrieve a recent snapshot of another DHT node's "Header Accumulator"
-- A DHT node can retrieve recent headers identified by their hash from other nodes.
 
-We define the constant `RECENT_BLOCK_RETENTION_PERIOD = 256`. The term *"recent"* is defined to mean any header within the most recent `RECENT_BLOCK_RETENTION_PERIOD` number of blocks.
 
 ## The "Header Accumulator"
 
@@ -25,7 +23,7 @@ MAX_EPOCH_COUNT = XXXX
 # The verbose version of the accumulator
 MasterAccumulator = List[EpochAccumulator, max_length=MAX_EPOCH_COUNT]
 
-# An equivalent version of the `MasterAccumulator` which references the individual EpochAccumulator values by their ssz merkle root hash.
+# A schema equivalent version of the `MasterAccumulator` which references the individual EpochAccumulator values by their ssz merkle root hash.
 ConciseAccumulator = List[bytes32, max_length=MAX_EPOCH_COUNT]
 
 # The records of the headers from within a single epoch
@@ -37,140 +35,64 @@ HeaderRecord = Container[block_hash: bytes32, total_difficulty: uint256]
 
 The `MasterAccumulator` schema above is included for explanatory purposes, however clients of the network will not actually maintain this data structure, but the schema-equivalent `ConciseAccumulator`.  The `MasterAccumulator` would require retaining a large amount of historical header data which would exceed the storage limits of resource constrained devices.  The `ConciseAccumulator` is designed to leverage the SSZ merkle hashing, storing only the ssz merkle hash of the individual `EpochAccumulator` entries as opposed to the full epoch information.
 
-TODO: how
-
-
-
-
-## Block storage
-
-Each client will be storing blocks in two forms. As accumulators where the entire block history is recorded and as partial block headers where only a subset of the block header is stored. Partial block headers are only stored for the most recent N number of blocks.
-
-### Accumulator
-
-#### Epoch Accumulator
-EPOCH_SIZE = 2048
-
-A fixed sized accumulator of length 2048.
-
-Block info will be added in into the SSZ list until it has filled up all 2048 of its entries. After which the next block will be included in a new epoch accumulator.
-
-SSZ sede structure:
-`List[Container[blockhash:bytes32, total_difficulty:uint256], max_length=2048]`
-
-The root hash of an epoch will then be included as an entry in the master accumulator.
-
-Aside from the first epoch, each client will need to store the current epoch as well as the epoch before in case of reorgs and block sync.
-
-#### Master Accumulator
-
-An accumulator that increases in size with each epoch. The root hash of each epoch will be appended to the master accumulator
-
-SSZ sede structure:
-`List[epoch_root_hash:bytes32, max_length=<a_large_number>]`
-
-
-### Partial Block Header
-
-Clients will need more information to verify the validity of the block. In the event of network latency, some clients may have missed out on the last few blocks and will need to request for the partial block header from its neighbours. 
-
-And so, each client number will also be required to store a certain amount of the most recent blocks.
-
-Partial Block Header will include:
-- Block Number
-- Block Hash
-- Difficulty
-- Nonce
-- Mixhash
-- Previous Hash (may be required to determine longest, heaviest chain. to know if the current block is pointed to the previous block)
+TODO: full spec for construction and maintenance of the accumulator.
 
 ## Wire Protocol
 
-The block header gossip will be an overlay of [DiscV5](https://github.com/ethereum/devp2p/blob/master/discv5/discv5-theory.md).
+The Header Gossip Network is an overlay network on the [Discovery V5 Protocol](https://github.com/ethereum/devp2p/blob/master/discv5/discv5-theory.md).  The overlay network uses the PING/PONG/FINDNODES/FOUNDNODES/FINDCONTENT/FOUNDCONTENT/OFFER/ACCEPT messages from the [Portal Wire Protocol](./portal-wire-protocol.md).
 
-A seperate DHT for ENR's are being maintained in the overlay network. Similar messages such as PING, PONG, FINDNODES and FOUNDNODES will be used to maintained node liveness in the DHT. 
+### Distance Function
 
-Pros:
-1. Loosely coupled
+The Header Gossip Network uses the standard XOR distance function.
 
-Cons:
-1. Repeat of DiscV5 since every client is expected to store the block header info anyway. Extra overhead
+### PING payload
 
-### Distance function
-The distance function (will be required if we opt for Idea no.2) will have the same definition as in DiscV5
-
-`distance(n₁, n₂) = n₁ XOR n₂`
-
-Custom message types will be encapsulated in the DiscV5 TalkReq/TalkResponse message
-
-Custom message types are being proposed for the request and response of block header info
-
-
-### Message Type
-
-#### <u>RequestAccumulator</u>
-Request accumulator info from neighbour
+TODO: instructions on what a node should do prior to having acquired a copy of the accumulator
 
 ```
-ContentKey: N/A
-ContentId: TODO
-````
-
-#### <u>ResponseAccumulator</u>
-Response to RequestAccumulator
-
-```
-ContentKey: payload
-ContentType: uint8 (0 for epoch, 1 for master)
-
-
-payload for content type 0: 0 | epoch_number:uint | List[Container[blockhash:bytes32, total_difficulty:uint256 ], 2048]
-
-payload for content type 1 : 1 | List[epoch_root_hash:bytes32, <a_large_number>]
+Ping.custom_payload := ssz_serialize(custom_data)
+custom_data         := Container(accumulator_root_hash: Bytes32, fork_id: Bytes32, head_hash: Bytes32, head_td: uint256)
 ```
 
-#### <u>RequestBlockHeaders</u>
-Used by nodes to request for lastest numbers of blocks from its neighbour. Only for the last N blocks. Otherwise, neigbour node will request for the requesting node to request for accumulator instead.
-```
-ContentKey: start_block:uint | number_of_blocks_from_start_block:uint
-```
+### PONG payload
 
-#### <u>ResponseBlockHeader</u>
-Response to the requesting node's request if block number is within N block range. Else, tells the request node to request for an accumulator instead as the node is too far behind
+TODO: instructions on what a node should do prior to having acquired a copy of the accumulator
 
 ```
-ContentKey: status | payload
-
-status: 0 (to request for accumulator), 1 (successful request)
-
-payload(not present when status is 0): List[Container[partial_block_header], N: uint256]
-
-partial_block_header: structure TBD
-
+Pong.custom_payload := ssz_serialize(custom_data)
+custom_data         := Container(accumulator_root_hash: Bytes32, fork_id: Bytes32, head_hash: Bytes32, head_td: uint256)
 ```
 
-#### <u>OfferBlockHeader</u>
-Offer block header to its neighbour when the node comes to know of an existence of a new valid block.
+## Content Keys
 
-Interested neighbours will respond with `RequestBlockHeader`.
+### Accumulator Snapshot
 
-Message will be dropped after no response after a certain time period
+> Note: The `content-id` for this content key is not used for any purpose.
 
 ```
-ContentKey: block_number:uint256
+content_key  := Container(content_type: uint8, accumulator_root_hash: Bytes32)
+content_type := 0x01
+content_id   := accumulator_root_hash
 ```
 
+TODO: wire serialization for FINDCONTENT/FOUNDCONTENT
 
-## Node Responsibilities
-- All nodes are required to store and manage their local copy of the master and epoch accumulators. 
-- Each node will need to store the master accumulator and 2 latest epoch accumulators. 
-- Each block that the node receives must be validated by checking the POW seal.
-- Nodes are also required to store N most recent partial valid block headers and share this information to neighbour nodes who will be asking for them.
-- Nodes will `OfferBlockHeader` to other nodes in the DHT once a block has been validated and added to its accumulator 
+### New Block Header
 
-### Gossip rules
 
-WIP
+```
+content_key  := Container(content_type: uint8, block_hash: Bytes32, block_number: uint256)
+content_type := 0x02
+content_id   := block_hash
+```
+
+TODO: block validation and wire serialization
+
+## Gossip
+
+TODO: offer block to `log(len(routing_table))` number of nodes from your routing table.
+TODO: block validation rules
+
 
 ### Accumulator handling
 Describes how accumulator is shared when a node first joined the portal network or when a node tries to catch up to the tip of the chain after being N blocks away 
