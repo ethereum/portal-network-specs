@@ -22,7 +22,7 @@ generated `connection_id` instead.
 
 Alice will then initiate a new uTP connection with Bob using this `connection_id`.
 
-Bob, upon receiving the `Data` message containing the `connection_id` will
+Bob, upon sending the `Data` message containing the `connection_id` will
 *listen* for a new incoming connection from Alice over the `utp` sub-protocol.
 When this new connection is opened, Alice can then read the bytes from the stream
 until the connection closes.
