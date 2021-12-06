@@ -18,24 +18,62 @@ The accumulator is defined as an [SSZ](https://ssz.dev/) data structure with the
 
 ```python
 EPOCH_SIZE = 8192
-MAX_EPOCH_COUNT = XXXX
+MAX_HISTORICAL_EPOCHS = XXXX
 
-# The verbose version of the accumulator
-MasterAccumulator = List[EpochAccumulator, max_length=MAX_EPOCH_COUNT]
-
-# A schema equivalent version of the `MasterAccumulator` which references the individual EpochAccumulator values by their ssz merkle root hash.
-ConciseAccumulator = List[bytes32, max_length=MAX_EPOCH_COUNT]
+# An individual record for a historical header.
+HeaderRecord = Container[block_hash: bytes32, total_difficulty: uint256]
 
 # The records of the headers from within a single epoch
 EpochAccumulator = List[HeaderRecord, max_length=EPOCH_SIZE]
 
-# An individual record for a historical header.
-HeaderRecord = Container[block_hash: bytes32, total_difficulty: uint256]
+Accumulator = Container[
+    historical_epochs: List[bytes32, max_length=MAX_HISTORICAL_EPOCHS],
+    current_epoch: EpochAccumulator,
+]
 ```
 
-The `MasterAccumulator` schema above is included for explanatory purposes, however clients of the network will not actually maintain this data structure, but the schema-equivalent `ConciseAccumulator`.  The `MasterAccumulator` would require retaining a large amount of historical header data which would exceed the storage limits of resource constrained devices.  The `ConciseAccumulator` is designed to leverage the SSZ merkle hashing, storing only the ssz merkle hash of the individual `EpochAccumulator` entries as opposed to the full epoch information.
+The algorithm for managing the accumulator is as follows.
 
-TODO: full spec for construction and maintenance of the accumulator.
+> TODO: provide a written spec too
+
+```python
+def update_accumulator(accumulator: Accumulator, new_block_header: BlockHeader) -> None:
+    # get the previous total difficulty
+    if len(accumulator.current_epoch) == 0:
+        # genesis
+        last_total_difficulty = 0
+    else:
+        last_total_difficulty = accumulator.current_epoch[-1].total_difficulty
+
+    # check if the epoch accumulator is full.
+    if len(accumulator.current_epoch) == EPOCH_SIZE:
+        # compute the final hash for this epoch
+        epoch_hash = hash_tree_root(accumulator.current_epoch)
+        # append the hash for this epoch to the list of historical epochs
+        accumulator.historical_epochs.append(epoch_hash)
+        # initialize a new empy epoch
+        accumulator.current_epoch = []
+
+    # construct the concise record for the new header and add it to the current epoch.
+    header_record = HeaderRecord(header.hash, last_total_difficulty + header.difficulty)
+    accumulator.current_epoch.append(header_record)
+```
+
+### Growth over time
+
+Each `HeaderRecord` is 64 bytes meaning the `EpochAccumulator` can range from `0 - 64 * EPOCH_SIZE` bytes (0-512KB) over the course of a single epoch.
+
+The `Accumulator.historical_epochs` grows by 32 bytes per epoch.
+
+At a 13 second block time we expect:
+
+- ~1 epochs per day
+- ~6 epochs per week
+- ~25 epochs per month
+- ~296 epochs per year
+
+Ignoring fluxuations in the size of `Accumulator.current_epoch` we should expect the size of the accumulator to grow at a rate of roughly 10kb per year.
+
 
 ## Wire Protocol
 
@@ -47,7 +85,7 @@ The Header Gossip Network uses the standard XOR distance function.
 
 ### PING payload
 
-TODO: instructions on what a node should do prior to having acquired a copy of the accumulator
+TODO: specify what a node should do prior to having acquired a copy of the accumulator
 
 ```
 Ping.custom_payload := ssz_serialize(custom_data)
@@ -56,7 +94,7 @@ custom_data         := Container(accumulator_root_hash: Bytes32, fork_id: Bytes3
 
 ### PONG payload
 
-TODO: instructions on what a node should do prior to having acquired a copy of the accumulator
+TODO: specify what a node should do prior to having acquired a copy of the accumulator
 
 ```
 Pong.custom_payload := ssz_serialize(custom_data)
@@ -90,75 +128,16 @@ TODO: block validation and wire serialization
 
 ## Gossip
 
-TODO: offer block to `log(len(routing_table))` number of nodes from your routing table.
-TODO: block validation rules
+The gossip protocol for the header network is designed to quickly spread new headers around to all nodes in the network.
 
+Upon receiving a new block header via OFFER/ACCEPT a node should first check the validity of the header.
 
-### Accumulator handling
-Describes how accumulator is shared when a node first joined the portal network or when a node tries to catch up to the tip of the chain after being N blocks away 
+Headers that pass the validity check should be propagated to `LOG2(num_entries_in_routing_table)` nodes from the routing table via OFFER/ACCEPT.
 
-1. Nodes request for accumulator will `RequestAccumulator` from more than 1 node in its DHT.
+## Accumulator Acquisition
 
-2. Node that receives `RequestAccumulator` will respond with 3 `ResponseAccumulator` responses. 1 for the master accumulator and the other 2 for the 2 latest epoch accumulator it currently stores. A node that receives too many  `RequestAccumulator` from the same node within a short time span may choose to drop the request for DOS protection.
+New nodes entering the network will need to acquire an up-to-date snapshot of the accumulator.
 
-3. Requesting node will compare the master accumulator response and determined the 'correct' master accumulator via a heuristic approach. The last entry of the master accumulator will not be taken in account as network latency will result in some differences in the last few blocks
+The Header Gossip Network does provide the ability to acquire a snapshot of another node's accumulator. Since the accumulator is not a part of the base protocol (and thus is not part of the block header), nodes will have to do their own due diligence to either build the full accumulator from genesis or to adequately verify and validate a snapshot acquired from another peer.
 
-4. The epoch accumulator associated the 2nd last entry of the master accumulator is validated by checking the root hash and is accepted and stored. 
-
-5. The correctness epoch accumulator associated to the last entry of master accumulator is also determined heuristically. 
-A common length and block hash that the majority of the neighbour nodes shared will be accepted and stored.
-
-6. The node will proceed to sync the later blocks through the normal process
-
-### Incoming blocks handling
-Describes how new blocks are being shared among nodes. 
-
-1. New blocks originate from bridge nodes and the full block header is stripped to contain only information that is needed for block validation. Refer <u>Partial Block Header</u> section. 
-
-2. New validated blocks are offered to neighbour nodes (not including nodes which the block is received from) via  `OfferBlockHeader`
-
-3. Nodes receiving the `OfferBlockHeader` will check to see if the blocknumber being offered is currently than that it currently stores
-
-4. Nodes who are interested in the new block will `RequestBlockHeaders` to the offering node and includes a starting block number. 
-
-5. Offering node will respond the partial block headers starting from the requested starting block number via `ResponseBlockHeader`.
-
-6. Receiving nodes will validate the blocks and include them into the accumulator. It will send out `OfferBlockHeader` of the latest block only to other nodes in its DHT.
-
-
-### Reorg handling
-Describes how a node handles reorg. Occurs when a node realizes a longer valid chain has a different canonical parent block hash.
-
-1. When a node receives partial block header from `ResponseBlockHeader` it checks to see if it has a canonical parant block hash. A reorg will occur if the parent block hash expected by the new block does not match the block hash of the previous block from the new block.
-
-e.g. 
-| New block | Previous block |
-|-----------|----------------|
-| number:100| number:99      |
-| hash: irrelevant | hash: 0xbb|
-| parenthash: 0xbc | parenthash: irrelevant|
-
-
-2. A node will `RequestBlockHeaders` and setting the starting block number to a few blocks behind the current block in an attempt to determine the canonical block.
-
-3. If the canonical block is beyond the range of the selected starting block number, the node will `RequestBlockHeaders` again until a canonical block hash is found or the requested block header is beyond N blocks away
-
-4. If block header requested is N blocks away, the node will need to `RequestAccumulator` to resync its accumulator. If it is within N blocks, the entries of the accumulator in the node's local storage will be replaced with the new block hashes
-
-## Analysis on storage growth for different epoch size
-
-*Assuming block time of 15secs
-
-
-| Epoch size | 2048 | 8192 |
-| --- | --- | --- |
-| Size of fully filled epoch file | 131,072 bytes | 524,288 byte |
-| Rate of Growth of master accumulator | 3.75 bytes/hr | 0.9375 bytes/hr |
-| Size of master accumulator at block 1000 | 32 bytes | 32 bytes |
-| Size of master accumulator at block 5000 | 96 bytes | 32 bytes |
-| Size of master accumulator at block 10,000 | 160 bytes | 64 bytes |
-| Size of master accumulator at block 15,000 | 256 bytes | 64 bytes |
-
-
-
-
+TODO: provide basic probabalistic approach for verification of an accumulator snapshot.
