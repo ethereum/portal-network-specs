@@ -140,4 +140,4 @@ New nodes entering the network will need to acquire an up-to-date snapshot of th
 
 The Header Gossip Network does provide the ability to acquire a snapshot of another node's accumulator. Since the accumulator is not a part of the base protocol (and thus is not part of the block header), nodes will have to do their own due diligence to either build the full accumulator from genesis or to adequately verify and validate a snapshot acquired from another peer.
 
-TODO: provide basic probabalistic approach for verification of an accumulator snapshot.
+TODO: provide basic probabilistic approach for verification of an accumulator snapshot.
