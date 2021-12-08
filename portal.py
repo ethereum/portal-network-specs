@@ -36,8 +36,6 @@ def humanize_bytes(num_bytes: int) -> str:
         return f"{num_bytes:n}B"
 
 
-ACCUMULATOR_EPOCH_SIZE = 8192
-MAX_HISTORICAL_EPOCHS = 8192
 NETWORK_SIZES = (1000, 10000, 20000, 50000, 100000, 500000, 1000000)
 
 
@@ -46,13 +44,16 @@ def render_routing_table_stats(network_sizes: Sequence[int] = NETWORK_SIZES) -> 
     Render the markdown table with expected size of the routing table for
     different network sizes.
     """
-    header = ("Network Size", "Routing Table Size")
+    header = ("Network Size", "Routing Table Size", "Log2")
     rows = tuple(
-        (f"{network_size:n}", f"{get_routing_table_size(network_size):n}")
+        (f"{network_size:n}", f"{get_routing_table_size(network_size):n}", f"{math.log2(get_routing_table_size(network_size)):n}")
         for network_size in network_sizes
     )
     table = snakemd.generator.Table(header, rows)
     return table.render()
+
+
+from accumulator import ACCUMULATOR_EPOCH_SIZE, MAX_HISTORICAL_EPOCHS
 
 
 BLOCK_HEIGHTS = (100000, 1000000, 10000000, 15000000, 30000000)
@@ -63,9 +64,9 @@ def render_accumulator_stats(block_heights: Sequence[int] = BLOCK_HEIGHTS, epoch
     full_epoch_size = epoch_size * 64
     base_sizes = tuple(32 * block_number // epoch_size for block_number in block_heights)
     rows = tuple(
-            (f"{block_number:n}", f"{humanize_bytes(base_size)}", f"{humanize_bytes(base_size + full_epoch_size)}")
-            for block_number, base_size
-            in zip(block_heights, base_sizes)
+        (f"{block_number:n}", f"{humanize_bytes(base_size)}", f"{humanize_bytes(base_size + full_epoch_size)}")
+        for block_number, base_size
+        in zip(block_heights, base_sizes)
     )
     table = snakemd.generator.Table(header, rows)
     return table.render()

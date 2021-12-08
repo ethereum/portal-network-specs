@@ -19,15 +19,86 @@ def get_routing_table_size(total_network_size: int) -> int:
     )
 ```
 
-| Network Size | Routing Table Size |
-| ------------ | ------------------ |
-| 1,000        | 106                |
-| 10,000       | 160                |
-| 20,000       | 176                |
-| 50,000       | 198                |
-| 100,000      | 214                |
-| 500,000      | 250                |
-| 1,000,000    | 266                |
+| Network Size | Routing Table Size | Log2    |
+| ------------ | ------------------ | ------- |
+| 1,000        | 106                | 6.72792 |
+| 10,000       | 160                | 7.32193 |
+| 20,000       | 176                | 7.45943 |
+| 50,000       | 198                | 7.62936 |
+| 100,000      | 214                | 7.74147 |
+| 500,000      | 250                | 7.96578 |
+| 1,000,000    | 266                | 8.05528 |
+
+
+### Accumulator Sizes
+
+The Accumulator should exibit the following growth characteristics.
+
+The "History Size" column is for the portion of the accumulator that stores the hashes of historical epochs.
+
+The "Max Size" column is the size of the accumulator when the current epoch is full (and will be hashed and stored in the history section upon adding the next block).
+
+
+| Block Number | Accumulator History Size | Accumulator Max Size |
+| ------------ | ------------------------ | -------------------- |
+| 100,000      | 390B                     | 512.4KB              |
+| 1,000,000    | 3.8KB                    | 515.8KB              |
+| 10,000,000   | 38.1KB                   | 550.1KB              |
+| 15,000,000   | 57.2KB                   | 569.2KB              |
+| 30,000,000   | 114.4KB                  | 626.4KB              |
+
+
+### Block Headers
+
+A block header is about 540 bytes.
+
+### Accumulator Info
+
+Using an epoch size of 8192 results in an SSZ merkle trie 13 levels (8192 = 2**13).  The proof for a single element in the SSZ data structure will contain:
+
+- The element being proven which is a `HeaderMeta`: 64 bytes
+- The hash of the sibling element: 32 bytes
+- 12 layers of intermediate node hashes: 12 * 32 bytes
+- The hash of the SSZ "length" node in the trie: 32 bytes (compressable using LEB128 if desired)
+- The root hash: 32 bytes
+
+Summing these up gives us: 544 bytes of proof data for the epoch portion of the proof.
+
+The epoch proof must be anchored to the accumulator history.  At present the chain has progressed through approximately 1600 epochs (13000000 / 8192).
+
+The proof for a single element from history with today's chain at a heigh of 13 million blocks will contain:
+
+- The hash of the epoch accumulator for the epoch in question: 32 bytes
+- The sibling hash of the node adjacent to the epoch in question: 32 bytes
+- Approximately 10 layers of intermediate hashes: 10 * 32 bytes
+- The hash of the length node: 32 bytes
+- The root hash: 32 bytes
+
+This gives us roughly 170 bytes for the main accumulator proof
+
+The expected total proof size is 714 bytes.
+
+## Header Gossip
+
+Gossip of block headers in the history network will include both the header (540 bytes) and the proof (714) bytes, with a total payload size of roughly 1254 bytes.
+
+The header gossip algorithm encourages gossip to `log2(len(routing_table))` peers, which is between 6-8 peers.
+
+The content-key for header gossip is specified as `Container(chain-id: uint16, content-type: uint8, block-hash: Bytes32)` which results in a 35 byte encoded length.
+
+The least number of messages we expect a node to send are 8 OFFER messages for which none are acccepted, resulting in sending:
+
+- 8 x OFER overhead
+- 8 x 35 bytes
+
+
+The loose upper bound for data transmission is all 8 peers ACCEPT the OFFER, resulting in:
+
+- 8 x OFFER overhead
+- 8 x ACCEPT overhead
+- 8 x uTP stream overhead
+- 8 x 1254 bytes for payloads.
+
 
 
 ### Content Key Sizes
