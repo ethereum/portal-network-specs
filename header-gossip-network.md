@@ -132,7 +132,7 @@ The gossip protocol for the header network is designed to quickly spread new hea
 
 Upon receiving a new block header via OFFER/ACCEPT a node should first check the validity of the header.
 
-Headers that pass the validity check should be propagated to `LOG2(num_entries_in_routing_table)` nodes from the routing table via OFFER/ACCEPT.
+Headers that pass the validity check should be propagated to `LOG2(num_entries_in_routing_table)` random nodes from the routing table via OFFER/ACCEPT.
 
 ## Accumulator Acquisition
 
