@@ -294,7 +294,7 @@ Upon encountering a FOUNDCONTENT response that contains a uTP `connection-id`, t
 
 ## G.4 - Gossip via OFFER/ACCEPT & uTP
 
-Support for receipt of content using the GOSSIP/ACCEPT messages and uTP sub protocol.
+Support for receipt of content using the OFFER/ACCEPT messages and uTP sub protocol.
 
 ### G.4.a - Handle incoming gossip
 
