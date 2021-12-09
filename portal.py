@@ -149,10 +149,22 @@ BANDWIDTH_TIME_PERIODS = (
 )
 
 
-def render_bandwidth_usage_stats(bytes_per_second: Union[int, float], periods: Sequence[Tuple[str, int]] = BANDWIDTH_TIME_PERIODS) -> str:
-    header = ("Time", "Bandwidth")
-    rows = (("bytes-per-second", f"{bytes_per_second:0.2f}"),) + tuple(
-        (period, humanize_bytes(int(bytes_per_second * seconds_per_period)))
+def _render_rates(rates: Sequence[Union[int, float]], seconds_per_period: int) -> str:
+    return ' - '.join((
+    ))
+
+
+
+def render_bandwidth_usage_stats(rates: Sequence[Union[int, float]], periods: Sequence[Tuple[str, int]] = BANDWIDTH_TIME_PERIODS) -> str:
+    header = ("Period", "Bandwidth")
+    rows = tuple(
+        (
+            period,
+            ' - '.join((
+                humanize_bytes(int(bytes_per_second * seconds_per_period))
+                for bytes_per_second in rates
+            )),
+        )
         for period, seconds_per_period in periods
     )
     table = snakemd.generator.Table(header, rows)
@@ -266,14 +278,14 @@ def do_rendering():
     print("\n############## UTP #####################\n\n")
     print(utp_stats)
     print("\n############## Header Gossip #####################\n\n")
-    print("Inbound Best")
-    print(render_bandwidth_usage_stats(2064 / 13))
-    print("Inbound Worst")
-    print(render_bandwidth_usage_stats(3344 / 13))
-    print("Outbound Best")
-    print(render_bandwidth_usage_stats(12256 / 13))
-    print("Outbound Worst")
-    print(render_bandwidth_usage_stats(13376 / 13))
+    print("Inbound (worst)")
+    print(render_bandwidth_usage_stats(((1168 / 13), (2448 / 13))))
+    print("Outbound (worst)")
+    print(render_bandwidth_usage_stats(((11568 / 13), (12686 / 13))))
+    print("Inbound (average)")
+    print(render_bandwidth_usage_stats(((748 / 13), (908 / 13))))
+    print("Outbound (average)")
+    print(render_bandwidth_usage_stats(((2230 / 13), (2370 / 13))))
     print("\n****************** FIN ***************************\n")
 
 

@@ -1,8 +1,9 @@
 import functools
-from typing import Any, Optional
+from typing import Any, Optional, Tuple, Sequence
 
 from eth_typing import Address, BlockNumber, Hash32
-from eth_utils import encode_hex, humanize_hash, keccak, to_canonical_address, big_endian_to_int,
+from eth_utils import encode_hex, humanize_hash, keccak, to_canonical_address, big_endian_to_int, to_int, int_to_big_endian, decode_hex
+from eth.db.trie import make_trie_root_and_nodes
 import rlp
 from rlp import sedes
 from web3 import Web3
@@ -97,23 +98,23 @@ class BlockHeader(rlp.Serializable):  # type: ignore
 
 
 def retrieve_header(w3: Web3, block_number: int) -> BlockHeader:
-    w3_header = w3.eth.getBlock(block_number)
+    w3_block = w3.eth.getBlock(block_number)
     header = BlockHeader(
-        difficulty=w3_header["difficulty"],
-        block_number=w3_header["number"],
-        gas_limit=w3_header["gasLimit"],
-        timestamp=w3_header["timestamp"],
-        coinbase=to_canonical_address(w3_header["miner"]),
-        parent_hash=Hash32(w3_header["parentHash"]),
-        uncles_hash=Hash32(w3_header["sha3Uncles"]),
-        state_root=Hash32(w3_header["stateRoot"]),
-        transaction_root=Hash32(w3_header["transactionsRoot"]),
-        receipt_root=Hash32(w3_header["receiptsRoot"]),
-        bloom=big_endian_to_int(bytes(w3_header["logsBloom"])),
-        gas_used=w3_header["gasUsed"],
-        extra_data=bytes(w3_header["extraData"]),
-        mix_hash=Hash32(w3_header["mixHash"]),
-        nonce=bytes(w3_header["nonce"]),
+        difficulty=w3_block["difficulty"],
+        block_number=w3_block["number"],
+        gas_limit=w3_block["gasLimit"],
+        timestamp=w3_block["timestamp"],
+        coinbase=to_canonical_address(w3_block["miner"]),
+        parent_hash=Hash32(w3_block["parentHash"]),
+        uncles_hash=Hash32(w3_block["sha3Uncles"]),
+        state_root=Hash32(w3_block["stateRoot"]),
+        transaction_root=Hash32(w3_block["transactionsRoot"]),
+        receipt_root=Hash32(w3_block["receiptsRoot"]),
+        bloom=big_endian_to_int(bytes(w3_block["logsBloom"])),
+        gas_used=w3_block["gasUsed"],
+        extra_data=bytes(w3_block["extraData"]),
+        mix_hash=Hash32(w3_block["mixHash"]),
+        nonce=bytes(w3_block["nonce"]),
     )
     if header.hash != Hash32(w3_header["hash"]):
         raise ValueError(
@@ -121,3 +122,87 @@ def retrieve_header(w3: Web3, block_number: int) -> BlockHeader:
             f"expected={encode_hex(w3_header['hash'])}  actual={header.hex_hash}"
         )
     return header
+
+
+class LegacyTransaction(rlp.Serializable):  # type: ignore
+    fields = (
+        ('nonce', sedes.big_endian_int),
+        ('gas_price', sedes.big_endian_int),
+        ('gas', sedes.big_endian_int),
+        ('to', address),
+        ('value', sedes.big_endian_int),
+        ('data', sedes.binary),
+        ('v', sedes.big_endian_int),
+        ('r', sedes.big_endian_int),
+        ('s', sedes.big_endian_int),
+    )
+
+    def encode(self) -> bytes:
+        return rlp.encode(self)
+
+
+class BlockBody(rlp.Serializable):  # type: ignore
+    fields = [
+        ("transactions", sedes.CountableList(sedes.binary)),
+        ("uncles", sedes.CountableList(BlockHeader)),
+    ]
+
+    def __init__(
+        self,
+        transactions: Sequence[bytes],
+        uncles: Sequence[BlockHeader],
+    ) -> None:
+        super().__init__(
+            transactions=transactions,
+            uncles=uncles,
+        )
+
+
+def _to_canonical_transaction(w3_transaction) -> Tuple[bytes, ...]:
+    try:
+        transaction_type = to_int(hexstr=w3_transaction["type"])
+    except KeyError:
+        transaction_type = 0
+
+    if transaction_type == 0:
+        transaction = LegacyTransaction(
+            w3_transaction["nonce"],
+            w3_transaction["gasPrice"],
+            w3_transaction["gas"],
+            to_canonical_address(w3_transaction["to"]),
+            w3_transaction["value"],
+            decode_hex(w3_transaction["input"]),
+            w3_transaction["v"],
+            big_endian_to_int(w3_transaction["r"]),
+            big_endian_to_int(w3_transaction["s"]),
+        )
+    else:
+        raise ValueError(f"Unsupported transaction type: type={transaction_type}  tx={w3_transaction}")
+
+    return transaction
+
+
+def retrieve_block(w3: Web3, block_number: int) -> BlockHeader:
+    w3_block = w3.eth.getBlock(block_number, full_transactions=True)
+    transactions = tuple(
+        _to_canonical_transaction(transaction)
+        for transaction
+        in w3_block["transactions"]
+    )
+    uncles = tuple(
+        _to_canonical_uncle(uncle)
+        for uncle
+        in w3_block["uncles"]
+    )
+    transactions_root, _ = make_trie_root_and_nodes(transactions)
+    if transactions_root != w3_block["transactionsRoot"]:
+        raise ValueError(
+            f"Reconstructed transaction trie does not match: ours={transactions_root}  theirs={w3_block['transactionsRoot']}"
+        )
+    uncles_hash = keccak(rlp.encode(uncles))
+    if uncles_hash != w3_block["sha3Uncles"]:
+        raise ValueError(
+            f"Reconstructed ommers trie does not match: ours={uncles_hash}  theirs={w3_block['sha3Uncles']}"
+        )
+
+    return BlockBody(transactions=transactions, uncles=uncles)

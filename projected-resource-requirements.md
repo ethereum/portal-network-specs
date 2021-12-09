@@ -237,61 +237,81 @@ The loose upper bound for data transmission is all 8 peers ACCEPT the OFFER, res
   - worst case: 220 bytes in / 1474 bytes out
 
 
-Summing all this up and multiplying by 8 for the 8x peers that must be communiccated with:
+Summing all this up for a single peer:
 
-- inbound: 2064 - 3344 bytes
-- outbound: 12256 - 13376 bytes
+- outbound: 1446-1586 bytes
+- inbound: 146-306 bytes
 
-These messages should occur roughly once per BLOCK_TIME (13 seconds)....
+and multiplying by 8 for the 8x peers that must be communicated with:
+
+- outbound: 11568 - 12686 bytes
+- inbound: 1168 - 2448 bytes
+
+These messages should occur roughly once per BLOCK_TIME (13 seconds).  Extrapolating from this rate gives us the following numbers which represent the upper bounds on data transfer for a node in the network that **always** gossips the block header to 8 other peers.
 
 
-- Inbound Best
+- Inbound
 
-| Time             | Bandwidth |
-| ---------------- | --------- |
-| bytes-per-second | 158.77    |
-| minute           | 9.3KB     |
-| hour             | 558.2KB   |
-| day              | 13.1MB    |
-| week             | 91.6MB    |
-| month            | 397.9MB   |
-| year             | 4.7GB     |
+| Period | Bandwidth         |
+| ------ | ----------------- |
+| minute | 5.3KB - 11.0KB    |
+| hour   | 315.9KB - 662.0KB |
+| day    | 7.4MB - 15.5MB    |
+| week   | 51.8MB - 108.6MB  |
+| month  | 225.2MB - 471.9MB |
+| year   | 2.6GB - 5.5GB     |
 
-- Inbound Worst
+- Outbound
 
-| Time             | Bandwidth |
-| ---------------- | --------- |
-| bytes-per-second | 257.23    |
-| minute           | 15.1KB    |
-| hour             | 904.3KB   |
-| day              | 21.2MB    |
-| week             | 148.4MB   |
-| month            | 644.7MB   |
-| year             | 7.6GB     |
+| Period | Bandwidth         |
+| ------ | ----------------- |
+| minute | 52.1KB - 57.2KB   |
+| hour   | 3.1MB - 3.4MB     |
+| day    | 73.3MB - 80.4MB   |
+| week   | 513.2MB - 562.9MB |
+| month  | 2.2GB - 2.4GB     |
+| year   | 26.1GB - 28.7GB   |
 
-- Outbound Best
 
-| Time             | Bandwidth |
-| ---------------- | --------- |
-| bytes-per-second | 942.77    |
-| minute           | 55.2KB    |
-| hour             | 3.2MB     |
-| day              | 77.7MB    |
-| week             | 543.8MB   |
-| month            | 2.3GB     |
-| year             | 27.7GB    |
+A more realistic estimate is that on average, each node in the network on average will only have a single peer ACCEPT the offered data.  Under this estimate:
 
-- Outbound Worst
+- 7x who do not ACCEPT the data:
+    - outbound: 784 bytes
+    - inbound: 602 bytes
+- 1x who does ACCEPT:
+    - outbound: 1446-1586 bytes
+    - inbound: 146-306 bytes
 
-| Time             | Bandwidth |
-| ---------------- | --------- |
-| bytes-per-second | 1028.92   |
-| minute           | 60.3KB    |
-| hour             | 3.5MB     |
-| day              | 84.8MB    |
-| week             | 593.5MB   |
-| month            | 2.5GB     |
-| year             | 30.2GB    |
+Giving an average expected bandwidth usage of:
+
+- outbound: 2230-2370 bytes
+- inbound: 748-908 bytes
+
+Giving a monthly transfer of:
+
+
+- Inbound (average)
+
+| Period | Bandwidth         |
+| ------ | ----------------- |
+| minute | 3.4KB - 4.1KB     |
+| hour   | 202.3KB - 245.6KB |
+| day    | 4.7MB - 5.8MB     |
+| week   | 33.2MB - 40.3MB   |
+| month  | 144.2MB - 175.1MB |
+| year   | 1.7GB - 2.1GB     |
+
+- Outbound (average)
+
+| Period | Bandwidth         |
+| ------ | ----------------- |
+| minute | 10.1KB - 10.7KB   |
+| hour   | 603.1KB - 640.9KB |
+| day    | 14.1MB - 15.0MB   |
+| week   | 98.9MB - 105.2MB  |
+| month  | 429.9MB - 456.9MB |
+| year   | 5.0GB - 5.4GB     |
+
 
 
 
