@@ -4,6 +4,31 @@ This document is intended to examine the expected storage, processing, and bandw
 
 ## Basics
 
+### Message Sizes
+
+Here we establish the overhead for various messages in the protocol.
+
+#### Base protocol message overhead
+
+We expect most messages to use the regular MESSAGE type packet from discovery v5 which has 39 bytes of overhead.
+
+#### TALKREQ/TALKRESP message overhead
+
+We expect each TALKREQ message to contain:
+
+- `request-id`: 4 bytes
+- `protocol-id`: 2 bytes
+- `payload`: variable
+
+Combined with the base overhead from the message packet this gives us 55 bytes of overhead per packet.
+
+
+#### uTP message overhead.
+
+TODO: ask konrad
+
+
+
 ### Routing Table Sizes
 
 We can compute how many entries on average should exist in an individual node's routing table with the following:
@@ -88,16 +113,33 @@ The content-key for header gossip is specified as `Container(chain-id: uint16, c
 
 The least number of messages we expect a node to send are 8 OFFER messages for which none are acccepted, resulting in sending:
 
-- 8 x OFER overhead
-- 8 x 35 bytes
+- OFFER:
+  - message overhead: 55 bytes 
+  - content key encoding: 35 bytes
+- ACCEPT: 
+  - message overhead: 55 bytes 
+  - message: 9 bytes (4-byte connection id, 1 byte bit-list + 4-byte length prefix)
+
+This gives us a total of 80 bytes out and 64 bytes inbound.  Totalling the 8 OFFER/ACCEPT messages gives us:
+
+- Best case:
+  - 640 bytes out
+  - 512 bytes in
 
 
 The loose upper bound for data transmission is all 8 peers ACCEPT the OFFER, resulting in:
 
-- 8 x OFFER overhead
-- 8 x ACCEPT overhead
-- 8 x uTP stream overhead
-- 8 x 1254 bytes for payloads.
+- OFFER overhead
+  - message overhead: 55 bytes 
+  - content key encoding: 35 bytes
+- ACCEPT: 
+  - message overhead: 55 bytes 
+  - message: 9 bytes (4-byte connection id, 1 byte bit-list + 4-byte length prefix)
+- uTP:
+  - overhead???
+  - 1254 bytes for payloads
+
+These messages should occur roughly once per BLOCK_TIME (13 seconds)....
 
 
 
