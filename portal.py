@@ -1,5 +1,5 @@
-from dataclasses import dataclass
-from typing import Sequence, Tuple
+from dataclasses import dataclass, field
+from typing import Sequence, Tuple, Union
 import math
 
 
@@ -34,6 +34,147 @@ def humanize_bytes(num_bytes: int) -> str:
         return f"{num_bytes / KB:0.1f}KB"
     else:
         return f"{num_bytes:n}B"
+
+
+UTP_PACKET_MIN_SIZE = 150
+UTP_PACKET_MAX_SIZE = 1024
+
+
+@dataclass(eq=True)
+class Meter:
+    packets: int = 0
+    bytes: int = 0
+
+    def add_packet(self, num_bytes: int) -> None:
+        self.packets += 1
+        self.bytes += num_bytes
+
+
+@dataclass(eq=True)
+class UDPMeter:
+    # number of inbound bytes
+    inbound: Meter = field(default_factory=Meter)
+
+    # number of outbound bytes
+    outbound: Meter = field(default_factory=Meter)
+
+    def __str__(self) -> str:
+        return f"packets={self.num_packets:n}  inbound={humanize_bytes(self.inbound)}  outbound={humanize_bytes(self.outbound)}"
+
+
+def _compute_utp_transfer(payload_size: int, packet_payload_size: int) -> Tuple[UDPMeter, UDPMeter]:
+    initiator = UDPMeter()
+    recipient = UDPMeter()
+
+    # SYN to initiate stream
+    initiator.outbound.add_packet(20)
+    recipient.inbound.add_packet(20)
+
+    # ACK to acknowledge stream setup
+    recipient.outbound.add_packet(20)
+    initiator.inbound.add_packet(20)
+
+    # Data packets
+    total_data_packets = max(1, int(math.ceil(payload_size / packet_payload_size)))
+
+    # 20 bytes of overhead per packet
+    initiator.outbound.packets += total_data_packets
+    initiator.outbound.bytes += (total_data_packets - 1) * (packet_payload_size + 20)
+    initiator.outbound.bytes += payload_size % packet_payload_size + 20
+
+    # acks from the recipient for the data packets
+    initiator.inbound.packets += total_data_packets
+    initiator.inbound.bytes += total_data_packets * 20
+
+    # receipt of the data packets
+    recipient.inbound.packets += total_data_packets
+    recipient.inbound.bytes += (total_data_packets - 1) * (packet_payload_size + 20)
+    recipient.inbound.bytes += payload_size % packet_payload_size + 20
+
+    # acks sent for data packets
+    recipient.outbound.packets += total_data_packets
+    recipient.outbound.bytes += total_data_packets * 20
+
+    # FIN to close the stream
+    initiator.outbound.add_packet(20)
+    recipient.inbound.add_packet(20)
+
+    # ACK to acknowledge the stream is closed
+    recipient.outbound.add_packet(20)
+    initiator.inbound.add_packet(20)
+
+    return initiator, recipient
+
+
+def compute_utp_tranfer_worst(payload_size: int) -> Tuple[UDPMeter, UDPMeter]:
+    return _compute_utp_transfer(payload_size, UTP_PACKET_MIN_SIZE)
+
+
+def compute_utp_tranfer_best(payload_size: int) -> Tuple[UDPMeter, UDPMeter]:
+    return _compute_utp_transfer(payload_size, UTP_PACKET_MAX_SIZE)
+
+
+def render_utp_stats_row(payload_name: str, payload_size: int) -> str:
+    initiator_w, recipient_w = compute_utp_tranfer_worst(payload_size)
+    initiator_b, recipient_b = compute_utp_tranfer_best(payload_size)
+
+    return (
+        payload_name,
+        f"{initiator_b.inbound.packets:n} - {initiator_w.inbound.packets:n}",
+        f"{initiator_b.outbound.packets:n} - {initiator_w.outbound.packets:n}",
+        f"{initiator_b.inbound.bytes:n} - {initiator_w.inbound.bytes:n}",
+        f"{initiator_b.outbound.bytes:n} - {initiator_w.outbound.bytes:n}",
+        f"{recipient_b.inbound.packets:n} - {recipient_w.inbound.packets:n}",
+        f"{recipient_b.outbound.packets:n} - {recipient_w.outbound.packets:n}",
+        f"{recipient_b.inbound.bytes:n} - {recipient_w.inbound.bytes:n}",
+        f"{recipient_b.outbound.bytes:n} - {recipient_w.outbound.bytes:n}",
+    )
+
+
+MINUTE = 60
+HOUR = MINUTE * 60
+DAY = HOUR * 24
+WEEK = DAY * 7
+MONTH = int(DAY * 365 / 12)
+YEAR = 365 * DAY
+
+
+BANDWIDTH_TIME_PERIODS = (
+    ('minute', MINUTE),
+    ('hour', HOUR),
+    ('day', DAY),
+    ('week', WEEK),
+    ('month', MONTH),
+    ('year', YEAR),
+)
+
+
+def render_bandwidth_usage_stats(bytes_per_second: Union[int, float], periods: Sequence[Tuple[str, int]] = BANDWIDTH_TIME_PERIODS) -> str:
+    header = ("Time", "Bandwidth")
+    rows = (("bytes-per-second", f"{bytes_per_second:0.2f}"),) + tuple(
+        (period, humanize_bytes(int(bytes_per_second * seconds_per_period)))
+        for period, seconds_per_period in periods
+    )
+    table = snakemd.generator.Table(header, rows)
+    return table.render()
+
+
+UTP_PAYLOADS = (
+    ("Header", 540),
+    ("Header+AccumulatorProof", 1254),
+)
+
+
+def render_utp_stats(payloads: Sequence[Tuple[str, int]] = UTP_PAYLOADS) -> str:
+    header = ("Payload", "Initiator: packets-in", "I: packets-out", "I: bytes-in", "I: bytes-out", "Recipient: packets-in", "R: packets-out", "R: bytes-in", "R: bytes-out")
+
+    rows = tuple(
+        render_utp_stats_row(payload_name, payload_size)
+        for payload_name, payload_size in payloads
+    )
+    table = snakemd.generator.Table(header, rows)
+    return table.render()
+
 
 
 NETWORK_SIZES = (1000, 10000, 20000, 50000, 100000, 500000, 1000000)
@@ -72,9 +213,6 @@ def render_accumulator_stats(block_heights: Sequence[int] = BLOCK_HEIGHTS, epoch
     return table.render()
 
 
-@dataclass
-class StorageProfile:
-    growth_bytes_per_block: int
 
 
 """
@@ -120,10 +258,22 @@ def do_rendering():
     locale.setlocale(locale.LC_ALL, '')
     routing_table_stats = render_routing_table_stats()
     accumulator_stats = render_accumulator_stats()
+    utp_stats = render_utp_stats()
     print("\n############## ROUTING TABLE #####################\n\n")
     print(routing_table_stats)
     print("\n############## ACCUMULATOR #####################\n\n")
     print(accumulator_stats)
+    print("\n############## UTP #####################\n\n")
+    print(utp_stats)
+    print("\n############## Header Gossip #####################\n\n")
+    print("Inbound Best")
+    print(render_bandwidth_usage_stats(2064 / 13))
+    print("Inbound Worst")
+    print(render_bandwidth_usage_stats(3344 / 13))
+    print("Outbound Best")
+    print(render_bandwidth_usage_stats(12256 / 13))
+    print("Outbound Worst")
+    print(render_bandwidth_usage_stats(13376 / 13))
     print("\n****************** FIN ***************************\n")
 
 
@@ -158,3 +308,15 @@ def test_get_bucket_size(total_network_size, bucket_idx, expected):
 def test_humanize_bytes(num_bytes, expected):
     actual = humanize_bytes(num_bytes)
     assert actual == expected
+
+
+@pytest.mark.parametrize(
+    'payload_size,packet_data_size,initiator_expected,recipient_expected',
+    (
+        (100, 1000, UDPMeter(Meter(3, 60), Meter(3, 160)), UDPMeter(Meter(3, 160), Meter(3, 60))),
+    ),
+)
+def test_utp_stream_projections(payload_size, packet_data_size, initiator_expected, recipient_expected):
+    initiator_actual, recipient_actual = _compute_utp_transfer(payload_size, packet_data_size)
+    assert initiator_actual == initiator_expected
+    assert recipient_actual == recipient_expected

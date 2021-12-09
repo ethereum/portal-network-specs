@@ -10,7 +10,7 @@ Here we establish the overhead for various messages in the protocol.
 
 #### Base protocol message overhead
 
-We expect most messages to use the regular MESSAGE type packet from discovery v5 which has 39 bytes of overhead.
+We expect most messages to use the regular MESSAGE type packet from discovery v5 which has 71 bytes of overhead.
 
 #### TALKREQ/TALKRESP message overhead
 
@@ -20,12 +20,109 @@ We expect each TALKREQ message to contain:
 - `protocol-id`: 2 bytes
 - `payload`: variable
 
-Combined with the base overhead from the message packet this gives us 55 bytes of overhead per packet.
+Combined with the base overhead from the message packet this gives us 77 bytes of overhead per packet.
+
+> The few additional bytes needed for RLP encoding are intentionally left out of this estimate.
 
 
 #### uTP message overhead.
 
-TODO: ask konrad
+Setting up a stream involves 40 bytes of packet overhead:
+
+- SYN packet:
+    - sent by initiator
+    - 20 bytes
+- ACK packet:
+    - sent by recipient
+    - 20 bytes
+
+Closing a stream involves 40 bytes of packet overhead:
+
+- FIN packet:
+    - sent by initiator
+    - 20 bytes
+- ACK packet:
+    - sent by recipient
+    - 20 bytes
+
+The data payload is divided up into chunks of as small as 150 bytes and as large as 1180 bytes, each with 20 bytes of overhead giving us a formula of:
+
+```python
+UTP_PACKET_MIN_SIZE = 150
+UTP_PACKET_MAX_SIZE = 1024
+
+
+@dataclass
+class Meter:
+    packets: int = 0
+    bytes: int = 0
+
+    def add_packet(self, num_bytes: int) -> None:
+        self.packets += 1
+        self.bytes += num_bytes
+
+
+@dataclass
+class UDPMeter:
+    # number of inbound bytes
+    inbound: Meter = field(default_factory=Meter)
+
+    # number of outbound bytes
+    outbound: Meter = field(default_factory=Meter)
+
+    def __str__(self) -> str:
+        return f"packets={self.num_packets:n}  inbound={humanize_bytes(self.inbound)}  outbound={humanize_bytes(self.outbound)}"
+
+
+def _compute_utp_transfer(payload_size: int, packet_payload_size: int) -> Tuple[UDPMeter, UDPMeter]:
+    initiator = UDPMeter()
+    recipient = UDPMeter()
+
+    # SYN to initiate stream
+    initiator.outbound.add_packet(20)
+    recipient.inbound.add_packet(20)
+
+    # ACK to acknowledge stream setup
+    recipient.outbound.add_packet(20)
+    initiator.inbound.add_packet(20)
+
+    # Data packets
+    total_data_packets = int(math.ceil(payload_size / packet_payload_size))
+
+    # 20 bytes of overhead per packet
+    initiator.outbound.packets += total_data_packets
+    initiator.outbound.bytes += total_data_packets * (packet_payload_size + 20)
+
+    # acks from the recipient for the data packets
+    initiator.inbound.packets += total_data_packets
+    initiator.inbound.bytes += total_data_packets * 20
+
+    # receipt of the data packets
+    recipient.inbound.packets += total_data_packets
+    recipient.inbound.bytes += total_data_packets * (packet_payload_size + 20)
+
+    # acks sent for data packets
+    recipient.outbound.packets += total_data_packets
+    recipient.outbound.bytes += total_data_packets * 20
+
+    # FIN to close the stream
+    initiator.outbound.add_packet(20)
+    recipient.inbound.add_packet(20)
+
+    # ACK to acknowledge the stream is closed
+    recipient.outbound.add_packet(20)
+    initiator.inbound.add_packet(20)
+
+    return initiator, recipient
+```
+
+
+Here is a table of uTP expected traffic for various known payloads:
+
+| Payload                 | Initiator: packets-in | I: packets-out | I: bytes-in | I: bytes-out  | Recipient: packets-in | R: packets-out | R: bytes-in   | R: bytes-out |
+| ----------------------- | --------------------- | -------------- | ----------- | ------------- | --------------------- | -------------- | ------------- | ------------ |
+| Header                  | 3 - 6                 | 3 - 6          | 60 - 120    | 600 - 660     | 3 - 6                 | 3 - 6          | 600 - 660     | 60 - 120     |
+| Header+AccumulatorProof | 4 - 11                | 4 - 11         | 80 - 220    | 1,334 - 1,474 | 4 - 11                | 4 - 11         | 1,334 - 1,474 | 80 - 220     |
 
 
 
@@ -114,10 +211,10 @@ The content-key for header gossip is specified as `Container(chain-id: uint16, c
 The least number of messages we expect a node to send are 8 OFFER messages for which none are acccepted, resulting in sending:
 
 - OFFER:
-  - message overhead: 55 bytes 
+  - message overhead: 77 bytes
   - content key encoding: 35 bytes
 - ACCEPT: 
-  - message overhead: 55 bytes 
+  - message overhead: 77 bytes
   - message: 9 bytes (4-byte connection id, 1 byte bit-list + 4-byte length prefix)
 
 This gives us a total of 80 bytes out and 64 bytes inbound.  Totalling the 8 OFFER/ACCEPT messages gives us:
@@ -130,16 +227,71 @@ This gives us a total of 80 bytes out and 64 bytes inbound.  Totalling the 8 OFF
 The loose upper bound for data transmission is all 8 peers ACCEPT the OFFER, resulting in:
 
 - OFFER overhead
-  - message overhead: 55 bytes 
+  - message overhead: 77 bytes 
   - content key encoding: 35 bytes
 - ACCEPT: 
-  - message overhead: 55 bytes 
+  - message overhead: 77 bytes 
   - message: 9 bytes (4-byte connection id, 1 byte bit-list + 4-byte length prefix)
 - uTP:
-  - overhead???
-  - 1254 bytes for payloads
+  - best case: 60 bytes in / 1334 bytes out
+  - worst case: 220 bytes in / 1474 bytes out
+
+
+Summing all this up and multiplying by 8 for the 8x peers that must be communiccated with:
+
+- inbound: 2064 - 3344 bytes
+- outbound: 12256 - 13376 bytes
 
 These messages should occur roughly once per BLOCK_TIME (13 seconds)....
+
+
+- Inbound Best
+
+| Time             | Bandwidth |
+| ---------------- | --------- |
+| bytes-per-second | 158.77    |
+| minute           | 9.3KB     |
+| hour             | 558.2KB   |
+| day              | 13.1MB    |
+| week             | 91.6MB    |
+| month            | 397.9MB   |
+| year             | 4.7GB     |
+
+- Inbound Worst
+
+| Time             | Bandwidth |
+| ---------------- | --------- |
+| bytes-per-second | 257.23    |
+| minute           | 15.1KB    |
+| hour             | 904.3KB   |
+| day              | 21.2MB    |
+| week             | 148.4MB   |
+| month            | 644.7MB   |
+| year             | 7.6GB     |
+
+- Outbound Best
+
+| Time             | Bandwidth |
+| ---------------- | --------- |
+| bytes-per-second | 942.77    |
+| minute           | 55.2KB    |
+| hour             | 3.2MB     |
+| day              | 77.7MB    |
+| week             | 543.8MB   |
+| month            | 2.3GB     |
+| year             | 27.7GB    |
+
+- Outbound Worst
+
+| Time             | Bandwidth |
+| ---------------- | --------- |
+| bytes-per-second | 1028.92   |
+| minute           | 60.3KB    |
+| hour             | 3.5MB     |
+| day              | 84.8MB    |
+| week             | 593.5MB   |
+| month            | 2.5GB     |
+| year             | 30.2GB    |
 
 
 
