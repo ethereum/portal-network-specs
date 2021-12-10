@@ -359,20 +359,130 @@ No storage
 - size metrics for `transaction + proof` payload
 - expected gossip message volume as a function of radius (and network size)
 
-### History Network
+### Chain History Network
 
 #### Storage
 
-Need size and growth metrics for:
+Data sourced from `geth db inspect` at block height `13663937`
 
-- header + accumulator proof
-- block bodies
-- receipts
 
-Parametrize storage based on network size and projected growth rates.
+| Item     | Size     |
+| -------- | ---------|
+| Headers  |   6.07GB |
+| Bodies   | 183.06GB |
+| Receipts |  92.51GB |
+| -------- | -------- |
+| Total    |  281.64  |
 
-Growth rates can be parametrized by block gas limit
+The growth rate here is dependent on the current gas limit which is subject to change.  At the current gas limit of 30 million:
 
+Block Bodies sizes from the latest 100,000 blocks:
+
+| Percentile | Size    | Size-Bytes |
+| ---------- | ------- | ---------- |
+| median     | 59.3KB  | 60774.5    |
+| average    | 67.8KB  | 69434.3    |
+| 1          | 539B    | 539        |
+| 5          | 5.5KB   | 5611       |
+| 10         | 10.3KB  | 10542.9    |
+| 20         | 20.0KB  | 20432.8    |
+| 30         | 31.1KB  | 31861      |
+| 40         | 44.0KB  | 45066      |
+| 50         | 59.3KB  | 60774.5    |
+| 60         | 77.8KB  | 79681      |
+| 70         | 97.8KB  | 100106     |
+| 80         | 114.9KB | 117676     |
+| 85         | 123.2KB | 126118     |
+| 90         | 133.1KB | 136340     |
+| 95         | 149.8KB | 153418     |
+| 97         | 161.1KB | 164998     |
+| 98         | 170.6KB | 174680     |
+| 99         | 187.6KB | 192107     |
+| 100        | 499.8KB | 511816     |
+
+Block Receipt Sizes from the latest 10,000 blocks
+
+| Percentile | Size    | Size-Bytes |
+| ---------- | ------- | ---------- |
+| median     | 94.5KB  | 96736      |
+| average    | 110.3KB | 112985     |
+| 1          | 1B      | 1          |
+| 5          | 16.4KB  | 16825.8    |
+| 10         | 23.3KB  | 23814.9    |
+| 20         | 39.3KB  | 40255      |
+| 30         | 56.8KB  | 58148.2    |
+| 40         | 75.3KB  | 77140.4    |
+| 50         | 94.5KB  | 96736      |
+| 60         | 119.6KB | 122453     |
+| 70         | 151.6KB | 155221     |
+| 80         | 193.0KB | 197610     |
+| 85         | 210.2KB | 215246     |
+| 90         | 224.4KB | 229815     |
+| 95         | 233.4KB | 239011     |
+| 97         | 240.6KB | 246390     |
+| 98         | 246.6KB | 252521     |
+| 99         | 249.7KB | 255707     |
+| 100        | 264.1KB | 270422     |
+
+
+With a block time of 13 seconds, we expect roughly 2.5 million blocks per year
+
+This gives us loose bounds on the annual data growth rate:
+
+> Note: these numbers dont include compression
+
+
+| Thing      | Average | Median  | 50th    | 70th    | 90th    | 95th    |
+| ---------- | ------- | ------- | ------- | ------- | ------- | ------- |
+| Headers    |   1.2GB |   1.2GB |   1.2GB |   1.2GB |   1.2GB |   1.2GB |
+| Bodies     | 156.9GB | 137.3GB | 137.3GB | 226.2GB | 308.0GB | 346.7GB |
+| Receipts   | 255.3GB | 218.6GB | 218.6GB | 350.7GB | 519.2GB | 540.0GB |
+| ---------- | ------- | ------- | ------- | ------- | ------- | ------- |
+| Total      | 413.4GB | 357.1GB | 357.1GB | 578.1GB | 828.4GB | 847.9GB |
+
+
+Looking at these numbers we have 281GB of existing chain data and should expect to acquire as much as 350-800GB of new chain data over the next year.  For this reason we will use the number 1TB as our initial required amount of network storage.
+
+
+Deriving required average storage sizes for the network is a function of:
+
+- Total required non-replicated storage: 10TB
+- Replication factor: 5x, 10x, 20x
+- Number of nodes: 100, 250, 500, 1000, 10000, 50000, 100000, 500000, 1000000
+
+
+| nodes / replication | storage |
+| ------------------- | ------- |
+| 100 / 5             | 51.2GB  |
+| 100 / 10            | 102.4GB |
+| 100 / 20            | 204.8GB |
+| 250 / 5             | 20.5GB  |
+| 250 / 10            | 41.0GB  |
+| 250 / 20            | 81.9GB  |
+| 500 / 5             | 10.2GB  |
+| 500 / 10            | 20.5GB  |
+| 500 / 20            | 41.0GB  |
+| 1000 / 5            | 5.1GB   |
+| 1000 / 10           | 10.2GB  |
+| 1000 / 20           | 20.5GB  |
+| 5000 / 5            | 1.0GB   |
+| 5000 / 10           | 2.0GB   |
+| 5000 / 20           | 4.1GB   |
+| 10000 / 5           | 524.3MB |
+| 10000 / 10          | 1.0GB   |
+| 10000 / 20          | 2.0GB   |
+| 50000 / 5           | 104.9MB |
+| 50000 / 10          | 209.7MB |
+| 50000 / 20          | 419.4MB |
+| 100000 / 5          | 52.4MB  |
+| 100000 / 10         | 104.9MB |
+| 100000 / 20         | 209.7MB |
+| 500000 / 5          | 10.5MB  |
+| 500000 / 10         | 21.0MB  |
+| 500000 / 20         | 41.9MB  |
+| 1000000 / 5         | 5.2MB   |
+| 1000000 / 10        | 10.5MB  |
+| 1000000 / 20        | 21.0MB  |
 
 #### Processing
 
@@ -386,7 +496,7 @@ Growth rates can be parametrized by block gas limit
     
 #### Bandwidth
 
-- expected gossip message volume
+- expected gossip message volume for full radius node, move down from there.
 
 
 ### State Network

@@ -1,5 +1,6 @@
 from dataclasses import dataclass, field
 from typing import Sequence, Tuple, Union
+import itertools
 import math
 
 
@@ -225,6 +226,89 @@ def render_accumulator_stats(block_heights: Sequence[int] = BLOCK_HEIGHTS, epoch
     return table.render()
 
 
+import numpy as np
+from web3 import Web3
+
+
+PERCENTILES = (1, 5, 10, 20, 30, 40, 50, 60, 70, 80, 85, 90, 95, 97, 98, 99, 100)
+
+
+def analize_block_size_stats(w3: Web3, from_block: int, sample_size: int, percentiles: Sequence[int] = PERCENTILES) -> None:
+    sizes = tuple(
+        w3.eth.getBlock(block_number)["size"]
+        for block_number
+        in range(from_block, max(0, from_block - sample_size), -1)
+    )
+    header = ("Percentile", "Size", "Size-Bytes")
+    size_percentiles = tuple(
+        np.percentile(sizes, percentile)
+        for percentile
+        in percentiles
+    )
+    median = np.median(sizes)
+    average = np.average(sizes)
+    rows = (
+        ("median", humanize_bytes(int(median)), f"{median:n}"),
+        ("average", humanize_bytes(int(average)), f"{average:n}"),
+    ) + tuple(
+        (str(label), humanize_bytes(int(percentile)), f"{percentile:n}")
+        for label, percentile
+        in zip(percentiles, size_percentiles)
+    )
+    table = snakemd.generator.Table(header, rows)
+    print("#################### BODY SIZES #######################")
+    print(table.render())
+
+
+import rlp
+from rlp_sedes import retrieve_receipts_bundle
+
+
+def analize_receipt_bundle_size_stats(w3: Web3, from_block: int, sample_size: int, percentiles: Sequence[int] = PERCENTILES) -> None:
+    sizes = tuple(
+        len(rlp.encode(retrieve_receipts_bundle(w3, block_number)))
+        for block_number
+        in range(from_block, max(0, from_block - sample_size), -1)
+    )
+    header = ("Percentile", "Size", "Size-Bytes")
+    size_percentiles = tuple(
+        np.percentile(sizes, percentile)
+        for percentile
+        in percentiles
+    )
+    median = np.median(sizes)
+    average = np.average(sizes)
+    rows = (
+        ("median", humanize_bytes(int(median)), f"{median:n}"),
+        ("average", humanize_bytes(int(average)), f"{average:n}"),
+    ) + tuple(
+        (str(label), humanize_bytes(int(percentile)), f"{percentile:n}")
+        for label, percentile
+        in zip(percentiles, size_percentiles)
+    )
+    table = snakemd.generator.Table(header, rows)
+    print("#################### RECEIPT BUNDLE SIZES #######################")
+    print(table.render())
+
+
+def derive_average_storage_size(num_nodes: int, replication_factor: int, base_storage: int = TB) -> int:
+    total_storage = base_storage * replication_factor
+    storage_per_node = total_storage // num_nodes
+    return storage_per_node
+
+
+NODE_SIZES = (100, 250, 500, 1000, 5000, 10000, 50000, 100000, 500000, 1000000)
+REPLICATION_FACTORS = (5, 10, 20)
+
+def render_average_storage_size_stats(node_sizes: Sequence[int] = NODE_SIZES, replication_factors: Sequence[int] = REPLICATION_FACTORS) -> str:
+    header = ("nodes / replication", "storage")
+    rows = tuple(
+        (f"{num_nodes} / {replication}", humanize_bytes(derive_average_storage_size(num_nodes, replication)))
+        for num_nodes, replication
+        in itertools.product(NODE_SIZES, REPLICATION_FACTORS)
+    )
+    table = snakemd.generator.Table(header, rows)
+    return table.render()
 
 
 """
@@ -259,13 +343,6 @@ def render_accumulator_stats(block_heights: Sequence[int] = BLOCK_HEIGHTS, epoch
 """
 
 
-def get_header_gossip_network_storage_range() -> Tuple[int, int]:
-    ...
-
-def get_average_storage_requirements(network_sizes: Sequence[int]) -> str:
-    header_gossip_bounds = get_header_gossip_network_storage_range()
-
-
 def do_rendering():
     locale.setlocale(locale.LC_ALL, '')
     routing_table_stats = render_routing_table_stats()
@@ -286,6 +363,8 @@ def do_rendering():
     print(render_bandwidth_usage_stats(((748 / 13), (908 / 13))))
     print("Outbound (average)")
     print(render_bandwidth_usage_stats(((2230 / 13), (2370 / 13))))
+    print("#################### STORAGE REQUIREMENTS #######################")
+    print(render_average_storage_size_stats())
     print("\n****************** FIN ***************************\n")
 
 

@@ -2,7 +2,7 @@ import functools
 from typing import Any, Optional, Tuple, Sequence
 
 from eth_typing import Address, BlockNumber, Hash32
-from eth_utils import encode_hex, humanize_hash, keccak, to_canonical_address, big_endian_to_int, to_int, int_to_big_endian, decode_hex
+from eth_utils import encode_hex, humanize_hash, keccak, to_canonical_address, big_endian_to_int, to_int, int_to_big_endian, decode_hex, to_bytes
 from eth.db.trie import make_trie_root_and_nodes
 import rlp
 from rlp import sedes
@@ -141,6 +141,68 @@ class LegacyTransaction(rlp.Serializable):  # type: ignore
         return rlp.encode(self)
 
 
+class AccountAccesses(rlp.Serializable):
+    fields = (
+        ('account', address),
+        ('storage_keys', sedes.CountableList(sedes.BigEndianInt(32))),
+    )
+
+
+class AccessListTransaction(rlp.Serializable):
+    fields = (
+        ('chain_id', sedes.big_endian_int),
+        ('nonce', sedes.big_endian_int),
+        ('gas_price', sedes.big_endian_int),
+        ('gas', sedes.big_endian_int),
+        ('to', address),
+        ('value', sedes.big_endian_int),
+        ('data', sedes.binary),
+        ('access_list', sedes.CountableList(AccountAccesses)),
+        ('v', sedes.big_endian_int),
+        ('r', sedes.big_endian_int),
+        ('s', sedes.big_endian_int),
+    )
+
+    def encode(self) -> bytes:
+        return rlp.encode(self)
+
+
+class DynamicFeeTransaction(rlp.Serializable):
+    fields = (
+        ('chain_id', sedes.big_endian_int),
+        ('nonce', sedes.big_endian_int),
+        ('max_priority_fee_per_gas', sedes.big_endian_int),
+        ('max_fee_per_gas', sedes.big_endian_int),
+        ('gas', sedes.big_endian_int),
+        ('to', address),
+        ('value', sedes.big_endian_int),
+        ('data', sedes.binary),
+        ('access_list', sedes.CountableList(AccountAccesses)),
+        ('v', sedes.big_endian_int),
+        ('r', sedes.big_endian_int),
+        ('s', sedes.big_endian_int),
+    )
+
+    def encode(self) -> bytes:
+        return rlp.encode(self)
+
+
+class TypedTransaction:
+    def __init__(self, transaction) -> None:
+        if isinstance(transaction, LegacyTransaction):
+            self.transaction_type = 0
+        elif isinstance(transaction, AccessListTransaction):
+            self.transaction_type = 1
+        elif isinstance(transaction, DynamicFeeTransaction):
+            self.transaction_type = 2
+        else:
+            raise ValueError("Unsupported")
+        self.transaction = transaction
+
+    def encode(self) -> bytes:
+        return to_bytes(self.transaction_type) + self.transaction.encode()
+
+
 class BlockBody(rlp.Serializable):  # type: ignore
     fields = [
         ("transactions", sedes.CountableList(sedes.binary)),
@@ -158,6 +220,63 @@ class BlockBody(rlp.Serializable):  # type: ignore
         )
 
 
+class Log(rlp.Serializable):
+    fields = [
+        ('address', address),
+        ('topics', sedes.CountableList(uint32)),
+        ('data', sedes.binary)
+    ]
+
+
+class Receipt(rlp.Serializable):
+    fields = [
+        ('state_root', sedes.binary),
+        ('gas_used', sedes.big_endian_int),
+        ('bloom', uint256),
+        ('logs', sedes.CountableList(Log))
+    ]
+
+    def encode(self) -> bytes:
+        return rlp.encode(self)
+
+
+def _to_canonical_receipt(w3_receipt) -> Receipt:
+    logs = tuple(
+        Log(
+            to_canonical_address(w3_log["address"]),
+            tuple(big_endian_to_int(topic) for topic in w3_log["topics"]),
+            decode_hex(w3_log["data"]),
+        ) for w3_log in w3_receipt["logs"]
+    )
+
+    if 'root' in w3_receipt:
+        root = decode_hex(w3_receipt["root"])
+    else:
+        root = w3_receipt["status"].to_bytes(32, 'big')
+    return Receipt(
+        root,
+        w3_receipt["gasUsed"],
+        to_int(w3_receipt["logsBloom"]),
+        logs,
+    )
+
+
+def retrieve_receipts_bundle(w3: Web3, block_number: int) -> Tuple[Receipt, ...]:
+    w3_block = w3.eth.getBlock(block_number)
+    w3_receipts = tuple(
+        w3.eth.getTransactionReceipt(tx_hash) for tx_hash in w3_block["transactions"]
+    )
+    receipts = tuple(
+        _to_canonical_receipt(w3_receipt) for w3_receipt in w3_receipts
+    )
+    receipts_root, _ = make_trie_root_and_nodes(receipts)
+    #if receipts_root != w3_block["receiptsRoot"]:
+    #    raise ValueError(
+    #        f"Reconstructed receipt trie does not match: ours={receipts_root}  theirs={w3_block['receiptsRoot']}"
+    #    )
+    return receipts
+
+
 def _to_canonical_transaction(w3_transaction) -> Tuple[bytes, ...]:
     try:
         transaction_type = to_int(hexstr=w3_transaction["type"])
@@ -169,9 +288,38 @@ def _to_canonical_transaction(w3_transaction) -> Tuple[bytes, ...]:
             w3_transaction["nonce"],
             w3_transaction["gasPrice"],
             w3_transaction["gas"],
-            to_canonical_address(w3_transaction["to"]),
+            to_canonical_address(w3_transaction["to"]) if w3_transaction["to"] is not None else b'',
             w3_transaction["value"],
             decode_hex(w3_transaction["input"]),
+            w3_transaction["v"],
+            big_endian_to_int(w3_transaction["r"]),
+            big_endian_to_int(w3_transaction["s"]),
+        )
+    elif transaction_type == 1:
+        transaction = AccessListTransaction(
+            to_int(hexstr=w3_transaction["chainId"]),
+            w3_transaction["nonce"],
+            w3_transaction["gasPrice"],
+            w3_transaction["gas"],
+            to_canonical_address(w3_transaction["to"]) if w3_transaction["to"] is not None else b'',
+            w3_transaction["value"],
+            decode_hex(w3_transaction["input"]),
+            w3_transaction["accessList"],
+            w3_transaction["v"],
+            big_endian_to_int(w3_transaction["r"]),
+            big_endian_to_int(w3_transaction["s"]),
+        )
+    elif transaction_type == 2:
+        transaction = DynamicFeeTransaction(
+            to_int(hexstr=w3_transaction["chainId"]),
+            w3_transaction["nonce"],
+            w3_transaction["maxPriorityFeePerGas"],
+            w3_transaction["maxFeePerGas"],
+            w3_transaction["gas"],
+            to_canonical_address(w3_transaction["to"]) if w3_transaction["to"] is not None else b'',
+            w3_transaction["value"],
+            decode_hex(w3_transaction["input"]),
+            w3_transaction["accessList"],
             w3_transaction["v"],
             big_endian_to_int(w3_transaction["r"]),
             big_endian_to_int(w3_transaction["s"]),
@@ -182,6 +330,9 @@ def _to_canonical_transaction(w3_transaction) -> Tuple[bytes, ...]:
     return transaction
 
 
+BERLIN_MAINNET_BLOCK = BlockNumber(12244000)
+
+
 def retrieve_block(w3: Web3, block_number: int) -> BlockHeader:
     w3_block = w3.eth.getBlock(block_number, full_transactions=True)
     transactions = tuple(
@@ -189,6 +340,11 @@ def retrieve_block(w3: Web3, block_number: int) -> BlockHeader:
         for transaction
         in w3_block["transactions"]
     )
+    if block_number >= BERLIN_MAINNET_BLOCK:
+        transactions = tuple(
+            TypedTransaction(transaction)
+            for transaction in transactions
+        )
     uncles = tuple(
         _to_canonical_uncle(uncle)
         for uncle
