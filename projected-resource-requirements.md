@@ -117,12 +117,16 @@ def _compute_utp_transfer(payload_size: int, packet_payload_size: int) -> Tuple[
 ```
 
 
-Here is a table of uTP expected traffic for various known payloads:
+The expected total traffic per the given time period for a node in the header gossip network is as follows:
 
-| Payload                 | Initiator: packets-in | I: packets-out | I: bytes-in | I: bytes-out  | Recipient: packets-in | R: packets-out | R: bytes-in   | R: bytes-out |
-| ----------------------- | --------------------- | -------------- | ----------- | ------------- | --------------------- | -------------- | ------------- | ------------ |
-| Header                  | 3 - 6                 | 3 - 6          | 60 - 120    | 600 - 660     | 3 - 6                 | 3 - 6          | 600 - 660     | 60 - 120     |
-| Header+AccumulatorProof | 4 - 11                | 4 - 11         | 80 - 220    | 1,334 - 1,474 | 4 - 11                | 4 - 11         | 1,334 - 1,474 | 80 - 220     |
+| Period | Data-in           | Data-out          | Total             |
+| ------ | ----------------- | ----------------- | ----------------- |
+| minute | 3.5KB - 4.1KB     | 10.1KB - 10.7KB   | 13.5KB - 14.8KB   |
+| hour   | 207.7KB - 245.6KB | 603.1KB - 640.9KB | 810.8KB - 886.5KB |
+| day    | 4.9MB - 5.8MB     | 14.1MB - 15.0MB   | 19.0MB - 20.8MB   |
+| week   | 34.1MB - 40.3MB   | 98.9MB - 105.2MB  | 133.0MB - 145.4MB |
+| month  | 148.1MB - 175.1MB | 429.9MB - 456.9MB | 578.0MB - 632.0MB |
+| year   | 1.7GB - 2.1GB     | 5.0GB - 5.4GB     | 6.8GB - 7.4GB     |
 
 
 
@@ -496,6 +500,67 @@ Deriving required average storage sizes for the network is a function of:
     
 #### Bandwidth
 
+Here are the expected numbers for gossip trafic
+
+
+Block Headers: Single Gossip Iteration
+| case        | packet-in | packet-out | bytes-in     | bytes-out     |
+| ----------- | --------- | ---------- | ------------ | ------------- |
+| lower-bound | 8         | 8          | 688B         | 896B          |
+| upper-bound | 40 - 96   | 40 - 96    | 1.3KB - 984B | 11.1KB - 984B |
+| average     | 12 - 19   | 12 - 19    | 768B - 1.1KB | 2.0KB - 2.3KB |
+
+Block Headers: Usage
+
+| Period | Data-in           | Data-out          | Total             |
+| ------ | ----------------- | ----------------- | ----------------- |
+| minute | 3.5KB - 4.1KB     | 10.1KB - 10.7KB   | 13.5KB - 14.8KB   |
+| hour   | 207.7KB - 245.6KB | 603.1KB - 640.9KB | 810.8KB - 886.5KB |
+| day    | 4.9MB - 5.8MB     | 14.1MB - 15.0MB   | 19.0MB - 20.8MB   |
+| week   | 34.1MB - 40.3MB   | 98.9MB - 105.2MB  | 133.0MB - 145.4MB |
+| month  | 148.1MB - 175.1MB | 429.9MB - 456.9MB | 578.0MB - 632.0MB |
+| year   | 1.7GB - 2.1GB     | 5.0GB - 5.4GB     | 6.8GB - 7.4GB     |
+
+Block Bodies: Single Gossip Iteration
+
+| case        | packet-in   | packet-out  | bytes-in       | bytes-out       |
+| ----------- | ----------- | ----------- | -------------- | --------------- |
+| lower-bound | 8           | 8           | 688B           | 896B            |
+| upper-bound | 568 - 3,728 | 568 - 3,728 | 11.6KB - 4.5KB | 554.1KB - 4.5KB |
+| average     | 78 - 473    | 78 - 473    | 2.0KB - 10.0KB | 69.8KB - 77.8KB |
+
+Block Bodies: Usage
+
+| Period | Data-in          | Data-out          | Total             |
+| ------ | ---------------- | ----------------- | ----------------- |
+| minute | 9.4KB - 45.0KB   | 323.3KB - 358.9KB | 332.7KB - 403.9KB |
+| hour   | 564.7KB - 2.6MB  | 18.9MB - 21.0MB   | 19.5MB - 23.7MB   |
+| day    | 13.2MB - 63.3MB  | 454.6MB - 504.7MB | 467.9MB - 568.0MB |
+| week   | 92.6MB - 443.1MB | 3.1GB - 3.5GB     | 3.2GB - 3.9GB     |
+| month  | 402.5MB - 1.9GB  | 13.5GB - 15.0GB   | 13.9GB - 16.9GB   |
+| year   | 4.7GB - 22.6GB   | 162.1GB - 179.9GB | 166.8GB - 202.5GB |
+
+Receipt Bundle: Single Gossip Iteration
+
+| case        | packet-in   | packet-out  | bytes-in       | bytes-out         |
+| ----------- | ----------- | ----------- | -------------- | ----------------- |
+| lower-bound | 8           | 8           | 688B           | 896B              |
+| upper-bound | 912 - 6,056 | 912 - 6,056 | 18.3KB - 6.8KB | 901.0KB - 6.8KB   |
+| average     | 121 - 764   | 121 - 764   | 2.9KB - 15.6KB | 113.2KB - 126.0KB |
+
+Receipt Bundle: Usage
+
+| Period | Data-in           | Data-out          | Total             |
+| ------ | ----------------- | ----------------- | ----------------- |
+| minute | 13.3KB - 71.2KB   | 523.5KB - 581.4KB | 536.8KB - 652.7KB |
+| hour   | 797.2KB - 4.2MB   | 30.7MB - 34.1MB   | 31.5MB - 38.2MB   |
+| day    | 18.7MB - 100.2MB  | 736.1MB - 817.6MB | 754.8MB - 917.8MB |
+| week   | 130.8MB - 701.4MB | 5.0GB - 5.6GB     | 5.2GB - 6.3GB     |
+| month  | 568.3MB - 3.0GB   | 21.9GB - 24.3GB   | 22.4GB - 27.3GB   |
+| year   | 6.7GB - 35.7GB    | 262.4GB - 291.4GB | 269.1GB - 327.2GB |
+
+
+- gossip messages need to have accumulator proof included.
 - expected gossip message volume for full radius node, move down from there.
 
 

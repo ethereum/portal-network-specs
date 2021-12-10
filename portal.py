@@ -140,6 +140,36 @@ MONTH = int(DAY * 365 / 12)
 YEAR = 365 * DAY
 
 
+def render_gossip_transfer_stats(payload_size: int, content_key_size: int, seconds_per_payload: int = 13) -> str:
+    header = ("case", "packet-in", "packet-out", "bytes-in", "bytes-out")
+    row_lower_bound = ("lower-bound", "8", "8", humanize_bytes(8 * (77+9)), humanize_bytes(8 * (content_key_size + 77)))
+
+    initiator_w, _ = compute_utp_tranfer_worst(payload_size)
+    initiator_b, _ = compute_utp_tranfer_best(payload_size)
+
+    row_upper_bound = (
+        "upper-bound",
+        f"{8 + 8 * initiator_b.inbound.packets:n} - {8 + 8 * initiator_w.inbound.packets:n}",
+        f"{8 + 8 * initiator_b.outbound.packets:n} - {8 + 8 * initiator_w.outbound.packets:n}",
+        f"{humanize_bytes(8 * (77 + 9 + initiator_b.inbound.bytes))} - {humanize_bytes(8 * (content_key_size + 77 + initiator_w.inbound.packets))}",
+        f"{humanize_bytes(8 * (77 + 9 + initiator_b.outbound.bytes))} - {humanize_bytes(8 * (content_key_size + 77 + initiator_w.outbound.packets))}",
+    )
+    row_average = (
+        "average",
+        f"{8 + initiator_b.inbound.packets:n} - {8 + initiator_w.inbound.packets:n}",
+        f"{8 + initiator_b.outbound.packets:n} - {8 + initiator_w.outbound.packets:n}",
+        f"{humanize_bytes(8 * (77 + 9) + initiator_b.inbound.bytes)} - {humanize_bytes(8 * (content_key_size + 77) + initiator_w.inbound.bytes)}",
+        f"{humanize_bytes(8 * (77 + 9) + initiator_b.outbound.bytes)} - {humanize_bytes(8 * (content_key_size + 77) + initiator_w.outbound.bytes)}",
+    )
+    rows = (
+        row_lower_bound,
+        row_upper_bound,
+        row_average,
+    )
+    table = snakemd.generator.Table(header, rows)
+    return table.render()
+
+
 BANDWIDTH_TIME_PERIODS = (
     ('minute', MINUTE),
     ('hour', HOUR),
@@ -150,10 +180,33 @@ BANDWIDTH_TIME_PERIODS = (
 )
 
 
-def _render_rates(rates: Sequence[Union[int, float]], seconds_per_period: int) -> str:
-    return ' - '.join((
-    ))
+def render_average_gossip_bandwidth_usage_stats(payload_size: int, content_key_size: int, seconds_per_payload: int = 13, periods: Sequence[Tuple[str, int]] = BANDWIDTH_TIME_PERIODS) -> str:
+    header = ("Period", "Data-in", "Data-out", "Total")
 
+    initiator_w, _ = compute_utp_tranfer_worst(payload_size)
+    initiator_b, _ = compute_utp_tranfer_best(payload_size)
+
+    bytes_in_b = 8 * (77 + 9) + initiator_b.inbound.bytes
+    bytes_in_w = 8 * (77 + 9) + initiator_w.inbound.bytes
+    bytes_out_b = 8 * (77 + content_key_size) + initiator_b.outbound.bytes
+    bytes_out_w = 8 * (77 + content_key_size) + initiator_w.outbound.bytes
+
+    rate_in_b = bytes_in_b / seconds_per_payload
+    rate_in_w = bytes_in_w / seconds_per_payload
+    rate_out_b = bytes_out_b / seconds_per_payload
+    rate_out_w = bytes_out_w / seconds_per_payload
+
+    rows = tuple(
+        (
+            period,
+            f"{humanize_bytes(seconds_per_period * rate_in_b)} - {humanize_bytes(seconds_per_period * rate_in_w)}",
+            f"{humanize_bytes(seconds_per_period * rate_out_b)} - {humanize_bytes(seconds_per_period * rate_out_w)}",
+            f"{humanize_bytes(seconds_per_period * (rate_in_b + rate_out_b))} - {humanize_bytes(seconds_per_period * (rate_in_w + rate_out_w))}",
+        )
+        for period, seconds_per_period in periods
+    )
+    table = snakemd.generator.Table(header, rows)
+    return table.render()
 
 
 def render_bandwidth_usage_stats(rates: Sequence[Union[int, float]], periods: Sequence[Tuple[str, int]] = BANDWIDTH_TIME_PERIODS) -> str:
@@ -343,6 +396,12 @@ def render_average_storage_size_stats(node_sizes: Sequence[int] = NODE_SIZES, re
 """
 
 
+HEADER_AVG_SIZE = 714
+ACCUMULATOR_PROOF_SIZE = 714
+BLOCK_BODY_AVG_SIZE = 69434
+RECEIPT_BUNDLE_AVG_SIZE = 112985
+
+
 def do_rendering():
     locale.setlocale(locale.LC_ALL, '')
     routing_table_stats = render_routing_table_stats()
@@ -355,14 +414,24 @@ def do_rendering():
     print("\n############## UTP #####################\n\n")
     print(utp_stats)
     print("\n############## Header Gossip #####################\n\n")
-    print("Inbound (worst)")
-    print(render_bandwidth_usage_stats(((1168 / 13), (2448 / 13))))
-    print("Outbound (worst)")
-    print(render_bandwidth_usage_stats(((11568 / 13), (12686 / 13))))
-    print("Inbound (average)")
-    print(render_bandwidth_usage_stats(((748 / 13), (908 / 13))))
-    print("Outbound (average)")
-    print(render_bandwidth_usage_stats(((2230 / 13), (2370 / 13))))
+    print("Single Iteration")
+    print(render_gossip_transfer_stats(540, 35))
+    print("Bandwidth Used")
+    print(render_average_gossip_bandwidth_usage_stats(540, 35))
+
+    print("#################### HISTORY GOSSIP #######################")
+    print("Block Headers: Single Gossip Iteration")
+    print(render_gossip_transfer_stats(HEADER_AVG_SIZE + ACCUMULATOR_PROOF_SIZE, 35))
+    print("Block Headers: Usage")
+    print(render_average_gossip_bandwidth_usage_stats(HEADER_AVG_SIZE + ACCUMULATOR_PROOF_SIZE, 35))
+    print("Block Bodies: Single Gossip Iteration")
+    print(render_gossip_transfer_stats(BLOCK_BODY_AVG_SIZE + ACCUMULATOR_PROOF_SIZE, 35))
+    print("Block Bodies: Usage")
+    print(render_average_gossip_bandwidth_usage_stats(BLOCK_BODY_AVG_SIZE + ACCUMULATOR_PROOF_SIZE, 35))
+    print("Receipt Bundle: Single Gossip Iteration")
+    print(render_gossip_transfer_stats(RECEIPT_BUNDLE_AVG_SIZE + ACCUMULATOR_PROOF_SIZE, 35))
+    print("Receipt Bundle: Usage")
+    print(render_average_gossip_bandwidth_usage_stats(RECEIPT_BUNDLE_AVG_SIZE + ACCUMULATOR_PROOF_SIZE, 35))
     print("#################### STORAGE REQUIREMENTS #######################")
     print(render_average_storage_size_stats())
     print("\n****************** FIN ***************************\n")
