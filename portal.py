@@ -1,7 +1,8 @@
 from dataclasses import dataclass, field
-from typing import Sequence, Tuple, Union
+from typing import Sequence, Tuple, Union, Iterable
 import itertools
 import math
+from eth_typing import Address
 
 
 def get_bucket_size(total_network_size: int, bucket_idx: int) -> int:
@@ -281,6 +282,7 @@ def render_accumulator_stats(block_heights: Sequence[int] = BLOCK_HEIGHTS, epoch
 
 import numpy as np
 from web3 import Web3
+from web3.types import BlockData, TxData
 
 
 PERCENTILES = (1, 5, 10, 20, 30, 40, 50, 60, 70, 80, 85, 90, 95, 97, 98, 99, 100)
@@ -396,10 +398,83 @@ def render_average_storage_size_stats(node_sizes: Sequence[int] = NODE_SIZES, re
 """
 
 
-HEADER_AVG_SIZE = 714
+HEADER_AVG_SIZE = 540
 ACCUMULATOR_PROOF_SIZE = 714
 BLOCK_BODY_AVG_SIZE = 69434
-RECEIPT_BUNDLE_AVG_SIZE = 112985
+RECEIPT_BUNDLE_AVG_SIZE = 112318
+
+
+#
+# State stuff
+#
+def _iter_transaction_addresses(w3_transaction: TxData) -> Iterable[Address]:
+    yield w3_transaction['from']
+    yield w3_transaction['to']
+
+def _iter_block_addresses(w3_block: BlockData) -> Iterable[Address]:
+    yield w3_block['miner']
+    for w3_transaction in w3_block['transactions']:
+        yield from _iter_transaction_addresses(w3_transaction)
+
+
+def _iter_blocks(w3: Web3) -> Iterable[BlockData]:
+    block = w3.eth.getBlock('latest', full_transactions=True)
+
+    yield block
+
+    while True:
+        block = w3.eth.getBlock(block['parentHash'], full_transactions=True)
+        yield block
+
+
+def _iter_addresses_from_chain(w3: Web3):
+    for w3_block in _iter_blocks(w3):
+        for address in _iter_block_addresses(w3_block):
+            yield address
+
+
+def get_recently_seen_addresses(w3: Web3, total_addresses: int = 10) -> Iterable[Address]:
+    seen = set()
+
+    for address in _iter_addresses_from_chain(w3):
+        if address is None:
+            continue
+        if address in seen:
+            continue
+        seen.add(address)
+        yield address
+        if len(seen) >= total_addresses:
+            break
+
+
+from rlp_sedes import get_proof_size
+
+
+def analize_account_proof_stats(w3: Web3, sample_size: int = 100, percentiles: Sequence[int] = PERCENTILES) -> None:
+    sizes = tuple(
+        get_proof_size(w3, address)
+        for address in
+        get_recently_seen_addresses(w3, total_addresses=sample_size)
+    )
+    header = ("Percentile", "Size", "Size-Bytes")
+    size_percentiles = tuple(
+        np.percentile(sizes, percentile)
+        for percentile
+        in percentiles
+    )
+    median = np.median(sizes)
+    average = np.average(sizes)
+    rows = (
+        ("median", humanize_bytes(int(median)), f"{median:n}"),
+        ("average", humanize_bytes(int(average)), f"{average:n}"),
+    ) + tuple(
+        (str(label), humanize_bytes(int(percentile)), f"{percentile:n}")
+        for label, percentile
+        in zip(percentiles, size_percentiles)
+    )
+    table = snakemd.generator.Table(header, rows)
+    print("#################### ACCOUNT PROOF SIZES #######################")
+    print(table.render())
 
 
 def do_rendering():

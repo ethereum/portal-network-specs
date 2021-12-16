@@ -1,12 +1,14 @@
 import functools
-from typing import Any, Optional, Tuple, Sequence
+from typing import Any, Optional, Tuple, Sequence, NamedTuple
 
-from eth_typing import Address, BlockNumber, Hash32
+from eth_typing import Address, BlockNumber, Hash32, ChecksumAddress
 from eth_utils import encode_hex, humanize_hash, keccak, to_canonical_address, big_endian_to_int, to_int, int_to_big_endian, decode_hex, to_bytes
 from eth.db.trie import make_trie_root_and_nodes
 import rlp
 from rlp import sedes
 from web3 import Web3
+from web3.types import TxData, BlockIdentifier
+from cytoolz import concat, groupby
 
 address = sedes.Binary.fixed_length(20, allow_empty=True)
 hash32 = sedes.Binary.fixed_length(32)
@@ -362,3 +364,85 @@ def retrieve_block(w3: Web3, block_number: int) -> BlockHeader:
         )
 
     return BlockBody(transactions=transactions, uncles=uncles)
+
+
+class Account(rlp.Serializable):
+    """
+    RLP object for accounts.
+    """
+    fields = [
+        ('nonce', sedes.big_endian_int),
+        ('balance', sedes.big_endian_int),
+        ('storage_root', trie_root),
+        ('code_hash', hash32)
+    ]
+
+    def __init__(self,
+                 nonce: int,
+                 balance: int,
+                 storage_root: bytes,
+                 code_hash: bytes,
+                 ) -> None:
+        super().__init__(nonce, balance, storage_root, code_hash)
+
+    def __repr__(self) -> str:
+        return (
+            f"Account(nonce={self.nonce}, balance={self.balance}, "
+            f"storage_root=0x{self.storage_root.hex()}, "
+            f"code_hash=0x{self.code_hash.hex()})"
+        )
+
+
+ADDR_WETH = "0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2"
+
+
+def get_proof_size(w3: Web3, address: Address) -> int:
+    w3_proof = w3.eth.getProof(address, [])
+    proof_elements = w3_proof["accountProof"]
+    account = Account(
+        nonce=w3_proof["nonce"],
+        balance=w3_proof["balance"],
+        storage_root=w3_proof["storageHash"],
+        code_hash=w3_proof["codeHash"],
+    )
+
+    return len(rlp.encode(proof_elements))
+
+
+class AccountAccessList(NamedTuple):
+    address: ChecksumAddress
+    slots: Tuple[int, ...]
+
+
+AccessList = Tuple[AccountAccessList, ...]
+
+
+def get_tx_access_list(w3: Web3, w3_transaction: TxData) -> AccessList:
+    tx_params = {
+        'to': w3_transaction['to'],
+        'from': w3_transaction['from'],
+        #'gas': hex(w3_transaction['gas']),
+        'gasPrice': hex(w3_transaction['gasPrice']),
+        'value': hex(w3_transaction['value']),
+        'input': w3_transaction['input'],
+    }
+    w3_access_list = w3.access_list.create_access_list(tx_params, hex(w3_transaction['blockNumber'] - 1))
+    return tuple(
+        AccountAccessList(item['address'], item['storageKeys']) for item in w3_access_list['accessList']
+    )
+
+
+def get_block_access_list(w3: Web3, block_identifier: BlockIdentifier) -> AccessList:
+    w3_block = w3.eth.getBlock(block_identifier, full_transactions=True)
+    tx_access_lists = tuple(
+        get_tx_access_list(w3, w3_transaction)
+        for w3_transaction in w3_block['transactions']
+    )
+    grouped_access_lists = groupby(0, concat(tx_access_lists))
+    assert False
+
+
+def get_recently_used_storage_slots(w3: Web3) -> Tuple[Tuple[Address, Tuple[int, ...]], ...]:
+    for w3_block in _iter_blocks(w3):
+        for w3_transaction in w3_block['transactions']:
+            ...

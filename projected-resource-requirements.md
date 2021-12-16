@@ -117,19 +117,6 @@ def _compute_utp_transfer(payload_size: int, packet_payload_size: int) -> Tuple[
 ```
 
 
-The expected total traffic per the given time period for a node in the header gossip network is as follows:
-
-| Period | Data-in           | Data-out          | Total             |
-| ------ | ----------------- | ----------------- | ----------------- |
-| minute | 3.5KB - 4.1KB     | 10.1KB - 10.7KB   | 13.5KB - 14.8KB   |
-| hour   | 207.7KB - 245.6KB | 603.1KB - 640.9KB | 810.8KB - 886.5KB |
-| day    | 4.9MB - 5.8MB     | 14.1MB - 15.0MB   | 19.0MB - 20.8MB   |
-| week   | 34.1MB - 40.3MB   | 98.9MB - 105.2MB  | 133.0MB - 145.4MB |
-| month  | 148.1MB - 175.1MB | 429.9MB - 456.9MB | 578.0MB - 632.0MB |
-| year   | 1.7GB - 2.1GB     | 5.0GB - 5.4GB     | 6.8GB - 7.4GB     |
-
-
-
 ### Routing Table Sizes
 
 We can compute how many entries on average should exist in an individual node's routing table with the following:
@@ -204,7 +191,23 @@ This gives us roughly 170 bytes for the main accumulator proof
 
 The expected total proof size is 714 bytes.
 
-## Header Gossip
+
+
+## Networks
+
+### Header Gossip Network
+
+#### Storage
+
+- establish current size and growth rate for accumulator
+
+#### Processing
+
+- benchmark header verification
+- benchmark maintenance of accumulator
+
+
+#### Bandwidth
 
 Gossip of block headers in the history network will include both the header (540 bytes) and the proof (714) bytes, with a total payload size of roughly 1254 bytes.
 
@@ -318,36 +321,6 @@ Giving a monthly transfer of:
 
 
 
-
-### Content Key Sizes
-
-TODO
-
-### Content Sizes
-
-TODO
-
-
-## Networks
-
-### Header Gossip Network
-
-#### Storage
-
-- establish current size and growth rate for accumulator
-
-#### Processing
-
-- benchmark header verification
-- benchmark maintenance of accumulator
-
-
-#### Bandwidth
-
-- gossip message volume as a function of radius (and network size)
-- providing a copy of local accumulator
-
-
 ### Transaction Gossip Network
 
 #### Storage
@@ -408,25 +381,25 @@ Block Receipt Sizes from the latest 10,000 blocks
 
 | Percentile | Size    | Size-Bytes |
 | ---------- | ------- | ---------- |
-| median     | 94.5KB  | 96736      |
-| average    | 110.3KB | 112985     |
+| median     | 96.5KB  | 98809.5    |
+| average    | 109.7KB | 112318     |
 | 1          | 1B      | 1          |
-| 5          | 16.4KB  | 16825.8    |
-| 10         | 23.3KB  | 23814.9    |
-| 20         | 39.3KB  | 40255      |
-| 30         | 56.8KB  | 58148.2    |
-| 40         | 75.3KB  | 77140.4    |
-| 50         | 94.5KB  | 96736      |
-| 60         | 119.6KB | 122453     |
-| 70         | 151.6KB | 155221     |
-| 80         | 193.0KB | 197610     |
-| 85         | 210.2KB | 215246     |
-| 90         | 224.4KB | 229815     |
-| 95         | 233.4KB | 239011     |
-| 97         | 240.6KB | 246390     |
-| 98         | 246.6KB | 252521     |
-| 99         | 249.7KB | 255707     |
-| 100        | 264.1KB | 270422     |
+| 5          | 9.4KB   | 9629.5     |
+| 10         | 18.1KB  | 18490.2    |
+| 20         | 35.0KB  | 35831.6    |
+| 30         | 53.2KB  | 54495      |
+| 40         | 72.7KB  | 74396.4    |
+| 50         | 96.5KB  | 98809.5    |
+| 60         | 123.3KB | 126286     |
+| 70         | 155.3KB | 159023     |
+| 80         | 190.0KB | 194547     |
+| 85         | 204.3KB | 209183     |
+| 90         | 218.1KB | 223358     |
+| 95         | 235.5KB | 241121     |
+| 97         | 246.6KB | 252519     |
+| 98         | 254.7KB | 260840     |
+| 99         | 272.5KB | 279029     |
+| 100        | 441.0KB | 451591     |
 
 
 With a block time of 13 seconds, we expect roughly 2.5 million blocks per year
@@ -559,9 +532,12 @@ Receipt Bundle: Usage
 | month  | 568.3MB - 3.0GB   | 21.9GB - 24.3GB   | 22.4GB - 27.3GB   |
 | year   | 6.7GB - 35.7GB    | 262.4GB - 291.4GB | 269.1GB - 327.2GB |
 
+Total yearly bandwidth across all history data 442.7GB
 
-- gossip messages need to have accumulator proof included.
-- expected gossip message volume for full radius node, move down from there.
+
+Our "target" resource level for nodes is for them to contribute ~100MB of storage each.  With today's total history size of ~300GB that means that each node in the network would only be handling `0.03%` (`100MB / 300GB`) of the data.  This gives us a total expected bandwidth usage due to gossip messages of 144MB per year.
+
+Assuming that our starting conditions for the network will contain fewer nodes, we also look at each node providing 1GB of storage which shifts the number up by a factor of 10, giving us an annual bandwidth consumption of 1.44GB.
 
 
 ### State Network
