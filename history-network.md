@@ -60,30 +60,36 @@ Each of these data items are represented as a key-value pair. Denote the key for
 
 All `content` items are transmitted as RLP-encoded byte arrays.
 
-We derive a `content-id` from the `content-key` as `H(content-key)` where `H` denotes the SHA-256 hash function, which outputs 32-byte values. The `content-id` represents the key in the DHT that we use for `distance` calculations.
-
-All `content-key` values are encoded and decoded according to SSZ sedes.
+All `content-key` values are encoded and decoded as an [`SSZ Union`](https://github.com/ethereum/consensus-specs/blob/dev/ssz/simple-serialize.md#union) type.
+```
+content-key = Union[blockheader, blockbody, receipt]
+serialized-content_key = serialize(content_key)
+```
 
 #### Block Header
 
 ```
+selector = 0x00
 content-key  = Container(chain-id: uint16, content-type: uint8, block-hash: Bytes32)
-content-type = 0x01
 ```
 
 #### Block Body
 
 ```
+selector = 0x01
 content-key  = Container(chain-id: uint16, content-type: uint8, block-hash: Bytes32)
-content-type = 0x02
 ```
 
 #### Receipts
 
 ```
+selector = 0x02
 content-key  = Container(chain-id: uint16, content-type: uint8, block-hash: Bytes32)
-content-type = 0x03
 ```
+
+#### Content ID
+
+We derive a `content-id` from the `content-key` as `H(serialized-content-key)` where `H` denotes the SHA-256 hash function, which outputs 32-byte values. The `content-id` represents the key in the DHT that we use for `distance` calculations.
 
 ### Radius
 
