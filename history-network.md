@@ -63,28 +63,28 @@ All `content` items are transmitted as RLP-encoded byte arrays.
 All `content-key` values are encoded and decoded as an [`SSZ Union`](https://github.com/ethereum/consensus-specs/blob/dev/ssz/simple-serialize.md#union) type.
 ```
 content-key = Union[blockheader, blockbody, receipt]
-serialized-content_key = serialize(content_key)
+serialized-content-key = serialize(content-key)
 ```
 
 #### Block Header
 
 ```
 selector = 0x00
-content-key  = Container(chain-id: uint16, content-type: uint8, block-hash: Bytes32)
+content-key  = Container(chain-id: uint16, block-hash: Bytes32)
 ```
 
 #### Block Body
 
 ```
 selector = 0x01
-content-key  = Container(chain-id: uint16, content-type: uint8, block-hash: Bytes32)
+content-key  = Container(chain-id: uint16, block-hash: Bytes32)
 ```
 
 #### Receipts
 
 ```
 selector = 0x02
-content-key  = Container(chain-id: uint16, content-type: uint8, block-hash: Bytes32)
+content-key  = Container(chain-id: uint16, block-hash: Bytes32)
 ```
 
 #### Content ID
