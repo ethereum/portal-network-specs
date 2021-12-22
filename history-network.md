@@ -89,7 +89,7 @@ content-key  = Container(chain-id: uint16, block-hash: Bytes32)
 
 #### Content ID
 
-We derive a `content-id` from the `content-key` as `H(serialized-content-key)` where `H` denotes the SHA-256 hash function, which outputs 32-byte values. The `content-id` represents the key in the DHT that we use for `distance` calculations.
+We derive a `content-id` from the `content-key` as `H(serialized-content-key)` where `H` denotes the Keccak-256 hash function, which outputs 32-byte values. Note: by "serialized-content-key", we mean the hex encoded string of the raw bytes of the key. The `content-id` represents the key in the DHT that we use for `distance` calculations.
 
 ### Radius
 
