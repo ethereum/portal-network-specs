@@ -3,10 +3,22 @@ from typing import Sequence, Tuple, Union, Iterable
 import itertools
 import math
 from eth_typing import Address
+import locale
+import snakemd
+import numpy as np
+from web3 import Web3
+from web3.types import BlockData, TxData
+import rlp
+import pytest
+
+from rlp_sedes import retrieve_receipts_bundle, get_proof_size
+
+from accumulator import ACCUMULATOR_EPOCH_SIZE
 
 
 def get_bucket_size(total_network_size: int, bucket_idx: int) -> int:
     return min(16, int(total_network_size / 2**bucket_idx))
+
 
 def get_routing_table_size(total_network_size: int) -> int:
     return sum(
@@ -14,10 +26,6 @@ def get_routing_table_size(total_network_size: int) -> int:
         for bucket_idx in range(1, 256)
     )
 
-
-import locale
-
-import snakemd
 
 KB = 1024
 MB = KB * 1024
@@ -61,7 +69,11 @@ class UDPMeter:
     outbound: Meter = field(default_factory=Meter)
 
     def __str__(self) -> str:
-        return f"packets={self.num_packets:n}  inbound={humanize_bytes(self.inbound)}  outbound={humanize_bytes(self.outbound)}"
+        return (
+            f"packets={self.num_packets:n}  "
+            f"inbound={humanize_bytes(self.inbound)}  "
+            f"outbound={humanize_bytes(self.outbound)}"
+        )
 
 
 def _compute_utp_transfer(payload_size: int, packet_payload_size: int) -> Tuple[UDPMeter, UDPMeter]:
@@ -141,9 +153,16 @@ MONTH = int(DAY * 365 / 12)
 YEAR = 365 * DAY
 
 
-def render_gossip_transfer_stats(payload_size: int, content_key_size: int, seconds_per_payload: int = 13) -> str:
+def render_gossip_transfer_stats(
+        payload_size: int, content_key_size: int, seconds_per_payload: int = 13) -> str:
     header = ("case", "packet-in", "packet-out", "bytes-in", "bytes-out")
-    row_lower_bound = ("lower-bound", "8", "8", humanize_bytes(8 * (77+9)), humanize_bytes(8 * (content_key_size + 77)))
+    row_lower_bound = (
+        "lower-bound",
+        "8",
+        "8",
+        humanize_bytes(8 * (77 + 9)),
+        humanize_bytes(8 * (content_key_size + 77)),
+    )
 
     initiator_w, _ = compute_utp_tranfer_worst(payload_size)
     initiator_b, _ = compute_utp_tranfer_best(payload_size)
@@ -152,15 +171,15 @@ def render_gossip_transfer_stats(payload_size: int, content_key_size: int, secon
         "upper-bound",
         f"{8 + 8 * initiator_b.inbound.packets:n} - {8 + 8 * initiator_w.inbound.packets:n}",
         f"{8 + 8 * initiator_b.outbound.packets:n} - {8 + 8 * initiator_w.outbound.packets:n}",
-        f"{humanize_bytes(8 * (77 + 9 + initiator_b.inbound.bytes))} - {humanize_bytes(8 * (content_key_size + 77 + initiator_w.inbound.packets))}",
-        f"{humanize_bytes(8 * (77 + 9 + initiator_b.outbound.bytes))} - {humanize_bytes(8 * (content_key_size + 77 + initiator_w.outbound.packets))}",
+        f"{humanize_bytes(8 * (77 + 9 + initiator_b.inbound.bytes))} - {humanize_bytes(8 * (content_key_size + 77 + initiator_w.inbound.packets))}",  # noqa: E501
+        f"{humanize_bytes(8 * (77 + 9 + initiator_b.outbound.bytes))} - {humanize_bytes(8 * (content_key_size + 77 + initiator_w.outbound.packets))}",  # noqa: E501
     )
     row_average = (
         "average",
         f"{8 + initiator_b.inbound.packets:n} - {8 + initiator_w.inbound.packets:n}",
         f"{8 + initiator_b.outbound.packets:n} - {8 + initiator_w.outbound.packets:n}",
-        f"{humanize_bytes(8 * (77 + 9) + initiator_b.inbound.bytes)} - {humanize_bytes(8 * (content_key_size + 77) + initiator_w.inbound.bytes)}",
-        f"{humanize_bytes(8 * (77 + 9) + initiator_b.outbound.bytes)} - {humanize_bytes(8 * (content_key_size + 77) + initiator_w.outbound.bytes)}",
+        f"{humanize_bytes(8 * (77 + 9) + initiator_b.inbound.bytes)} - {humanize_bytes(8 * (content_key_size + 77) + initiator_w.inbound.bytes)}",  # noqa: E501
+        f"{humanize_bytes(8 * (77 + 9) + initiator_b.outbound.bytes)} - {humanize_bytes(8 * (content_key_size + 77) + initiator_w.outbound.bytes)}",  # noqa: E501
     )
     rows = (
         row_lower_bound,
@@ -181,7 +200,11 @@ BANDWIDTH_TIME_PERIODS = (
 )
 
 
-def render_average_gossip_bandwidth_usage_stats(payload_size: int, content_key_size: int, seconds_per_payload: int = 13, periods: Sequence[Tuple[str, int]] = BANDWIDTH_TIME_PERIODS) -> str:
+def render_average_gossip_bandwidth_usage_stats(
+        payload_size: int,
+        content_key_size: int,
+        seconds_per_payload: int = 13,
+        periods: Sequence[Tuple[str, int]] = BANDWIDTH_TIME_PERIODS) -> str:
     header = ("Period", "Data-in", "Data-out", "Total")
 
     initiator_w, _ = compute_utp_tranfer_worst(payload_size)
@@ -200,9 +223,9 @@ def render_average_gossip_bandwidth_usage_stats(payload_size: int, content_key_s
     rows = tuple(
         (
             period,
-            f"{humanize_bytes(seconds_per_period * rate_in_b)} - {humanize_bytes(seconds_per_period * rate_in_w)}",
-            f"{humanize_bytes(seconds_per_period * rate_out_b)} - {humanize_bytes(seconds_per_period * rate_out_w)}",
-            f"{humanize_bytes(seconds_per_period * (rate_in_b + rate_out_b))} - {humanize_bytes(seconds_per_period * (rate_in_w + rate_out_w))}",
+            f"{humanize_bytes(seconds_per_period * rate_in_b)} - {humanize_bytes(seconds_per_period * rate_in_w)}",  # noqa: E501
+            f"{humanize_bytes(seconds_per_period * rate_out_b)} - {humanize_bytes(seconds_per_period * rate_out_w)}",  # noqa: E501
+            f"{humanize_bytes(seconds_per_period * (rate_in_b + rate_out_b))} - {humanize_bytes(seconds_per_period * (rate_in_w + rate_out_w))}",  # noqa: E501
         )
         for period, seconds_per_period in periods
     )
@@ -210,7 +233,9 @@ def render_average_gossip_bandwidth_usage_stats(payload_size: int, content_key_s
     return table.render()
 
 
-def render_bandwidth_usage_stats(rates: Sequence[Union[int, float]], periods: Sequence[Tuple[str, int]] = BANDWIDTH_TIME_PERIODS) -> str:
+def render_bandwidth_usage_stats(
+        rates: Sequence[Union[int, float]],
+        periods: Sequence[Tuple[str, int]] = BANDWIDTH_TIME_PERIODS) -> str:
     header = ("Period", "Bandwidth")
     rows = tuple(
         (
@@ -233,7 +258,17 @@ UTP_PAYLOADS = (
 
 
 def render_utp_stats(payloads: Sequence[Tuple[str, int]] = UTP_PAYLOADS) -> str:
-    header = ("Payload", "Initiator: packets-in", "I: packets-out", "I: bytes-in", "I: bytes-out", "Recipient: packets-in", "R: packets-out", "R: bytes-in", "R: bytes-out")
+    header = (
+        "Payload",
+        "Initiator: packets-in",
+        "I: packets-out",
+        "I: bytes-in",
+        "I: bytes-out",
+        "Recipient: packets-in",
+        "R: packets-out",
+        "R: bytes-in",
+        "R: bytes-out",
+    )
 
     rows = tuple(
         render_utp_stats_row(payload_name, payload_size)
@@ -241,7 +276,6 @@ def render_utp_stats(payloads: Sequence[Tuple[str, int]] = UTP_PAYLOADS) -> str:
     )
     table = snakemd.generator.Table(header, rows)
     return table.render()
-
 
 
 NETWORK_SIZES = (1000, 10000, 20000, 50000, 100000, 500000, 1000000)
@@ -254,25 +288,32 @@ def render_routing_table_stats(network_sizes: Sequence[int] = NETWORK_SIZES) -> 
     """
     header = ("Network Size", "Routing Table Size", "Log2")
     rows = tuple(
-        (f"{network_size:n}", f"{get_routing_table_size(network_size):n}", f"{math.log2(get_routing_table_size(network_size)):n}")
+        (
+            f"{network_size:n}",
+            f"{get_routing_table_size(network_size):n}",
+            f"{math.log2(get_routing_table_size(network_size)):n}"
+        )
         for network_size in network_sizes
     )
     table = snakemd.generator.Table(header, rows)
     return table.render()
 
 
-from accumulator import ACCUMULATOR_EPOCH_SIZE, MAX_HISTORICAL_EPOCHS
-
-
 BLOCK_HEIGHTS = (100000, 1000000, 10000000, 15000000, 30000000)
 
 
-def render_accumulator_stats(block_heights: Sequence[int] = BLOCK_HEIGHTS, epoch_size: int = ACCUMULATOR_EPOCH_SIZE) -> str:
+def render_accumulator_stats(
+        block_heights: Sequence[int] = BLOCK_HEIGHTS,
+        epoch_size: int = ACCUMULATOR_EPOCH_SIZE) -> str:
     header = ("Block Number", "Accumulator History Size", "Accumulator Max Size")
     full_epoch_size = epoch_size * 64
     base_sizes = tuple(32 * block_number // epoch_size for block_number in block_heights)
     rows = tuple(
-        (f"{block_number:n}", f"{humanize_bytes(base_size)}", f"{humanize_bytes(base_size + full_epoch_size)}")
+        (
+            f"{block_number:n}",
+            f"{humanize_bytes(base_size)}",
+            f"{humanize_bytes(base_size + full_epoch_size)}"
+        )
         for block_number, base_size
         in zip(block_heights, base_sizes)
     )
@@ -280,15 +321,14 @@ def render_accumulator_stats(block_heights: Sequence[int] = BLOCK_HEIGHTS, epoch
     return table.render()
 
 
-import numpy as np
-from web3 import Web3
-from web3.types import BlockData, TxData
-
-
 PERCENTILES = (1, 5, 10, 20, 30, 40, 50, 60, 70, 80, 85, 90, 95, 97, 98, 99, 100)
 
 
-def analize_block_size_stats(w3: Web3, from_block: int, sample_size: int, percentiles: Sequence[int] = PERCENTILES) -> None:
+def analize_block_size_stats(
+        w3: Web3,
+        from_block: int,
+        sample_size: int,
+        percentiles: Sequence[int] = PERCENTILES) -> None:
     sizes = tuple(
         w3.eth.getBlock(block_number)["size"]
         for block_number
@@ -315,11 +355,11 @@ def analize_block_size_stats(w3: Web3, from_block: int, sample_size: int, percen
     print(table.render())
 
 
-import rlp
-from rlp_sedes import retrieve_receipts_bundle
-
-
-def analize_receipt_bundle_size_stats(w3: Web3, from_block: int, sample_size: int, percentiles: Sequence[int] = PERCENTILES) -> None:
+def analize_receipt_bundle_size_stats(
+        w3: Web3,
+        from_block: int,
+        sample_size: int,
+        percentiles: Sequence[int] = PERCENTILES) -> None:
     sizes = tuple(
         len(rlp.encode(retrieve_receipts_bundle(w3, block_number)))
         for block_number
@@ -346,7 +386,10 @@ def analize_receipt_bundle_size_stats(w3: Web3, from_block: int, sample_size: in
     print(table.render())
 
 
-def derive_average_storage_size(num_nodes: int, replication_factor: int, base_storage: int = TB) -> int:
+def derive_average_storage_size(
+        num_nodes: int,
+        replication_factor: int,
+        base_storage: int = TB) -> int:
     total_storage = base_storage * replication_factor
     storage_per_node = total_storage // num_nodes
     return storage_per_node
@@ -355,10 +398,16 @@ def derive_average_storage_size(num_nodes: int, replication_factor: int, base_st
 NODE_SIZES = (100, 250, 500, 1000, 5000, 10000, 50000, 100000, 500000, 1000000)
 REPLICATION_FACTORS = (5, 10, 20)
 
-def render_average_storage_size_stats(node_sizes: Sequence[int] = NODE_SIZES, replication_factors: Sequence[int] = REPLICATION_FACTORS) -> str:
+
+def render_average_storage_size_stats(
+        node_sizes: Sequence[int] = NODE_SIZES,
+        replication_factors: Sequence[int] = REPLICATION_FACTORS) -> str:
     header = ("nodes / replication", "storage")
     rows = tuple(
-        (f"{num_nodes} / {replication}", humanize_bytes(derive_average_storage_size(num_nodes, replication)))
+        (
+            f"{num_nodes} / {replication}",
+            humanize_bytes(derive_average_storage_size(num_nodes, replication)),
+        )
         for num_nodes, replication
         in itertools.product(NODE_SIZES, REPLICATION_FACTORS)
     )
@@ -411,6 +460,7 @@ def _iter_transaction_addresses(w3_transaction: TxData) -> Iterable[Address]:
     yield w3_transaction['from']
     yield w3_transaction['to']
 
+
 def _iter_block_addresses(w3_block: BlockData) -> Iterable[Address]:
     yield w3_block['miner']
     for w3_transaction in w3_block['transactions']:
@@ -447,10 +497,10 @@ def get_recently_seen_addresses(w3: Web3, total_addresses: int = 10) -> Iterable
             break
 
 
-from rlp_sedes import get_proof_size
-
-
-def analize_account_proof_stats(w3: Web3, sample_size: int = 100, percentiles: Sequence[int] = PERCENTILES) -> None:
+def analize_account_proof_stats(
+        w3: Web3,
+        sample_size: int = 100,
+        percentiles: Sequence[int] = PERCENTILES) -> None:
     sizes = tuple(
         get_proof_size(w3, address)
         for address in
@@ -502,11 +552,11 @@ def do_rendering():
     print("Block Bodies: Single Gossip Iteration")
     print(render_gossip_transfer_stats(BLOCK_BODY_AVG_SIZE + ACCUMULATOR_PROOF_SIZE, 35))
     print("Block Bodies: Usage")
-    print(render_average_gossip_bandwidth_usage_stats(BLOCK_BODY_AVG_SIZE + ACCUMULATOR_PROOF_SIZE, 35))
+    print(render_average_gossip_bandwidth_usage_stats(BLOCK_BODY_AVG_SIZE + ACCUMULATOR_PROOF_SIZE, 35))  # noqa: E501
     print("Receipt Bundle: Single Gossip Iteration")
     print(render_gossip_transfer_stats(RECEIPT_BUNDLE_AVG_SIZE + ACCUMULATOR_PROOF_SIZE, 35))
     print("Receipt Bundle: Usage")
-    print(render_average_gossip_bandwidth_usage_stats(RECEIPT_BUNDLE_AVG_SIZE + ACCUMULATOR_PROOF_SIZE, 35))
+    print(render_average_gossip_bandwidth_usage_stats(RECEIPT_BUNDLE_AVG_SIZE + ACCUMULATOR_PROOF_SIZE, 35))  # noqa: E501
     print("#################### STORAGE REQUIREMENTS #######################")
     print(render_average_storage_size_stats())
     print("\n****************** FIN ***************************\n")
@@ -514,9 +564,6 @@ def do_rendering():
 
 if __name__ == '__main__':
     do_rendering()
-
-
-import pytest
 
 
 @pytest.mark.parametrize(
@@ -551,7 +598,7 @@ def test_humanize_bytes(num_bytes, expected):
         (100, 1000, UDPMeter(Meter(3, 60), Meter(3, 160)), UDPMeter(Meter(3, 160), Meter(3, 60))),
     ),
 )
-def test_utp_stream_projections(payload_size, packet_data_size, initiator_expected, recipient_expected):
+def test_utp_stream_projections(payload_size, packet_data_size, initiator_expected, recipient_expected):  # noqa: E501
     initiator_actual, recipient_actual = _compute_utp_transfer(payload_size, packet_data_size)
     assert initiator_actual == initiator_expected
     assert recipient_actual == recipient_expected
