@@ -200,6 +200,7 @@ BENIGN_OPS = {
     mnemonics.MLOAD,
     mnemonics.MSIZE,
     # System
+    mnemonics.CALLVALUE,
     mnemonics.CALLDATALOAD,
     mnemonics.CALLDATASIZE,
     mnemonics.CALLDATACOPY,
@@ -326,6 +327,9 @@ def get_access_events(
     stack = []
 
     for idx, entry in enumerate(trace.structLogs):
+        while entry.depth <= len(stack):
+            context = stack.pop()
+
         if entry.op in BENIGN_OPS:
             continue
         elif entry.op in READ_OPS:
@@ -336,12 +340,28 @@ def get_access_events(
         elif entry.op in WRITE_OPS:
             assert False, f"not handled: op={entry.op}"
         elif entry.op in CALL_OPS:
-            assert False, f"not handled: op={entry.op}"
+            if entry.op == mnemonics.DELEGATECALL:
+                _, code_address_as_int, _, _, _, _ = entry.stack[-6:]
+                code_address = code_address_as_int.to_bytes(20, 'big')
+                stack.append(context)
+                context = CallContext(
+                    sender=context.sender,
+                    self=context.self,
+                    storage=context.storage,
+                    code=code_address,
+                    value=context.value,
+                )
+                yield StateAccess(code_address)
+            else:
+                assert False, f"not handled: op={entry.op}"
         else:
             raise ValueError(f"Unsupported opcode: op={entry.op}")
 
 
-def get_block_access_list(w3: Web3, block_identifier: BlockIdentifier, trace: Optional[Trace] = None) -> AccessList:
+def get_block_access_list(
+        w3: Web3,
+        block_identifier: BlockIdentifier,
+        trace: Optional[Trace] = None) -> AccessList:
     if trace is None:
         trace = w3.debug_trace.trace_block(block_identifier)
     block = w3.eth.get_block(block_identifier, full_transactions=True)
