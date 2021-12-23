@@ -46,7 +46,12 @@ We use the same PING/PONG/FINDNODES/NODES rules from base discovery v5 protocol 
 
 The network supports the following schemes for addressing different types of content.
 
-All content keys are the concatenation of a 1-byte `content_type` and a serialized SSZ `Container` object.  The `content_type` indicate which type of content key the payload represents.  The SSZ `Container` sedes defines how the payload can be decoded.
+All content keys are encoded as an [SSZ Union](https://github.com/ethereum/consensus-specs/blob/dev/ssz/simple-serialize.md#union) type.
+
+```
+content_key = Union[account_trie_node, contract_storage_trie_node, account_trie_proof, contract_storage_trie_proof, contract_bytecode]
+serialized_content_key = serialize(content_key)
+```
 
 We define a custom SSZ sedes alias `Nibbles` to mean `List[uint8, max_length=64]` where each individual value **must** be constrained to a valid "nibbles" value of `0 - 15`.
 
@@ -58,12 +63,14 @@ An individual trie node from the main account trie.
 
 > TODO: consult on best way to define trie paths
 ```
-content_key := 0x00 | Container(path: Nibbles, node_hash: bytes32, state_root: bytes32)
+account_trie_node = Container(path: Nibbles, node_hash: Bytes32, state_root: Bytes32)
+selector = 0x00
 
-content_id  := sha256(path | node_hash)
-node_hash   := bytes32
-state_root  := bytes32
-path        := TODO
+content_id  = sha256(path | node_hash)
+
+node_hash   = Bytes32
+state_root  = Bytes32
+path        = TODO
 ```
 
 #### Contract Storage Trie Node
@@ -71,39 +78,43 @@ path        := TODO
 An individual trie node from a contract storage trie.
 
 ```
-content_key := 0x01 | Container(address: bytes20, path: Nibbles, node_hash: bytes32, state_root: bytes32)
+contract_storage_trie_node = Container(address: Bytes20, path: Nibbles, node_hash: Bytes32, state_root: Bytes32)
+selector = 0x01
 
-content_id  := sha256(address | path | node_hash)
-address     := bytes20
-node_hash   := bytes32
-path        := TODO
+content_id  = sha256(address | path | node_hash)
+
+address     = Bytes20
+node_hash   = Bytes32
+path        = TODO
 ```
-
 
 #### Account Trie Proof
 
 A leaf node from the main account trie and accompanying merkle proof against a recent `Header.state_root`
 
 ```
-content_key := 0x02 | Container(address: bytes20, state_root: bytes32)
+account_trie_proof = Container(address: Bytes20, state_root: Bytes32)
+selector = 0x02
 
-content_id  := keccak(address)
-address     := bytes20
-state_root  := bytes32
+content_id  = keccak(address)
+
+address     = Bytes20
+state_root  = Bytes32
 ```
-
 
 #### Contract Storage Trie Proof
 
 A leaf node from a contract storage trie and accompanying merkle proof against the `Account.storage_root`.
 
 ```
-content_key := 0x03 | Container(address: bytes20, slot: uint256, state_root: bytes32)
+contract_storage_trie_proof = Container(address: Bytes20, slot: uint256, state_root: Bytes32)
+selector = 0x03
 
-content_id  := (keccak(address) + keccak(slot)) % 2**256
-address     := bytes20
-slot        := uint256
-state_root  := bytes32
+content_id  = (keccak(address) + keccak(slot)) % 2**256
+
+address     = Bytes20
+slot        = uint256
+state_root  = Bytes32
 ```
 
 #### Contract Bytecode
@@ -111,10 +122,13 @@ state_root  := bytes32
 The bytecode for a specific contract as referenced by `Account.code_hash`
 
 ```
-content_key := 0x04 | Container(address: bytes20, code_hash: bytes32)
-address     := bytes20
-code_hash   := bytes32
-content_id  := sha256(address | code_hash)
+contract_bytecode = Container(address: Bytes20, code_hash: Bytes32)
+selector = 0x04
+
+content_id  = sha256(address | code_hash)
+
+address     = Bytes20
+code_hash   = Bytes32
 ```
 
 
