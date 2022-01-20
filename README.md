@@ -144,8 +144,8 @@ A [double batched merkle log accumulator](./https://ethresear.ch/t/double-batche
 - [Transaction Gossip Network](./transaction-gossip.md):
     - Spec is preliminary
     - Prior work: https://ethresear.ch/t/scalable-transaction-gossip/8660
-- Header Gossip Network
-    - WIP: https://github.com/ethereum/portal-network-specs/pull/79
+- [Header Gossip Network](./header-gossip-network.md)
+    - Spec if preliminary
 - Canonical Indices Network:
     - No specification has been written.  Largely mirrors that of Chain History.
 
