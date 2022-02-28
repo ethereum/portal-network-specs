@@ -1,10 +1,10 @@
-# Chain History Storage Network
+# Execution History Network
 
-This document is a preliminary specification for a networking protocol that supports on-demand availability of Ethereum chain history data.
+This document is the specification for the networking protocol that supports on-demand availability of Ethereum execution chain history data.
 
 ## Overview
 
-Chain history data consists of historical block headers, block bodies (transactions and omners), and receipts.
+Execution chain history data consists of historical block headers, block bodies (transactions and ommer), and receipts.
 
 The chain history storage network is a [Kademlia](https://pdos.csail.mit.edu/~petar/papers/maymounkov-kademlia-lncs.pdf) DHT that forms an overlay network on top of the [Discovery v5](https://github.com/ethereum/devp2p/blob/master/discv5/discv5-wire.md) network. The term *overlay network* means that the history network operates with its own independent routing table and uses the extensible `TALKREQ` and `TALKRESP` messages from the base Discovery v5 protocol for communication.
 
@@ -14,7 +14,7 @@ The history protocol uses the node table structure from the Discovery v5 network
 
 ### Data
 
-Types:
+#### Types
 
 * Block headers
 * Block bodies
@@ -22,13 +22,20 @@ Types:
     * Omners
 * Receipts
 
-Lookups:
+#### Retrieval
 
 * Block header by block header hash
 * Block body by block header hash
 * Block receipts by block header hash
 
-This specification does not support block lookups by number or transaction lookups by hash. To support these lookups, we will require a specification for a block header accumulator so that we can return the canonical block for a given height or the transaction for a given hash included in some canonical block.
+> This network does **not** support:
+> 
+> - Header by block number
+> - Block by block number
+> - Transaction by hash
+>
+> Support for the indices needed to do these types of lookups is the responsibility of the "Execution Canonical Indices" subnetwork of the Portal Network.
+
 
 ## Specification
 
@@ -58,8 +65,6 @@ The chain history DHT stores the following data items:
 
 Each of these data items are represented as a key-value pair. Denote the key for a data item by `content-key`. Denote the value for an item as `content`.
 
-All `content` items are transmitted as RLP-encoded byte arrays.
-
 All `content-key` values are encoded and decoded as an [`SSZ Union`](https://github.com/ethereum/consensus-specs/blob/dev/ssz/simple-serialize.md#union) type.
 ```
 content-key = Union[blockheader, blockbody, receipt]
@@ -69,15 +74,17 @@ serialized-content-key = serialize(content-key)
 #### Block Header
 
 ```
-selector = 0x00
+selector     = 0x00
 content-key  = Container(chain-id: uint16, block-hash: Bytes32)
+content       = rlp(header)
 ```
 
 #### Block Body
 
 ```
-selector = 0x01
+selector     = 0x01
 content-key  = Container(chain-id: uint16, block-hash: Bytes32)
+content      = rlp([transaction_list, uncle_list])
 ```
 
 #### Receipts
@@ -85,6 +92,7 @@ content-key  = Container(chain-id: uint16, block-hash: Bytes32)
 ```
 selector = 0x02
 content-key  = Container(chain-id: uint16, block-hash: Bytes32)
+content      = rlp(receipt_list)
 ```
 
 #### Content ID
