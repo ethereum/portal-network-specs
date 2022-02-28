@@ -1,6 +1,6 @@
 # Execution History Network
 
-This document is the specification for the "a networking protocol that supports on-demand availability of Ethereum execution chain history data.
+This document is the specification for the networking protocol that supports on-demand availability of Ethereum execution chain history data.
 
 ## Overview
 
