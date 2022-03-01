@@ -1,16 +1,16 @@
-# Execution History Network
+# Execution Chain History Sub-Network
 
-This document is the specification for the networking protocol that supports on-demand availability of Ethereum execution chain history data.
+This document is the specification for the sub-network that supports on-demand availability of Ethereum execution chain history data.
 
 ## Overview
 
 Execution chain history data consists of historical block headers, block bodies (transactions and ommer), and receipts.
 
-The chain history storage network is a [Kademlia](https://pdos.csail.mit.edu/~petar/papers/maymounkov-kademlia-lncs.pdf) DHT that forms an overlay network on top of the [Discovery v5](https://github.com/ethereum/devp2p/blob/master/discv5/discv5-wire.md) network. The term *overlay network* means that the history network operates with its own independent routing table and uses the extensible `TALKREQ` and `TALKRESP` messages from the base Discovery v5 protocol for communication.
+The chain history sub-network is a [Kademlia](https://pdos.csail.mit.edu/~petar/papers/maymounkov-kademlia-lncs.pdf) DHT that forms an overlay network on top of the [Discovery v5](https://github.com/ethereum/devp2p/blob/master/discv5/discv5-wire.md) network. The term *overlay network* means that the history network operates with its own independent routing table and uses the extensible `TALKREQ` and `TALKRESP` messages from the base Discovery v5 protocol for communication.
 
-The `TALKREQ` and `TALKRESP` protocol messages are application-level messages whose contents are specific to the history protocol. We specify these messages below.
+The `TALKREQ` and `TALKRESP` protocol messages are application-level messages whose contents are specific to the history sub-network. We specify these messages below.
 
-The history protocol uses the node table structure from the Discovery v5 network and the lookup algorithm from section 2.3 of the Kademlia paper.
+The history sub-network uses the node table structure from the Discovery v5 network and the lookup algorithm from section 2.3 of the Kademlia paper.
 
 ### Data
 
@@ -28,7 +28,7 @@ The history protocol uses the node table structure from the Discovery v5 network
 * Block body by block header hash
 * Block receipts by block header hash
 
-> This network does **not** support:
+> This subnetwork does **not** support:
 > 
 > - Header by block number
 > - Block by block number
@@ -41,7 +41,7 @@ The history protocol uses the node table structure from the Discovery v5 network
 
 ### Distance
 
-Nodes in the history network are represented by their [EIP-778 Ethereum Node Record (ENR)](https://eips.ethereum.org/EIPS/eip-778) from the Discovery v5 network. A node's `node-id` is derived according to the node's identity scheme, which is specified in the node's ENR. A node's `node-id` represents its address in the DHT.
+Nodes in the history subnetwork are represented by their [EIP-778 Ethereum Node Record (ENR)](https://eips.ethereum.org/EIPS/eip-778) from the Discovery v5 network. A node's `node-id` is derived according to the node's identity scheme, which is specified in the node's ENR. A node's `node-id` represents its address in the DHT.
 
 The `node-id` is a 32-byte identifier. We define the `distance` function that maps a pair of `node-id` values to a 256-bit unsigned integer identically to the Discovery v5 network.
 
@@ -113,7 +113,7 @@ A node is expected to maintain `radius` information for each node in its local n
 
 ### Wire Protocol
 
-The [Portal wire protocol](./portal-wire-protocol.md) is used as wire protocol for the state network.
+The [Portal wire protocol](./portal-wire-protocol.md) is used as wire protocol for the history sub-network.
 
 As specified in the [Protocol identifiers](./portal-wire-protocol.md#protocol-identifiers) section of the Portal wire protocol, the `protocol` field in the `TALKREQ` message **MUST** contain the value of `0x500B`.
 
