@@ -18,11 +18,11 @@ All protocol identifiers consist of two bytes. The first byte is "`P`" (`0x50`),
 
 Currently defined protocol identifiers:
 - Inclusive range of `0x5000` - `0x5009`: Reserved for future networks or network upgrades
-- `0x500A`: State Network
-- `0x500B`: History Network
+- `0x500A`: Execution State Network
+- `0x500B`: Execution History Network
 - `0x500C`: Transaction Gossip Network
-- `0x500D`: Header Gossip Network
-- `0x500E`: Canonical Indices Network
+- `0x500D`: Execution Header Gossip Network
+- `0x500E`: Execution Canonical Indices Network
 - `0x501A`: gossip channel: bc-light-client-snapshot
 - `0x501B`: gossip channel: bc-light-client-update
 - `0x501C`: DHT network: beacon-state
@@ -213,12 +213,14 @@ A collection of test vectors for this specification can be found in the
 
 ## Algorithms
 
-Here we define a collection of generic algorithms which can be applied to sub-networks implementing the wire protocol.
+Here we define a collection of generic algorithms which can be applied to sub-protocol implementing the wire protocol.
 
 
 ### Lookup
 
-We use the lookup algorithm described in section 2.3 of the Kademlia paper. A "node lookup" is the execution of the algorithm to find the `k` closest nodes to some `node-id`. A "content lookup" is the execution of the algorithm to find the data for `content-id` or the `k` closest nodes to `content-id`.
+We use the lookup algorithm described in section 2.3 of the Kademlia paper. 
+
+A "node lookup" is the execution of the algorithm to find the `k` closest nodes to some `node-id`. A "content lookup" is the execution of the algorithm to find the data for `content-id` or the `k` closest nodes to `content-id`.
 
 A `FindNode` request corresponds to a node lookup, and a `FindContent` request corresponds to a content lookup.
 
@@ -241,6 +243,8 @@ Following the join phase, a node's k-buckets are generally kept fresh by network
 To find a piece of content for `content-id`, a node performs a content lookup via `FindContent`. If the lookup succeeds, then the requestor sends an `Offer` message for the content to the closest node it observed that did not return the value and whose `radius` contains `content-id`.
 
 ### Storing Content
+
+The concept of content storage is only applicable to sub-protocols that implement persistant storage of data.
 
 To store a piece of content with DHT key `content-id`, a node performs a lookup to find the `k` closest nodes with radii that contain `content-id`. Then the node sends `Offer` messages to those nodes. For any node that responds to the `Offer` message with an `Accept` message, the local node attempts to transmit the content over the uTP connection with the `connection-id` from the `Accept` message.
 

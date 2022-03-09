@@ -129,6 +129,7 @@ custom_data = Container(data_radius: uint256)
 custom_payload = serialize(custom_data)
 ```
 
+
 ## Algorithms and Data Structures
 
 ### Node State
@@ -150,4 +151,3 @@ A node should regularly refresh the information it keeps about its neighbors. We
 When a node discovers some previously unknown node, and the corresponding k-bucket is full, the newly discovered node is put into a replacement cache sorted by time last seen. If a node in the k-bucket fails a liveness check, and the replacement cache for that bucket is non-empty, then that node is replaced by the most recently seen node in the replacement cache.
 
 Consider a node in some k-bucket to be "stale" if it fails to respond to β messages in a row, where β is a system parameter. β may be a function of the number of previous successful liveness checks or of the age of the neighbor. If the k-bucket is not full, and the corresponding replacement cache is empty, then stale nodes should only be flagged and not removed. This ensures that a node who goes offline temporarily does not void its k-buckets.
-
