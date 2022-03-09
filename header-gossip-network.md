@@ -1,10 +1,10 @@
-# Portal Network: Header Gossip
+# Execution Header Gossip Network
 
-This document is the specification for the "Header Gossip" network which is responsible for dissemination of new headers as new blocks are mined and  transmission of recent snapshots of the "Header Accumulator" data structure which all nodes on the network are expected to maintain.
+This document is the specification for the sub-protocol that facilitates transmission of new headers from the tip of the chain to all nodes in the network.  In addition, it facilitates acquisition of a snapshot of the "Header Accumulator" data structure.
 
 ## Design Requirements
 
-The network functionality has been designed around the following requirements.
+The header gossip network functionality has been designed around the following requirements.
 
 - A DHT node can reliably receive the headers for new blocks via the gossip mechanism in a timely manner.
 - A DHT node can retrieve a recent snapshot of another DHT node's "Header Accumulator"
@@ -77,11 +77,15 @@ Ignoring fluxuations in the size of `Accumulator.current_epoch` we should expect
 
 ## Wire Protocol
 
-The Header Gossip Network is an overlay network on the [Discovery V5 Protocol](https://github.com/ethereum/devp2p/blob/master/discv5/discv5-theory.md).  The overlay network uses the PING/PONG/FINDNODES/FOUNDNODES/FINDCONTENT/FOUNDCONTENT/OFFER/ACCEPT messages from the [Portal Wire Protocol](./portal-wire-protocol.md).
+The [Portal wire protocol](./portal-wire-protocol.md) is used as wire protocol for the transaction gossip network.
+
+As specified in the [Protocol identifiers](./portal-wire-protocol.md#protocol-identifiers) section of the Portal wire protocol, the `protocol` field in the `TALKREQ` message **MUST** contain the value of `0x500D`.
+
+The network uses the PING/PONG/FINDNODES/FOUNDNODES/FINDCONTENT/FOUNDCONTENT/OFFER/ACCEPT messages from the [Portal Wire Protocol](./portal-wire-protocol.md).
 
 ### Distance Function
 
-The Header Gossip Network uses the standard XOR distance function.
+The network uses the standard XOR distance function.
 
 ### PING payload
 
@@ -133,6 +137,7 @@ The gossip protocol for the header network is designed to quickly spread new hea
 Upon receiving a new block header via OFFER/ACCEPT a node should first check the validity of the header.
 
 Headers that pass the validity check should be propagated to `LOG2(num_entries_in_routing_table)` random nodes from the routing table via OFFER/ACCEPT.
+
 
 ## Accumulator Acquisition
 
