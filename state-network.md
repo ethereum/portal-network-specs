@@ -1,6 +1,6 @@
-# Execution State Sub-Protocol
+# Execution State Network
 
-This document is the specification for the subprotocol that supports on-demand availability of state data from the execution chain.
+This document is the specification for the sub-protocol that supports on-demand availability of state data from the execution chain.
 
 
 ## Overview
@@ -12,9 +12,9 @@ State data from the execution chain consists of:
 - The set of all contract bytecodes
 - Any information required to prove inclusion of the above data in the state.
 
-The subprotocol supports "on-demand" availability of the Ethereum execution state including proof of exclusion for non-existent data.
+The network supports "on-demand" availability of the Ethereum execution state including proof of exclusion for non-existent data.
 
-The execution state subprotocol is a [Kademlia](https://pdos.csail.mit.edu/~petar/papers/maymounkov-kademlia-lncs.pdf) DHT that forms an overlay network on top of the [Discovery v5](https://github.com/ethereum/devp2p/blob/master/discv5/discv5-wire.md) network. The term *overlay network* means that the history network operates with its own independent routing table and uses the extensible `TALKREQ` and `TALKRESP` messages from the base Discovery v5 protocol for communication.
+The execution state network is a [Kademlia](https://pdos.csail.mit.edu/~petar/papers/maymounkov-kademlia-lncs.pdf) DHT that forms an overlay network on top of the [Discovery v5](https://github.com/ethereum/devp2p/blob/master/discv5/discv5-wire.md) network. The term *overlay network* means that the history network operates with its own independent routing table and uses the extensible `TALKREQ` and `TALKRESP` messages from the base Discovery v5 protocol for communication.
 
 ## DHT Network
 
@@ -34,7 +34,7 @@ We use the same PING/PONG/FINDNODES/NODES rules from base discovery v5 protocol 
 
 ### Content Keys and Content IDs
 
-The subprotocol supports the following schemes for addressing different types of content.
+The network supports the following schemes for addressing different types of content.
 
 All content keys are encoded as an [SSZ Union](https://github.com/ethereum/consensus-specs/blob/dev/ssz/simple-serialize.md#union) type.
 

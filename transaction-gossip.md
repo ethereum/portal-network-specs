@@ -1,11 +1,10 @@
-# Portal Network: Transaction Gossip
+# Transaction Gossip Network
 
 > NOTE: This specification is a work in progress.
 
-This document is the specification for the "Transaction Gossip" portion of the portal network.  The network is designed to enable participants to broadcast transactions which can be picked up by miners for inclusion in future blocks.
+This document is the specification for the sub-protocol that facilitates transmission of transactions from individual nodes in the network to block producers for inclusion in future blocks.
 
-
-## Design Requirements
+## Overview
 
 The transaction gossip network is designed with the following requirements.
 
@@ -16,11 +15,16 @@ The transaction gossip network is designed with the following requirements.
 
 ## Wire Protocol
 
-The Transaction Gossip Network uses the PING/PONG/FINDNODES/FOUNDNODES/OFFER/ACCEPT messages from the [Portal Wire Protocol](./portal-wire-protocol.md).
+The [Portal wire protocol](./portal-wire-protocol.md) is used as wire protocol for the transaction gossip network.
+
+As specified in the [Protocol identifiers](./portal-wire-protocol.md#protocol-identifiers) section of the Portal wire protocol, the `protocol` field in the `TALKREQ` message **MUST** contain the value of `0x500C`.
+
+The network uses the PING/PONG/FINDNODES/FOUNDNODES/OFFER/ACCEPT messages from the [Portal Wire Protocol](./portal-wire-protocol.md).
+
 
 ### Distance Function
 
-The Transaction Gossip Network uses the standard XOR distance function.
+The network uses the standard XOR distance function.
 
 ### PING payload
 

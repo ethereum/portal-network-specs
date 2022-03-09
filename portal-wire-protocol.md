@@ -2,8 +2,9 @@
 
 The Portal wire protocol is the default p2p protocol by which Portal nodes communicate.
 
-The different Portal networks **MAY** use this protocol, but they **MUST** remain separated per network.
-This is done at the [Node Discovery Protocol v5](https://github.com/ethereum/devp2p/blob/master/discv5/discv5-wire.md#talkreq-request-0x05) layer, by providing a different protocol byte string, per network, in the `TALKREQ` message.
+The different protocol within the Portal network **MAY** use this protocol, but they **MUST** remain separated per network.
+
+This is done at the [Node Discovery Protocol v5](https://github.com/ethereum/devp2p/blob/master/discv5/discv5-wire.md#talkreq-request-0x05) layer, by providing a different protocol byte string, per protocol, in the `TALKREQ` message.
 
 The value for the protocol byte string in the `TALKREQ` message is specified as protocol identifier per network.
 
@@ -209,3 +210,38 @@ Upon *receiving* this message, the serving node **SHOULD** *initiate* a uTP stre
 
 A collection of test vectors for this specification can be found in the
 [Portal wire test vectors](./portal-wire-test-vectors.md) document.
+
+## Algorithms
+
+Here we define a collection of generic algorithms which can be applied to sub-networks implementing the wire protocol.
+
+
+### Lookup
+
+We use the lookup algorithm described in section 2.3 of the Kademlia paper. A "node lookup" is the execution of the algorithm to find the `k` closest nodes to some `node-id`. A "content lookup" is the execution of the algorithm to find the data for `content-id` or the `k` closest nodes to `content-id`.
+
+A `FindNode` request corresponds to a node lookup, and a `FindContent` request corresponds to a content lookup.
+
+The lookup algorithm is also used to identify nodes that should receive `Offer` messages to store some data.
+
+### Joining the Network
+
+We follow the join procedure described in the Kademlia paper.
+
+In order to join the network, a node `u` must know some node `v` who is already participating in the network. Node `u` inserts `v` into the appropriate k-bucket and then sends a `FindNode` request to `v` for its own node ID. Then, node `u` refreshes all k-buckets with distances further than its closest neighbor. To refresh a bucket, a node selects a random node ID in the bucket's range and performs a `FindNode` for that ID.
+
+### Finding Nodes
+
+A node's routing table is initially populated by the `FindNode` messages that the node sends when it joins the network.
+
+Following the join phase, a node's k-buckets are generally kept fresh by network traffic. When a node learns of a new contact (through node lookups), it attempts to insert the contact into the appropriate k-bucket. A node keeps track of the last node lookup it performed for each k-bucket, and it will regularly refresh any k-buckets with no recent lookups.
+
+### Finding Content
+
+To find a piece of content for `content-id`, a node performs a content lookup via `FindContent`. If the lookup succeeds, then the requestor sends an `Offer` message for the content to the closest node it observed that did not return the value and whose `radius` contains `content-id`.
+
+### Storing Content
+
+To store a piece of content with DHT key `content-id`, a node performs a lookup to find the `k` closest nodes with radii that contain `content-id`. Then the node sends `Offer` messages to those nodes. For any node that responds to the `Offer` message with an `Accept` message, the local node attempts to transmit the content over the uTP connection with the `connection-id` from the `Accept` message.
+
+The network cannot make guarantees about the storage of particular content. A lazy node may ignore all `Offer` messages. A malicious node may send `Accept` messages and ignore the data transmissions. The offer-accept mechanism is in place to require that nodes explicitly accept some data before another node attempts to transmit that data. The mechanism prevents the unnecessary consumption of bandwidth in the presence of lazy nodes. However, it does not defend against malicious nodes who accept offers for data with no intent to store it.

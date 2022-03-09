@@ -39,6 +39,14 @@ Each of these networks is designed to deliver a specific unit of functionality. 
 All of the sub-protocols in the Portal Network establish their own DHT network that is managed independent of the base Discovery V5 DHT.
 
 
+## Terminology
+
+The term "sub-protocol" is used to denote an individual protocol within the Portal Network.
+
+The term "network" is used contextually to refer to **either** the overall set of multiple protocols that comprise the Portal Network or an individual sub-protocol within the Portal Network.
+
+
+
 ## Design Principles
 
 Each of the Portal Network sub-protocols follows these design principles.

@@ -1,16 +1,16 @@
-# Execution Chain History Sub-Network
+# Execution Chain History Network
 
-This document is the specification for the sub-network that supports on-demand availability of Ethereum execution chain history data.
+This document is the specification for the sub-protocol that supports on-demand availability of Ethereum execution chain history data.
 
 ## Overview
 
 Execution chain history data consists of historical block headers, block bodies (transactions and ommer), and receipts.
 
-The chain history sub-network is a [Kademlia](https://pdos.csail.mit.edu/~petar/papers/maymounkov-kademlia-lncs.pdf) DHT that forms an overlay network on top of the [Discovery v5](https://github.com/ethereum/devp2p/blob/master/discv5/discv5-wire.md) network. The term *overlay network* means that the history network operates with its own independent routing table and uses the extensible `TALKREQ` and `TALKRESP` messages from the base Discovery v5 protocol for communication.
+The chain history network is a [Kademlia](https://pdos.csail.mit.edu/~petar/papers/maymounkov-kademlia-lncs.pdf) DHT that forms an overlay network on top of the [Discovery v5](https://github.com/ethereum/devp2p/blob/master/discv5/discv5-wire.md) network. The term *overlay network* means that the history network operates with its own independent routing table and uses the extensible `TALKREQ` and `TALKRESP` messages from the base Discovery v5 protocol for communication.
 
-The `TALKREQ` and `TALKRESP` protocol messages are application-level messages whose contents are specific to the history sub-network. We specify these messages below.
+The `TALKREQ` and `TALKRESP` protocol messages are application-level messages whose contents are specific to the history network. We specify these messages below.
 
-The history sub-network uses the node table structure from the Discovery v5 network and the lookup algorithm from section 2.3 of the Kademlia paper.
+The history network uses the node table structure from the Discovery v5 network and the lookup algorithm from section 2.3 of the Kademlia paper.
 
 ### Data
 
@@ -28,20 +28,20 @@ The history sub-network uses the node table structure from the Discovery v5 netw
 * Block body by block header hash
 * Block receipts by block header hash
 
-> This subnetwork does **not** support:
+> This sub-protocol does **not** support:
 > 
 > - Header by block number
 > - Block by block number
 > - Transaction by hash
 >
-> Support for the indices needed to do these types of lookups is the responsibility of the "Execution Canonical Indices" subnetwork of the Portal Network.
+> Support for the indices needed to do these types of lookups is the responsibility of the "Execution Canonical Indices" sub-protocol of the Portal Network.
 
 
 ## Specification
 
 ### Distance
 
-Nodes in the history subnetwork are represented by their [EIP-778 Ethereum Node Record (ENR)](https://eips.ethereum.org/EIPS/eip-778) from the Discovery v5 network. A node's `node-id` is derived according to the node's identity scheme, which is specified in the node's ENR. A node's `node-id` represents its address in the DHT.
+Nodes in the history network are represented by their [EIP-778 Ethereum Node Record (ENR)](https://eips.ethereum.org/EIPS/eip-778) from the Discovery v5 network. A node's `node-id` is derived according to the node's identity scheme, which is specified in the node's ENR. A node's `node-id` represents its address in the DHT.
 
 The `node-id` is a 32-byte identifier. We define the `distance` function that maps a pair of `node-id` values to a 256-bit unsigned integer identically to the Discovery v5 network.
 
@@ -113,7 +113,7 @@ A node is expected to maintain `radius` information for each node in its local n
 
 ### Wire Protocol
 
-The [Portal wire protocol](./portal-wire-protocol.md) is used as wire protocol for the history sub-network.
+The [Portal wire protocol](./portal-wire-protocol.md) is used as wire protocol for the history network.
 
 As specified in the [Protocol identifiers](./portal-wire-protocol.md#protocol-identifiers) section of the Portal wire protocol, the `protocol` field in the `TALKREQ` message **MUST** contain the value of `0x500B`.
 
@@ -151,32 +151,3 @@ When a node discovers some previously unknown node, and the corresponding k-buck
 
 Consider a node in some k-bucket to be "stale" if it fails to respond to β messages in a row, where β is a system parameter. β may be a function of the number of previous successful liveness checks or of the age of the neighbor. If the k-bucket is not full, and the corresponding replacement cache is empty, then stale nodes should only be flagged and not removed. This ensures that a node who goes offline temporarily does not void its k-buckets.
 
-### Lookup
-
-We use the lookup algorithm described in section 2.3 of the Kademlia paper. A "node lookup" is the execution of the algorithm to find the `k` closest nodes to some `node-id`. A "content lookup" is the execution of the algorithm to find the data for `content-id` or the `k` closest nodes to `content-id`.
-
-A `FindNode` request corresponds to a node lookup, and a `FindContent` request corresponds to a content lookup.
-
-The lookup algorithm is also used to identify nodes that should receive `Offer` messages to store some data.
-
-### Joining the Network
-
-We follow the join procedure described in the Kademlia paper.
-
-In order to join the network, a node `u` must know some node `v` who is already participating in the network. Node `u` inserts `v` into the appropriate k-bucket and then sends a `FindNode` request to `v` for its own node ID. Then, node `u` refreshes all k-buckets with distances further than its closest neighbor. To refresh a bucket, a node selects a random node ID in the bucket's range and performs a `FindNode` for that ID.
-
-### Finding Nodes
-
-A node's routing table is initially populated by the `FindNode` messages that the node sends when it joins the network.
-
-Following the join phase, a node's k-buckets are generally kept fresh by network traffic. When a node learns of a new contact (through node lookups), it attempts to insert the contact into the appropriate k-bucket. A node keeps track of the last node lookup it performed for each k-bucket, and it will regularly refresh any k-buckets with no recent lookups.
-
-### Finding Content
-
-To find a piece of content for `content-id`, a node performs a content lookup via `FindContent`. If the lookup succeeds, then the requestor sends an `Offer` message for the content to the closest node it observed that did not return the value and whose `radius` contains `content-id`.
-
-### Storing Content
-
-To store a piece of content with DHT key `content-id`, a node performs a lookup to find the `k` closest nodes with radii that contain `content-id`. Then the node sends `Offer` messages to those nodes. For any node that responds to the `Offer` message with an `Accept` message, the local node attempts to transmit the content over the uTP connection with the `connection-id` from the `Accept` message.
-
-The network cannot make guarantees about the storage of particular content. A lazy node may ignore all `Offer` messages. A malicious node may send `Accept` messages and ignore the data transmissions. The offer-accept mechanism is in place to require that nodes explicitly accept some data before another node attempts to transmit that data. The mechanism prevents the unnecessary consumption of bandwidth in the presence of lazy nodes. However, it does not defend against malicious nodes who accept offers for data with no intent to store it.
