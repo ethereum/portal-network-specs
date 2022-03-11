@@ -53,35 +53,26 @@ The canonical indices DHT stores the following data items:
 Each of these data items are represented as a key-value pair. Denote the key for a data item by `content-key`. Denote the value for an item as `content`.
 
 All `content-key` values are encoded and decoded as an [`SSZ Union`](https://github.com/ethereum/consensus-specs/blob/dev/ssz/simple-serialize.md#union) type.
+
 ```
 content-key = Union[transaction_hash_lookup, block_number_lookup]
 serialized-content-key = serialize(content-key)
 ```
 
-TODO: CONVERT FROM HERE ON DOWN
-
-#### Block Header
+#### Transaction Hash Mapping
 
 ```
 selector     = 0x00
-content-key  = Container(chain-id: uint16, block-hash: Bytes32)
-content       = rlp(header)
+content-key  = Container(chain-id: uint16, transaction-hash: Bytes32)
+content       = TODO: block hash & merkle proof against header.transactions_trie
 ```
 
-#### Block Body
+#### Block Number Mapping
 
 ```
 selector     = 0x01
-content-key  = Container(chain-id: uint16, block-hash: Bytes32)
-content      = rlp([transaction_list, uncle_list])
-```
-
-#### Receipts
-
-```
-selector = 0x02
-content-key  = Container(chain-id: uint16, block-hash: Bytes32)
-content      = rlp(receipt_list)
+content-key  = Container(chain-id: uint16, block-number: uint256)
+content      = TODO: block hash & accumulator proof
 ```
 
 #### Content ID
@@ -102,17 +93,17 @@ A node is expected to maintain `radius` information for each node in its local n
 
 ### Wire Protocol
 
-The [Portal wire protocol](./portal-wire-protocol.md) is used as wire protocol for the history network.
+The [Portal wire protocol](./portal-wire-protocol.md) is used as wire protocol for the canonical indices network.
 
 As specified in the [Protocol identifiers](./portal-wire-protocol.md#protocol-identifiers) section of the Portal wire protocol, the `protocol` field in the `TALKREQ` message **MUST** contain the value of `0x500B`.
 
-The history network supports the following protocol messages:
+The canonical indices network supports the following protocol messages:
 - `Ping` - `Pong`
 - `Find Nodes` - `Nodes`
 - `Find Content` - `Found Content`
 - `Offer` - `Accept`
 
-In the history network the `custom_payload` field of the `Ping` and `Pong` messages is the serialization of an SSZ Container specified as `custom_data`:
+In the canonical indices network the `custom_payload` field of the `Ping` and `Pong` messages is the serialization of an SSZ Container specified as `custom_data`:
 ```
 custom_data = Container(data_radius: uint256)
 custom_payload = serialize(custom_data)
