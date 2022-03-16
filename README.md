@@ -62,7 +62,55 @@ These design principles are aimed at ensuring that participation in the Portal N
 
 ## The JSON-RPC API
 
-The following JSON-RPC API endpoints are intended to be supported by the portal network and exposed by portal clients.
+The following JSON-RPC API endpoints are directly supported by the portal network and exposed by portal clients.
+
+- `eth_getBlockByHash`
+- `eth_getBlockByNumber`
+- `eth_getBlockTransactionCountByHash`
+- `eth_getBlockTransactionCountByNumber`
+- `eth_getUncleCountByBlockHash`
+- `eth_getUncleCountByBlockNumber`
+- `eth_blockNumber`
+- `eth_call`
+- `eth_estimateGas`
+- `eth_getBalance`
+- `eth_getStorageAt`
+- `eth_getTransactionCount`
+- `eth_getCode`
+- `eth_sendRawTransaction`
+- `eth_getTransactionByHash`
+- `eth_getTransactionByBlockHashAndIndex`
+- `eth_getTransactionByBlockNumberAndIndex`
+- `eth_getTransactionReceipt`
+
+In addition to these endpoints, the following endpoints can be exposed by portal clients through the data available through the portal network.
+
+- `eth_syncing`
+
+The following endpoints can be exposed by portal clients as they require no access to execution layer data.
+
+- `eth_protocolVersion`
+- `eth_chainId`
+- `eth_coinbase`
+- `eth_accounts`
+- `eth_gasPrice`
+- `eth_feeHistory`
+- `eth_newFilter`
+  - TODO: explain complexity.
+- `eth_newBlockFilter`
+- `eth_newPendingTransactionFilter`
+- `eth_uninstallFilter`
+- `eth_getFilterChanges`
+- `eth_getFilterLogs`
+- `eth_getLogs`
+  - TODO: explain complexity
+- `eth_mining`
+- `eth_hashrate`
+- `eth_getWork`
+- `eth_submitWork`
+- `eth_submitHashrate`
+- `eth_sign`
+- `eth_signTransaction`
 
 [JSON-RPC Specs](https://playground.open-rpc.org/?schemaUrl=https://raw.githubusercontent.com/ethereum/portal-network-specs/assembled-spec/jsonrpc/openrpc.json&uiSchema%5BappBar%5D%5Bui:splitView%5D=false&uiSchema%5BappBar%5D%5Bui:input%5D=false&uiSchema%5BappBar%5D%5Bui:examplesDropdown%5D=false)
 
@@ -148,12 +196,12 @@ A [double batched merkle log accumulator](https://ethresear.ch/t/double-batched-
 - [Chain History Network](./history-network.md)
     - Prior work: https://notes.ethereum.org/oUJE4ZX2Q6eMOgEMiQPkpQ?view
     - Prior Python proof-of-concept: https://github.com/ethereum/ddht/tree/341e84e9163338556cd48dd2fcfda9eedec3eb45
-        - This POC shouldn't be considered representative of the end goal.  It incorperates mechanisms that aren't likely to be apart of the actual implementation, specifically the "advertisement" system which proved to be a big bottleneck, as well as the SSZ merkle root system which was a work-around for large data transfer which we now intend to solve with uTP.
+        - This POC should NOT be considered representative of the end goal.  It incorperates mechanisms that aren't likely to be apart of the actual implementation, specifically the "advertisement" system which proved to be a big bottleneck, as well as the SSZ merkle root system which was a work-around for large data transfer which we now intend to solve with uTP.
 - [Transaction Gossip Network](./transaction-gossip.md):
     - Spec is preliminary
     - Prior work: https://ethresear.ch/t/scalable-transaction-gossip/8660
 - [Header Gossip Network](./header-gossip-network.md)
-    - Spec if preliminary
-- Canonical Indices Network:
-    - No specification has been written.  Largely mirrors that of Chain History.
-
+    - Spec is preliminary
+- [Canonical Indices Network]A(./canonical-indices-network.md)
+    - Spec is preliminary.
+    - Network design borrows heavily from history network.
