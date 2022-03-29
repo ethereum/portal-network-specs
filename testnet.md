@@ -3,7 +3,7 @@ The [enr](https://eips.ethereum.org/EIPS/eip-778) addresses for the bootnodes of
 
 
 ### Here be dragons...
-These bootnodes are currently all running [Trin](https://github.com/ethereum/trin) or [Fluffy](https://github.com/status-im/nimbus-eth1/tree/master/fluffy#introduction) clients, so their functionality is limited to what has been implemented in those clients. Both clients are still in alpha, so it is likely that bugs will occur or that the clients become unavailable for any number of reasons. If you have problems connecting to the bootnodes or encounter a bug, please let us know in the Portal Network discord.
+These bootnodes are currently all running [Trin](https://github.com/ethereum/trin), [Fluffy](https://github.com/status-im/nimbus-eth1/tree/master/fluffy#introduction), or [Ultralight](https://github.com/ethereumjs/ultralight) clients, so their functionality is limited to what has been implemented in those clients. All clients are still in alpha, so it is likely that bugs will occur or that the clients become unavailable for any number of reasons. If you have problems connecting to the bootnodes or encounter a bug, please let us know in the Portal Network discord.
 
 
 # Bootnodes
@@ -18,9 +18,7 @@ enr:-IS4QGeTMHteRmm-MSYniUd48OZ1M7RMUsIjnSP_TRbo-goQZAdYuqY2PyNJfDJQBz33kv16k7WB
 enr:-IS4QOA4voX3J7-R_x8pjlaxBTpT1S_CL7ZaNjetjZ-0nnr2VaP0wEZsT2KvjA5UWc8vi9I0XvNSd1bjU0GXUjlt7J0BgmlkgnY0gmlwhEFsKgOJc2VjcDI1NmsxoQI7aL5dFuHhwbxWD-C1yWH7UPlae5wuV_3WbPylCBwPboN1ZHCCI44
 enr:-IS4QFzPZ7Cc7BGYSQBlWdkPyep8XASIVlviHbi-ZzcCdvkcE382unsRq8Tb_dYQFNZFWLqhJsJljdgJ7WtWP830Gq0BgmlkgnY0gmlwhEFsKq6Jc2VjcDI1NmsxoQPjz2Y1Hsa0edvzvn6-OADS3re-FOkSiJSmBB7DVrsAXIN1ZHCCI40
 enr:-IS4QHA1PJCdmESyKkQsBmMUhSkRDgwKjwTtPZYMcbMiqCb8I1Xt-Xyh9Nj0yWeIN4S3sOpP9nxI6qCCR1Nf4LjY0IABgmlkgnY0gmlwhEFsKq6Jc2VjcDI1NmsxoQLMWRNAgXVdGc0Ij9RZCPsIyrrL67eYfE9PPwqwRvmZooN1ZHCCI44
-```
 
-```
 # Ultralight bootstrap nodes
 enr:-IS4QG_M1lzTXzQQhUcAViqK-WQKtBgES3IEdQIBbH6tlx3Zb-jCFfS1p_c8Xq0Iie_xT9cHluSyZl0TNCWGlUlRyWcFgmlkgnY0gmlwhKRc9EGJc2VjcDI1NmsxoQMo1NBoJfVY367ZHKA-UBgOE--U7sffGf5NBsNSVG629oN1ZHCCF6Q
 enr:-IS4QNxXp3t9TUUQCK39l1OYBYYkXoEF2ojj9bPmWqpKsSbIfw1dbsisOt9SYDD0qwNKZZ1_qWDEeEH5lo85gq-JOhEFgmlkgnY0gmlwhKRc9EGJc2VjcDI1NmsxoQKKnSTsqwcBYg1atI7dlanT8Mo29std_701sLx0g09yXYN1ZHCCF6Y
