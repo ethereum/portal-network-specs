@@ -129,7 +129,7 @@ This network is a pure gossip network and does not implement any form of content
 
 The Header Gossip Network faciliates tracking and following the canonical chain of block headers.
 
-A [double batched merkle log accumulator](./https://ethresear.ch/t/double-batched-merkle-log-accumulator/571) is used to minimize storage overhead while still allowing nodes to verify the historical headers without requiring nodes to store the full history.  The network also exposes functionality to allow new nodes joining the network to acquire a copy of another node's accumulator.
+A [double batched merkle log accumulator](https://ethresear.ch/t/double-batched-merkle-log-accumulator/571) is used to minimize storage overhead while still allowing nodes to verify the historical headers without requiring nodes to store the full history.  The network also exposes functionality to allow new nodes joining the network to acquire a copy of another node's accumulator.
 
 
 ## Network Specifications
