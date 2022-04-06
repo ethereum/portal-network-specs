@@ -95,7 +95,7 @@ A node is expected to maintain `radius` information for each node in its local n
 
 The [Portal wire protocol](./portal-wire-protocol.md) is used as wire protocol for the canonical indices network.
 
-As specified in the [Protocol identifiers](./portal-wire-protocol.md#protocol-identifiers) section of the Portal wire protocol, the `protocol` field in the `TALKREQ` message **MUST** contain the value of `0x500B`.
+As specified in the [Protocol identifiers](./portal-wire-protocol.md#protocol-identifiers) section of the Portal wire protocol, the `protocol` field in the `TALKREQ` message **MUST** contain the value of `0x500E`.
 
 The canonical indices network supports the following protocol messages:
 - `Ping` - `Pong`
