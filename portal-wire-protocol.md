@@ -2,7 +2,7 @@
 
 The Portal wire protocol is the default p2p protocol by which Portal nodes communicate.
 
-The different protocol within the Portal network **MAY** use this protocol, but they **MUST** remain separated per network.
+The different sub-protocols within the Portal network **MAY** use this wire protocol, but they **MUST** remain separated per network.
 
 This is done at the [Node Discovery Protocol v5](https://github.com/ethereum/devp2p/blob/master/discv5/discv5-wire.md#talkreq-request-0x05) layer, by providing a different protocol byte string, per protocol, in the `TALKREQ` message.
 
