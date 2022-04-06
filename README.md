@@ -56,7 +56,7 @@ These design principles are aimed at ensuring that participation in the Portal N
 
 The following JSON-RPC API endpoints are intended to be supported by the portal network and exposed by portal clients.
 
-TODO
+[JSON-RPC Specs](https://playground.open-rpc.org/?schemaUrl=https://raw.githubusercontent.com/ethereum/portal-network-specs/assembled-spec/jsonrpc/openrpc.json&uiSchema%5BappBar%5D%5Bui:splitView%5D=false&uiSchema%5BappBar%5D%5Bui:input%5D=false&uiSchema%5BappBar%5D%5Bui:examplesDropdown%5D=false)
 
 ## Bridge Nodes
 
