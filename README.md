@@ -34,7 +34,7 @@ The Portal Network is divided into the following sub-protocols.
 - Execution Header Gossip Network
 - Execution Canonical Indices Network
 
-Each of these sub-protocols is designed to deliver a specific unit of functionality.  Most portal clients will participate in all of these sub-protocols in order to deliver the full JSON-RPC API.  Each sub-protocols however is designed to be independent of the others, allowing clients the option of only participating in a subset of them if they wish.
+Each of these sub-protocols is designed to deliver a specific unit of functionality.  Most portal clients will participate in all of these sub-protocols in order to deliver the full JSON-RPC API.  Each sub-protocol however is designed to be independent of the others, allowing clients the option of only participating in a subset of them if they wish.
 
 All of the sub-protocols in the Portal Network establish their own overlay DHT that is managed independent of the base Discovery V5 DHT.
 
