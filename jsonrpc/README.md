@@ -44,6 +44,6 @@ $ ./scripts/debug.sh discv5_sendPing \"enr:-....\"
 data.json valid
 ```
 
-[playground]: https://playground.open-rpc.org/?schemaUrl=https://raw.githubusercontent.com/ogenev/portal-network-specs/jsonrpc-assembled-specs/jsonrpc-specs/openrpc.json&uiSchema[appBar][ui:splitView]=false&uiSchema[appBar][ui:input]=false&uiSchema[appBar][ui:examplesDropdown]=false
+[playground]: https://playground.open-rpc.org/?schemaUrl=https://raw.githubusercontent.com/ethereum/portal-network-specs/assembled-spec/jsonrpc/openrpc.json&uiSchema%5BappBar%5D%5Bui:splitView%5D=false&uiSchema%5BappBar%5D%5Bui:input%5D=false&uiSchema%5BappBar%5D%5Bui:examplesDropdown%5D=false
 [openrpc]: https://open-rpc.org
 [validator]: https://open-rpc.github.io/schema-utils-js/globals.html#validateopenrpcdocument
