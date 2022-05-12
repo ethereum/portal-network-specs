@@ -1,47 +1,35 @@
-# Execution Chain History Network
+# Execution Canonical Indices Network
 
-This document is the specification for the sub-protocol that supports on-demand availability of Ethereum execution chain history data.
+This document is the specification for the sub-protocol that supports on-demand availability of the indices necessary for clients to lookup transactions by their hash and blocks by their number.
 
 ## Overview
 
-Execution chain history data consists of historical block headers, block bodies (transactions and ommer), and receipts.
+The Execution canonical indices data consists of two data sets.
 
-The chain history network is a [Kademlia](https://pdos.csail.mit.edu/~petar/papers/maymounkov-kademlia-lncs.pdf) DHT that forms an overlay network on top of the [Discovery v5](https://github.com/ethereum/devp2p/blob/master/discv5/discv5-wire.md) network. The term *overlay network* means that the history network operates with its own independent routing table and uses the extensible `TALKREQ` and `TALKRESP` messages from the base Discovery v5 protocol for communication.
+- Mapping transaction hash to the canonical block hash and index of the transaction within the set of block transactions.
+- Mapping of block number to the canonical block hash for the block at that height.
 
-The `TALKREQ` and `TALKRESP` protocol messages are application-level messages whose contents are specific to the history network. We specify these messages below.
+The canonical indices network is a [Kademlia](https://pdos.csail.mit.edu/~petar/papers/maymounkov-kademlia-lncs.pdf) DHT that forms an overlay network on top of the [Discovery v5](https://github.com/ethereum/devp2p/blob/master/discv5/discv5-wire.md) network. The term *overlay network* means that the canonical indices network operates with its own independent routing table and uses the extensible `TALKREQ` and `TALKRESP` messages from the base Discovery v5 protocol for communication.
 
-The history network uses the node table structure from the Discovery v5 network and the lookup algorithm from section 2.3 of the Kademlia paper.
+The `TALKREQ` and `TALKRESP` protocol messages are application-level messages whose contents are specific to the canonical indices network. We specify these messages below.
+
+The canonical indices network uses the node table structure from the Discovery v5 network and the lookup algorithm from section 2.3 of the Kademlia paper.
 
 ### Data
 
 #### Types
 
-* Block headers
-* Block bodies
-    * Transactions
-    * Omners
-* Receipts
-
-#### Retrieval
-
-* Block header by block header hash
-* Block body by block header hash
-* Block receipts by block header hash
-
-> This sub-protocol does **not** support:
-> 
-> - Header by block number
-> - Block by block number
-> - Transaction by hash
->
-> Support for the indices needed to do these types of lookups is the responsibility of the "Execution Canonical Indices" sub-protocol of the Portal Network.
+* Transaction Hash Lookup
+  * A mapping from transaction hash to canonical block hash and transaction index
+* Block Number Lookup
+  * A mapping from block number to canonical block hash
 
 
 ## Specification
 
 ### Distance
 
-Nodes in the history network are represented by their [EIP-778 Ethereum Node Record (ENR)](https://eips.ethereum.org/EIPS/eip-778) from the Discovery v5 network. A node's `node-id` is derived according to the node's identity scheme, which is specified in the node's ENR. A node's `node-id` represents its address in the DHT.
+Nodes in the canonical indices network are represented by their [EIP-778 Ethereum Node Record (ENR)](https://eips.ethereum.org/EIPS/eip-778) from the Discovery v5 network. A node's `node-id` is derived according to the node's identity scheme, which is specified in the node's ENR. A node's `node-id` represents its address in the DHT.
 
 The `node-id` is a 32-byte identifier. We define the `distance` function that maps a pair of `node-id` values to a 256-bit unsigned integer identically to the Discovery v5 network.
 
@@ -57,42 +45,34 @@ logdistance(n1, n2) = log2(distance(n1, n2))
 
 ### Content: Keys and Values
 
-The chain history DHT stores the following data items:
+The canonical indices DHT stores the following data items:
 
-* Block headers
-* Block bodies
-* Receipts
+* Transaction Hash to Block Hash and Transaction Index
+* Block Number to Block Hash
 
 Each of these data items are represented as a key-value pair. Denote the key for a data item by `content-key`. Denote the value for an item as `content`.
 
 All `content-key` values are encoded and decoded as an [`SSZ Union`](https://github.com/ethereum/consensus-specs/blob/dev/ssz/simple-serialize.md#union) type.
+
 ```
-content-key = Union[blockheader, blockbody, receipt]
+content-key = Union[transaction_hash_lookup, block_number_lookup]
 serialized-content-key = serialize(content-key)
 ```
 
-#### Block Header
+#### Transaction Hash Mapping
 
 ```
 selector     = 0x00
-content-key  = Container(chain-id: uint16, block-hash: Bytes32)
-content       = rlp(header)
+content-key  = Container(chain-id: uint16, transaction-hash: Bytes32)
+content       = TODO: block hash & merkle proof against header.transactions_trie
 ```
 
-#### Block Body
+#### Block Number Mapping
 
 ```
 selector     = 0x01
-content-key  = Container(chain-id: uint16, block-hash: Bytes32)
-content      = rlp([transaction_list, uncle_list])
-```
-
-#### Receipts
-
-```
-selector = 0x02
-content-key  = Container(chain-id: uint16, block-hash: Bytes32)
-content      = rlp(receipt_list)
+content-key  = Container(chain-id: uint16, block-number: uint256)
+content      = TODO: block hash & accumulator proof
 ```
 
 #### Content ID
@@ -113,17 +93,17 @@ A node is expected to maintain `radius` information for each node in its local n
 
 ### Wire Protocol
 
-The [Portal wire protocol](./portal-wire-protocol.md) is used as wire protocol for the history network.
+The [Portal wire protocol](./portal-wire-protocol.md) is used as wire protocol for the canonical indices network.
 
-As specified in the [Protocol identifiers](./portal-wire-protocol.md#protocol-identifiers) section of the Portal wire protocol, the `protocol` field in the `TALKREQ` message **MUST** contain the value of `0x500B`.
+As specified in the [Protocol identifiers](./portal-wire-protocol.md#protocol-identifiers) section of the Portal wire protocol, the `protocol` field in the `TALKREQ` message **MUST** contain the value of `0x500E`.
 
-The history network supports the following protocol messages:
+The canonical indices network supports the following protocol messages:
 - `Ping` - `Pong`
 - `Find Nodes` - `Nodes`
 - `Find Content` - `Found Content`
 - `Offer` - `Accept`
 
-In the history network the `custom_payload` field of the `Ping` and `Pong` messages is the serialization of an SSZ Container specified as `custom_data`:
+In the canonical indices network the `custom_payload` field of the `Ping` and `Pong` messages is the serialization of an SSZ Container specified as `custom_data`:
 ```
 custom_data = Container(data_radius: uint256)
 custom_payload = serialize(custom_data)

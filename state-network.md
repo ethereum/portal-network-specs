@@ -1,30 +1,20 @@
-# Portal Network: State Network
+# Execution State Network
 
-This document is the specification for the "State" portion of the portal network.
+This document is the specification for the sub-protocol that supports on-demand availability of state data from the execution chain.
 
-## Definition of "State"
 
-We define the Ethereum "State" to be the collection of:
+## Overview
+
+State data from the execution chain consists of:
 
 - The set of all accounts from the main account trie referenced by `Header.state_root`
 - The set of all contract storage values from all contracts
 - The set of all contract bytecodes
 - Any information required to prove inclusion of the above data in the state.
 
-## Overview
+The network supports "on-demand" availability of the Ethereum execution state including proof of exclusion for non-existent data.
 
-The network(s) that support "on-demand" availability of the Ethereum state must do the following things.
-
-- Retrieval:
-    - A: Mechanism for finding and retrieving recent "state" data.  This must also include proof of exclusion for non-existent data.
-- Storage:
-    - B: Mechanism for state data to be distributed to *interested* nodes in a provable manner.
-    
-    
-We solve A by mapping "state" data onto the Kademlia DHT such that nodes can determine the location in the network where a particular piece of state should be stored.  With a standard Kademlia DHT using the "recursive find" algorithm any node in the network can quickly find nodes that should be storing the data they are interested in.
-
-We solve B with a structured gossip algorithm that distributes the individual trie node data across the nodes in the DHT.  As the chain progresses, a witness of the new and updated state data will be generated at each new `Header.state_root`.  The individual trie nodes from this witness would then be distributed to the appropriate DHT nodes.
-
+The execution state network is a [Kademlia](https://pdos.csail.mit.edu/~petar/papers/maymounkov-kademlia-lncs.pdf) DHT that forms an overlay network on top of the [Discovery v5](https://github.com/ethereum/devp2p/blob/master/discv5/discv5-wire.md) network. The term *overlay network* means that the history network operates with its own independent routing table and uses the extensible `TALKREQ` and `TALKRESP` messages from the base Discovery v5 protocol for communication.
 
 ## DHT Network
 
@@ -32,9 +22,9 @@ Our DHT will be an overlay network on the existing [Discovery V5](https://github
 
 Nodes **must** support the `utp` Discovery v5 sub-protocol to facilitate transmission of merkle proofs which will in most cases exceed the UDP packet size.
 
-We use a custom distance function defined below.
+We use the same routing table structure as the core protocol.
 
-We use the same routing table structure as the core protocol.  The routing table must use the custom distance function defined below.
+We use a custom distance function defined below.
 
 A separate instance of the routing table must be maintained for the state network, independent of the base routing table managed by the base discovery v5 protocol, only containing nodes that support the `portal-state` sub-protocol.  We refer to this as the *"overlay routing table"*.
 
