@@ -136,11 +136,11 @@ MID = 2**255
 def distance(node_id: int, content_id: int) -> int:
     """
     A distance function for determining proximity between a node and content.
-    
-    Treats the keyspace as if it wraps around on both ends and 
-    returns the minimum distance needed to traverse between two 
+
+    Treats the keyspace as if it wraps around on both ends and
+    returns the minimum distance needed to traverse between two
     different keys.
-    
+
     Examples:
 
     >>> assert distance(10, 10) == 0
@@ -212,7 +212,7 @@ The state data first enters the network as trie nodes which are then used to pop
 
 ### Terminology
 
-We define the following terms when referring to state data.  
+We define the following terms when referring to state data.
 
 > The diagrams below use a binary trie for visual simplicity. The same
 > definitions naturally extend to the hexary patricia trie.
@@ -241,7 +241,7 @@ We define the following terms when referring to state data.
 
 
 #### *"state root"*
-    
+
 The node labeled `X` in the diagram.
 
 #### *"trie node"*
@@ -260,18 +260,6 @@ Any node in the trie that represents a value stored in the trie.  The nodes in t
 
 The merkle proof which contains a leaf node and the intermediate trie nodes necessary to compute the state root of the trie.
 
-### Neighborhood Gossip
-
-We use the term *neighborhood gossip* to refer to the process through which content is disseminated to all of the DHT nodes *near* the location in the DHT where the content is located.
-
-The process works as follows.
-
-- A DHT node receives a piece of content that they are interested in storing.
-- The DHT node checks their routing table for nearby DHT nodes that should also be interested in the content.
-- A random subset of the nearby interested nodes is selected and the content is offered to them.
-
-The process above should quickly saturate the area of the DHT where the content is located and naturally terminate as more nodes become aware of the content.
-
 ### Stages
 
 The gossip mechanism is divided up into individual stages which are designed to
@@ -284,7 +272,7 @@ The stages are:
 - Stage 1:
     - Bridge node generates a proof of all new and updated state data from the most recent block and initiates gossip of the individual trie nodes.
 - Stage 2:
-    - DHT nodes receiving trie nodes perform *neighborhood gossip* to spread the data to nearby interested DHT nodes.
+    - DHT nodes receiving trie nodes perform [neighborhood gossip](./portal-wire-protocol.md#neighborhood-gossip) to spread the data to nearby interested DHT nodes.
     - DHT nodes receiving trie nodes extract the trie nodes from the anchor proof to perform *recursive gossip* (defined below).
     - DHT nodes receiving "leaf" nodes initiate gossip of the leaf proofs (for stage 3)
 - Stage 3:
@@ -366,7 +354,7 @@ The receiving DHT node will perform *neighborhood* gossip to nearby nodes from t
 
 When individual trie nodes are gossiped, the receiving node is responsible for initializing gossip for other trie nodes contained in the accompanying proof.
 
-This diagram illustrates the proof for the trie node under the path `0011`.  
+This diagram illustrates the proof for the trie node under the path `0011`.
 
 ```
 0:                           X
@@ -446,10 +434,3 @@ Each time a new block is added to the chain, the DHT nodes storing leaf proof da
 > TODO: reverse diffs and storing only the latest proof.
 
 > TODO: gossiping proof updates to neighbors to reduce duplicate work.
-
-
-### POKE: Actively disseminating data and replication of popular data
-
-When a DHT node in the network is retrieving some piece of data they will perform a "recursive find" using the FINDCONTENT (0x05) and FOUNDCONTENT (0x06) messages.  During the course of this recursive find, they may encounter nodes along the search path which did not have the content but for which the content does fall within their radius.
-
-When a DHT encounters this situation, and successfully retrieves the content from some other node, they should gossip the content to those nodes that should be interested.  This mechanism is designed to help spread content to nodes that may not yet be aware of it.

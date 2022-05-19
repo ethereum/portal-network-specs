@@ -218,19 +218,19 @@ Here we define a collection of generic algorithms which can be applied to sub-pr
 
 ### Lookup
 
-We use the lookup algorithm described in section 2.3 of the Kademlia paper. 
+The term lookup refers to the lookup algorithm described in section 2.3 of the Kademlia paper.
 
-A "node lookup" is the execution of the algorithm to find the `k` closest nodes to some `node-id`. A "content lookup" is the execution of the algorithm to find the data for `content-id` or the `k` closest nodes to `content-id`.
+A node lookup is the execution of the algorithm to find the `k` closest nodes to some `node-id`.
 
-A `FindNode` request corresponds to a node lookup, and a `FindContent` request corresponds to a content lookup.
+A content lookup is the execution of the algorithm to find the content with `content-id` or the `k` closest nodes to `content-id`.
 
-The lookup algorithm is also used to identify nodes that should receive `Offer` messages to store some data.
+A `FindNode` request is used for a node lookup, and a `FindContent` request for a content lookup.
 
 ### Joining the Network
 
 We follow the join procedure described in the Kademlia paper.
 
-In order to join the network, a node `u` must know some node `v` who is already participating in the network. Node `u` inserts `v` into the appropriate k-bucket and then sends a `FindNode` request to `v` for its own node ID. Then, node `u` refreshes all k-buckets with distances further than its closest neighbor. To refresh a bucket, a node selects a random node ID in the bucket's range and performs a `FindNode` for that ID.
+In order to join the network, a node `u` must know some node `v` who is already participating in the network. Node `u` inserts `v` into the appropriate k-bucket and then sends a `FindNode` request to `v` in order to discover more nodes in the network. Then, node `u` refreshes all k-buckets with distances further than its closest neighbor. To refresh a bucket, a node selects a random node ID in the bucket's range and performs a `FindNode` request with a distance that maps to that ID.
 
 ### Finding Nodes
 
@@ -240,12 +240,35 @@ Following the join phase, a node's k-buckets are generally kept fresh by network
 
 ### Finding Content
 
-To find a piece of content for `content-id`, a node performs a content lookup via `FindContent`. If the lookup succeeds, then the requestor sends an `Offer` message for the content to the closest node it observed that did not return the value and whose `radius` contains `content-id`.
+To find a piece of content for `content-id`, a node performs a content lookup via `FindContent`.
 
 ### Storing Content
 
 The concept of content storage is only applicable to sub-protocols that implement persistant storage of data.
 
-To store a piece of content with DHT key `content-id`, a node performs a lookup to find the `k` closest nodes with radii that contain `content-id`. Then the node sends `Offer` messages to those nodes. For any node that responds to the `Offer` message with an `Accept` message, the local node attempts to transmit the content over the uTP connection with the `connection-id` from the `Accept` message.
+Content will get stored by a node when:
+- the node receives the content through the `Offer` - `Accept` message flow and the content falls within the node's radius
+- the node requests content through the `FindContent` - `Content` message flow and the content falls within the node's radius
 
-The network cannot make guarantees about the storage of particular content. A lazy node may ignore all `Offer` messages. A malicious node may send `Accept` messages and ignore the data transmissions. The offer-accept mechanism is in place to require that nodes explicitly accept some data before another node attempts to transmit that data. The mechanism prevents the unnecessary consumption of bandwidth in the presence of lazy nodes. However, it does not defend against malicious nodes who accept offers for data with no intent to store it.
+The network cannot make guarantees about the storage of particular content. A lazy node may ignore all `Offer` messages. A malicious node may send `Accept` messages and ignore the data transmissions. The `Offer` - `Accept` mechanism is in place to require that nodes explicitly accept some data before another node attempts to transmit that data. The mechanism prevents the unnecessary consumption of bandwidth in the presence of lazy nodes. However, it does not defend against malicious nodes who accept offers for data with no intent to store it.
+
+### Neighborhood Gossip
+
+We use the term *neighborhood gossip* to refer to the process through which content is disseminated to all of the DHT nodes *near* the location in the DHT where the content is located.
+
+The process works as follows:
+
+- A DHT node is offered and receives a piece of content that it is interested in.
+- This DHT node checks their routing table for `k` nearby DHT nodes that should also be interested in the content.
+- If the DHT node finds `n` or more DHT nodes interested it selects `n` of these nodes and offers the content to them.
+- If the DHT node finds less than `n` DHT nodes interested, it launches a node lookup with target `content-id` and it
+offers the content to maximum `n` of the newly discovered nodes.
+
+The process above should quickly saturate the area of the DHT where the content is located and naturally terminate as more nodes become aware of the content.
+
+### POKE Mechanism
+
+When a node in the network is doing a content lookup, it will practically perform a recursive find using the `FindContent` and `Content` messages.
+During the course of this recursive find, it may encounter nodes along the search path which do not have the content but for which the `content-id` does fall within their announced radius. These are nodes that should be interested in storing this content unless their radius was recently changed.
+
+If the node doing the lookup successfully retrieves the content from another node, it should send an `Offer` message for that content to those interested nodes. This mechanism is designed to help spread content to nodes that may not yet be aware of it.
