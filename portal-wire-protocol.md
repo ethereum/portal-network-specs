@@ -206,6 +206,18 @@ Upon *sending* this message, the requesting node **SHOULD** *listen* for an inco
 
 Upon *receiving* this message, the serving node **SHOULD** *initiate* a uTP stream with the received `connection_id`.
 
+##### Content Encoding
+Up to 64 content items can be sent over the uTP stream after an `Offer` request and `Accept` response.
+
+In order to be able to discern these different content items, a variable length unsigned integer (varint) MUST be prefixed to each content item.
+The varint MUST hold the size, in bytes, of the consecutive content item.
+
+The varint encoding used is [Unsigned LEB128](https://en.wikipedia.org/wiki/LEB128#Encode_unsigned_integer).
+The maximum size allowed for this application is limited to `uint32`.
+
+The content item itself MUST be encoded as is defined for each specific network and content type.
+
+
 ### Test Vectors
 
 A collection of test vectors for this specification can be found in the
