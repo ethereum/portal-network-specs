@@ -18,7 +18,7 @@ The accumulator is defined as an [SSZ](https://ssz.dev/) data structure with the
 
 ```python
 EPOCH_SIZE = 8192 # blocks
-MAX_HISTORICAL_EPOCHS = XXXX
+MAX_HISTORICAL_EPOCHS = 100000
 
 # An individual record for a historical header.
 HeaderRecord = Container[block_hash: bytes32, total_difficulty: uint256]
