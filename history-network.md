@@ -76,24 +76,57 @@ serialized-content-key = serialize(content-key)
 ```
 selector     = 0x00
 content-key  = Container(chain-id: uint16, block-hash: Bytes32)
-content       = rlp(header)
+content      = rlp(header)
 ```
 
 #### Block Body
 
 ```
-selector     = 0x01
-content-key  = Container(chain-id: uint16, block-hash: Bytes32)
-content      = rlp([transaction_list, uncle_list])
+selector                = 0x01
+content-key             = Container(chain-id: uint16, block-hash: Bytes32)
+content                 = Container(all-transactions, serialized-uncles)
+all-transactions        = SSZList(serialized-transaction, max-length=2**14)
+serialized-transaction  = SSZList(encoded-transaction: Byte, max-length=2**24)
+encoded-transaction     =
+  if transaction.is_typed:
+    return type_byte + rlp.encode(transaction)
+  else:
+    return rlp.encode(transaction)
+serialized-uncles       = SSZList(encoded-uncles: Byte, max-length=2**17)
+encoded-uncles          = rlp.encode(list-of-uncle-headers)
 ```
+
+Note the type-specific encoding might be different in future transaction types, but this encoding
+works for all current transaction types.
 
 #### Receipts
 
 ```
-selector = 0x02
-content-key  = Container(chain-id: uint16, block-hash: Bytes32)
-content      = rlp(receipt_list)
+selector            = 0x02
+content-key         = Container(chain-id: uint16, block-hash: Bytes32)
+content             = SSZList(serialized-receipt, max-length=2**14)
+serialized-receipt  = SSZList(encoded-receipt: Byte, max-length=2**23)
+encoded-receipt     =
+  if receipt.is_typed:
+    return type_byte + rlp.encode(receipt)
+  else:
+    return rlp.encode(receipt)
 ```
+
+Note the type-specific encoding might be different in future receipt types, but this encoding works
+for all current receipt types.
+
+#### Encoding Content Values for Validation
+
+The encoding choices generally favor easy verification of the data, minimizing decoding. For
+example:
+- `keccak(encoded-uncles) == header.uncles_hash`
+- Each `encoded-transaction` can be inserted into a trie to compare to the
+  `header.transactions_root`
+- Each `encoded-receipt` can be inserted into a trie to compare to the `header.receipts_root`
+
+Combining all of the block body in RLP, in contrast, would require that a validator loop through
+each receipt/transaction and re-rlp-encode it, but only if it is a legacy transaction.
 
 #### Content ID
 
