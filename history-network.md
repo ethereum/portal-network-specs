@@ -29,7 +29,7 @@ The history network uses the node table structure from the Discovery v5 network 
 * Block receipts by block header hash
 
 > This sub-protocol does **not** support:
-> 
+>
 > - Header by block number
 > - Block by block number
 > - Transaction by hash
