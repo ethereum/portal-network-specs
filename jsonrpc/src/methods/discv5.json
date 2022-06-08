@@ -1,0 +1,329 @@
+[
+  {
+    "name": "discv5_nodeInfo",
+    "summary": "Returns ENR and nodeId information of the local discv5 node.",
+    "params": [],
+    "result": {
+      "name": "nodeInfoResult",
+      "description": "Local node information",
+      "required": true,
+      "schema": {
+        "title": "nodeInfoResults",
+        "description": "ENR and NodeId of the local peer",
+        "type": "object",
+        "required": [
+          "enr",
+          "nodeId"
+        ],
+        "properties": {
+          "enr": {
+            "title": "nodeENR",
+            "description": "URL-safe base64 encoded \\\"text\\\" version of the ENR prefixed by \\\"enr:\\\".\"",
+            "$ref": "#/components/schemas/Enr"
+          },
+          "nodeId": {
+            "title": "nodeId",
+            "description": "Hex encoded `NodeId` of an ENR (a 32 byte identifier).",
+            "$ref": "#/components/schemas/bytes32"
+          }
+        }
+      }
+    }
+  },
+  {
+    "name": "discv5_updateNodeInfo",
+    "summary": "Add, update, or remove a key-value pair from the local node record",
+    "params": [
+      {
+        "name": "socketAddr",
+        "required": true,
+        "schema": {
+          "title": "ENR socket address",
+          "$ref": "#/components/schemas/socketAddr"
+        }
+      },
+      {
+        "name": "isTcp",
+        "description": "TCP or UDP socket",
+        "schema": {
+          "type": "boolean"
+        }
+      }
+    ],
+    "result": {
+      "name": "nodeInfoResult",
+      "description": "Local node information",
+      "required": true,
+      "schema": {
+        "title": "nodeInfoResults",
+        "description": "ENR and NodeId of the local peer",
+        "type": "object",
+        "required": [
+          "enr",
+          "localNodeId"
+        ],
+        "properties": {
+          "enr": {
+            "title": "nodeENR",
+            "description": "URL-safe base64 encoded \\\"text\\\" version of the ENR prefixed by \\\"enr:\\\".\"",
+            "$ref": "#/components/schemas/Enr"
+          },
+          "localNodeId": {
+            "title": "nodeId",
+            "description": "Hex encoded `NodeId` of an ENR (a 32 byte identifier).",
+            "$ref": "#/components/schemas/bytes32"
+          }
+        }
+      }
+    }
+  },
+  {
+    "name": "discv5_routingTableInfo",
+    "summary": "Returns meta information about discv5 routing table.",
+    "params": [],
+    "result": {
+      "$ref": "#/components/contentDescriptors/RoutingTableInfoResult"
+    }
+  },
+  {
+    "name": "discv5_addEnr",
+    "summary": "Write an ethereum node record to the routing table.",
+    "params": [
+      {
+        "$ref": "#/components/contentDescriptors/Enr"
+      }
+    ],
+    "result": {
+      "$ref": "#/components/contentDescriptors/AddEnrResult"
+    }
+  },
+  {
+    "name": "discv5_getEnr",
+    "summary": "Fetch the latest ENR associated with the given node ID",
+    "params": [
+      {
+        "$ref": "#/components/contentDescriptors/NodeId"
+      }
+    ],
+    "result": {
+      "$ref": "#/components/contentDescriptors/GetEnrResult"
+    }
+  },
+  {
+    "name": "discv5_deleteEnr",
+    "summary": "Delete a Node ID from the routing table",
+    "params": [
+      {
+        "$ref": "#/components/contentDescriptors/NodeId"
+      }
+    ],
+    "result": {
+      "$ref": "#/components/contentDescriptors/DeleteEnrResult"
+    }
+  },
+  {
+    "name": "discv5_lookupEnr",
+    "summary": "Fetch the ENR representation associated with the given Node ID and optional sequence number",
+    "params": [
+      {
+        "$ref": "#/components/contentDescriptors/NodeId"
+      },
+      {
+        "$ref": "#/components/contentDescriptors/EnrSeq"
+      }
+    ],
+    "result": {
+      "$ref": "#/components/contentDescriptors/LookupEnrResult"
+    }
+  },
+  {
+    "name": "discv5_sendPing",
+    "summary": "Send a PING message to the specified node",
+    "params": [
+      {
+        "$ref": "#/components/contentDescriptors/Enr"
+      }
+    ],
+    "result": {
+      "$ref": "#/components/contentDescriptors/SendPingResult"
+    }
+  },
+  {
+    "name": "discv5_sendPong",
+    "summary": "Send a PONG message to the specified node",
+    "params": [
+      {
+        "$ref": "#/components/contentDescriptors/Enr"
+      },
+      {
+        "$ref": "#/components/contentDescriptors/RequestId"
+      }
+    ],
+    "result": {
+      "$ref": "#/components/contentDescriptors/SendPongResult"
+    }
+  },
+  {
+    "name": "discv5_sendFindNode",
+    "summary": "Send a FINDNODE request to a peer, to search within the given set of distances",
+    "params": [
+      {
+        "$ref": "#/components/contentDescriptors/Enr"
+      },
+      {
+        "$ref": "#/components/contentDescriptors/Distances"
+      }
+    ],
+    "result": {
+      "$ref": "#/components/contentDescriptors/SendFindNodeResult"
+    }
+  },
+  {
+    "name": "discv5_sendNodes",
+    "summary": "Respond to a specific FINDNODE request with a NODES response.",
+    "params": [
+      {
+        "$ref": "#/components/contentDescriptors/Enr"
+      },
+      {
+        "$ref": "#/components/contentDescriptors/Nodes"
+      },
+      {
+        "$ref": "#/components/contentDescriptors/RequestId"
+      }
+    ],
+    "result": {
+      "$ref": "#/components/contentDescriptors/SendNodesResult"
+    }
+  },
+  {
+    "name": "discv5_sendTalkRequest",
+    "summary": "Send a TALKREQ request with a payload to the given peer.",
+    "params": [
+      {
+        "$ref": "#/components/contentDescriptors/Enr"
+      },
+      {
+        "$ref": "#/components/contentDescriptors/ProtocolId"
+      },
+      {
+        "$ref": "#/components/contentDescriptors/Discv5Payload"
+      }
+    ],
+    "result": {
+      "name": "sendTalkRequestResult",
+      "description": "Returns the request-id assigned to the request message-data",
+      "schema": {
+        "title": "request-id",
+        "$ref": "#/components/schemas/bytes8"
+      }
+    }
+  },
+  {
+    "name": "discv5_sendTalkResponse",
+    "summary": "Respond to a TALKREQ request by sending a TALKRESP response.",
+    "params": [
+      {
+        "$ref": "#/components/contentDescriptors/Enr"
+      },
+      {
+        "$ref": "#/components/contentDescriptors/Discv5Payload"
+      },
+      {
+        "$ref": "#/components/contentDescriptors/RequestId"
+      }
+    ],
+    "result": {
+      "name": "sendTalkResponseResult",
+      "description": "Returns \"true\" upon success.",
+      "schema": {
+        "type": "boolean"
+      }
+    }
+  },
+  {
+    "name": "discv5_ping",
+    "summary": "Send a PING message to the designated node and wait for a PONG response.",
+    "params": [
+      {
+        "$ref": "#/components/contentDescriptors/Enr"
+      }
+    ],
+    "result": {
+      "name": "pingResult",
+      "description": "Returns PONG response",
+      "schema": {
+        "title": "PONG message",
+        "type": "object",
+        "required": [
+          "enrSeq",
+          "recipientIP",
+          "recipientPort"
+        ],
+        "properties": {
+          "enrSeq": {
+            "description": "ENR sequence number of sender",
+            "type": "number"
+          },
+          "recipientIP": {
+            "description": "IP address of the intended recipient",
+            "$ref": "#/components/schemas/ipAddr"
+          },
+          "recipientPort": {
+            "description": "recipient UDP port",
+            "$ref": "#/components/schemas/udpPort"
+          }
+        }
+      }
+    }
+  },
+  {
+    "name": "discv5_findNode",
+    "summary": "Send a FINDNODE request for nodes that fall within the given set of distances, to the designated peer and wait for a response.",
+    "params": [
+      {
+        "$ref": "#/components/contentDescriptors/Enr"
+      },
+      {
+        "$ref": "#/components/contentDescriptors/Distances"
+      }
+    ],
+    "result": {
+      "$ref": "#/components/contentDescriptors/FindNodeResult"
+    }
+  },
+  {
+    "name": "discv5_talkReq",
+    "summary": "Send a TALKREQ request with a payload to a given peer and wait for response.",
+    "params": [
+      {
+        "$ref": "#/components/contentDescriptors/Enr"
+      },
+      {
+        "$ref": "#/components/contentDescriptors/Enr"
+      },
+      {
+        "$ref": "#/components/contentDescriptors/Discv5Payload"
+      }
+    ],
+    "result": {
+      "name": "talkResult",
+      "description": "Returns TALKRESP message as hex string",
+      "schema": {
+        "$ref": "#/components/schemas/hexString"
+      }
+    }
+  },
+  {
+    "name": "discv5_recursiveFindNode",
+    "summary": "Lookup a target node within in the network",
+    "params": [
+      {
+        "$ref": "#/components/contentDescriptors/NodeId"
+      }
+    ],
+    "result": {
+      "$ref": "#/components/contentDescriptors/RecursiveFindNodeResult"
+    }
+  }
+]

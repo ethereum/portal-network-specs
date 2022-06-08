@@ -1,20 +1,20 @@
-# Chain History Storage Network
+# Execution Chain History Network
 
-This document is a preliminary specification for a networking protocol that supports on-demand availability of Ethereum chain history data.
+This document is the specification for the sub-protocol that supports on-demand availability of Ethereum execution chain history data.
 
 ## Overview
 
-Chain history data consists of historical block headers, block bodies (transactions and omners), and receipts.
+Execution chain history data consists of historical block headers, block bodies (transactions and ommer), and receipts.
 
-The chain history storage network is a [Kademlia](https://pdos.csail.mit.edu/~petar/papers/maymounkov-kademlia-lncs.pdf) DHT that forms an overlay network on top of the [Discovery v5](https://github.com/ethereum/devp2p/blob/master/discv5/discv5-wire.md) network. The term *overlay network* means that the history network operates with its own independent routing table and uses the extensible `TALKREQ` and `TALKRESP` messages from the base Discovery v5 protocol for communication.
+The chain history network is a [Kademlia](https://pdos.csail.mit.edu/~petar/papers/maymounkov-kademlia-lncs.pdf) DHT that forms an overlay network on top of the [Discovery v5](https://github.com/ethereum/devp2p/blob/master/discv5/discv5-wire.md) network. The term *overlay network* means that the history network operates with its own independent routing table and uses the extensible `TALKREQ` and `TALKRESP` messages from the base Discovery v5 protocol for communication.
 
-The `TALKREQ` and `TALKRESP` protocol messages are application-level messages whose contents are specific to the history protocol. We specify these messages below.
+The `TALKREQ` and `TALKRESP` protocol messages are application-level messages whose contents are specific to the history network. We specify these messages below.
 
-The history protocol uses the node table structure from the Discovery v5 network and the lookup algorithm from section 2.3 of the Kademlia paper.
+The history network uses the node table structure from the Discovery v5 network and the lookup algorithm from section 2.3 of the Kademlia paper.
 
 ### Data
 
-Types:
+#### Types
 
 * Block headers
 * Block bodies
@@ -22,13 +22,20 @@ Types:
     * Omners
 * Receipts
 
-Lookups:
+#### Retrieval
 
 * Block header by block header hash
 * Block body by block header hash
 * Block receipts by block header hash
 
-This specification does not support block lookups by number or transaction lookups by hash. To support these lookups, we will require a specification for a block header accumulator so that we can return the canonical block for a given height or the transaction for a given hash included in some canonical block.
+> This sub-protocol does **not** support:
+> 
+> - Header by block number
+> - Block by block number
+> - Transaction by hash
+>
+> Support for the indices needed to do these types of lookups is the responsibility of the "Execution Canonical Indices" sub-protocol of the Portal Network.
+
 
 ## Specification
 
@@ -57,36 +64,37 @@ The chain history DHT makes available the following data items:
 * Receipts
 * Transactions
 
-For data in the history network, we derive a `content-id` from the `content-key` as follows:
 
-  1.) If the `content-key` has `content-type` 0x04, the `content-id` is `H(body-content-key)`
-  2.) Otherwise, the `content-id` is `H(content-key)`
 
-  where `H` denotes the Sha256 hash function.
+All `content-key` values are encoded and decoded as an [`SSZ Union`](https://github.com/ethereum/consensus-specs/blob/dev/ssz/simple-serialize.md#union) type.
+```
+content-key = Union[blockheader, blockbody, receipt]
+serialized-content-key = serialize(content-key)
+```
 
-Step 1 is done so that a `content-key` for a single transaction maps to the same `content-id` as the block body that contains the transaction. The transaction can then be found using its index within the block. The alternative is to store every transaction twice: once in a block body, and once individually.
-
-The `content-key` format for retrieving each type of `content` are defined as follows:
 
 #### Block Header
 
 ```
-content-key  = Container(chain-id: uint16, content-type: uint8, block-hash: Bytes32)
-content-type = 0x01
+selector     = 0x00
+content-key  = Container(chain-id: uint16, block-hash: Bytes32)
+content       = rlp(header)
 ```
 
 #### Block Body
 
 ```
-content-key  = Container(chain-id: uint16, content-type: uint8, block-hash: Bytes32)
-content-type = 0x02
+selector     = 0x01
+content-key  = Container(chain-id: uint16, block-hash: Bytes32)
+content      = rlp([transaction_list, uncle_list])
 ```
 
 #### Receipts
 
 ```
-content-key  = Container(chain-id: uint16, content-type: uint8, block-hash: Bytes32)
-content-type = 0x03
+selector = 0x02
+content-key  = Container(chain-id: uint16, block-hash: Bytes32)
+content      = rlp(receipt_list)
 ```
 
 #### Transactions
@@ -95,8 +103,18 @@ content-type = 0x03
 
 ```
 content-key = Container(chain-id: uint16, body-content-key: Container, transaction-index: uint32)
-content-type = 0x04
-```
+content-type = 0x03
+
+#### Content ID
+
+The `content-id` represents the key in the DHT that we use for `distance` calculations. We derive a 32-byte `content-id` from each history network `content-key` as follows:
+
+  1.) If the `content-key` has `content-type` 0x03, the `content-id` is `H(serialized-body-content-key)`
+  2.) Otherwise, the `content-id` is `H(serialized-content-key)`
+
+  where `H` denotes the Sha256 hash function.
+
+Step 1 is done so that the `content-key` for a single transaction has the same `content-id` as the block body that contains the transaction. The transaction can then be found using its index within the block. The alternative is to store every transaction twice: once in a block body, and once individually.
 
 ### Radius
 
@@ -110,146 +128,23 @@ interested(node, content) = distance(node.id, content.id) <= node.radius
 
 A node is expected to maintain `radius` information for each node in its local node table. A node's `radius` value may fluctuate as the contents of its local key-value store change.
 
-### Protocol Messages
+### Wire Protocol
 
-All protocol messages are transmitted via the `TALKREQ` and `TALKRESP` messages defined by the Discovery v5 protocol.
+The [Portal wire protocol](./portal-wire-protocol.md) is used as wire protocol for the history network.
 
-Below is the general message encoding for all `TALKREQ` messages.
+As specified in the [Protocol identifiers](./portal-wire-protocol.md#protocol-identifiers) section of the Portal wire protocol, the `protocol` field in the `TALKREQ` message **MUST** contain the value of `0x500B`.
 
+The history network supports the following protocol messages:
+- `Ping` - `Pong`
+- `Find Nodes` - `Nodes`
+- `Find Content` - `Found Content`
+- `Offer` - `Accept`
+
+In the history network the `custom_payload` field of the `Ping` and `Pong` messages is the serialization of an SSZ Container specified as `custom_data`:
 ```
-protocol              = portal-history
-request               = protocol-message-type || protocol-message
-protocol-message-type = uint8
-protocol-message      = byte array
+custom_data = Container(data_radius: uint256)
+custom_payload = serialize(custom_data)
 ```
-
-Below is the general message encoding for all `TALKRESP` messages.
-
-```
-response              = protocol-message-type || protocol-message
-protocol-message-type = uint8
-protocol-message      = byte array
-```
-
-All `protocol-message` values are encoded and decoded according to SSZ sedes.
-
-For the transmission of `content` items, the size of `protocol-message` may exceed the max packet size of 1280 bytes. If this occurs, then the transmission of the message contents would occur over [uTP](https://github.com/ethereum/stateless-ethereum-specs/blob/master/discv5-utp.md).
-
-uTP connections are initiated with randomly generated connection IDs. Upon sending a message with some `connection-id`, the sender should initiate a uTP stream using `connection-id`. Upon receiving a message that contains some `connection-id`, the recipient should listen for an incoming uTP connection with `connection-id`.
-
-While the data requested by a `FindNode` message may also exceed the max packet size, `FoundNodes` does not utilize uTP but instead sends multiple response messages.
-
-NOTE: The `Offer`/`Accept`/`Store` messages do not conform to the request/response paradigm of Discovery v5. We plan to propose a change to the base protocol definition to loosen the language.
-
-#### Ping (0x01)
-
-Communicate ENR sequence number and `radius` information of the sender, and request the same information of the recipient.
-
-```
-protocol-message-type = 0x01
-protocol-message      = Container(enr-seq: uint64, radius: uint256)
-```
-
-#### Pong (0x02)
-
-In response to a `Ping` message, communicate ENR sequence number and `radius` information of the sender.
-
-```
-protocol-message-type = 0x02
-protocol-message      = Container(enr-seq: uint64, radius: uint256)
-```
-
-#### FindNode (0x03)
-
-Request a list of ENR values for nodes whose `logdistance` from the recipient's `node-id` is equal to one of the specified values.
-
-```
-protocol-message-type = 0x03
-protocol-message      = Container(distances: List[uint8, 256])
-```
-
-Each element of `distances` **MUST** be unique. A zero value in the `distances` list represents a request for the recipient's ENR value.
-
-#### FoundNodes (0x04)
-
-In response to a `FindNode` message, communicate a list of RLP-encoded ENR values for nodes whose `logdistance` value satisfies the request.
-
-```
-protocol-message-type = 0x04
-protocol-message      = Container(total: uint8, enrs: List[Bytes, 32])
-```
-
-The recipient may know of more than 32 nodes that satisfy the request, or the size of `enrs` may exceed the max packet size. In this case, the recipient will need to send multiple `FoundNodes` messages in response to the `FindNode` message.
-
-Here, `total` denotes the total number of `FoundNodes` messages that the sender of the `FindNode` message should expect in response.
-
-The mapping from ENR values to `node-id` values **MUST** be one-to-one. Each ENR **MUST** correspond to an element in the `distances` field of the `FindNode` request.
-
-#### FindContent (0x05)
-
-Request the data for `content` with `content-key`, or a list of ENR values for nodes whose `distance` from `content-id` is smaller than that of the recipient.
-
-The encoding of `content-key` for all possible data items is specified above.
-
-```
-protocol-message-type = 0x05
-protocol-message      = Container(content-key: Bytes)
-```
-
-#### FoundContent (0x06)
-
-In response to a `FindContent` message, communicate one of the following:
-
-* A connection ID for a uTP stream to transmit the requested  data
-* A list of RLP-encoded ENR values with maximum length of 32
-* A byte-array that encodes the requested data
-
-```
-protocol-message-type = 0x06
-protocol-message      = Union[connection-id: Bytes2, enrs: List[Bytes, 32], content: Bytes]
-```
-
-If the node does not hold the requested content, and the node does not know of any nodes with eligible ENR values, then the node should return `enrs` as an empty list.
-
-#### Offer (0x07)
-
-Communicate to the recipient that the data for each content key in `content-keys` is available for transmission.
-
-```
-protocol-message-type = 0x07
-protocol-message      = Container(content-keys: List[Bytes, 32])
-```
-
-Each element in `content-keys` **MUST** be unique.
-
-#### Accept (0x08)
-
-In response to a `Offer` message, request the data for a subset of the offered content keys.
-
-```
-protocol-message-type = 0x08
-protocol-message      = Container(content-keys: Bitlist[32])
-```
-
-The length of `content-keys` **MUST** be equal to the length of the `content-keys` field of the associated `Offer` message. The sender sets `content-keys[i]` equal to `1` to request the data that corresponds to coordinate `i` in the list of offered content keys.
-
-If a node transmits a `Accept` message, then we expect that node to store the corresponding data locally following the subsequent `Store` message.
-
-#### Store (0x09)
-
-In response to a `Accept` message, communicate one of the following:
-
-* A connection ID for a uTP stream to transmit the requested  data
-* A byte-array that encodes the requested data
-
-```
-protocol-message-type = 0x09
-protocol-message      = Union[connection-id: Bytes2, content: List[Bytes, 32]]
-```
-
-The length and ordering of `content` **MUST** match the length and ordering of the `content-keys` field of the associated `Accept` message.
-
-If the data for `content-keys[i]` was not requested, or if the sender is unable to transmit that data, then the sender should populate `content[i]` with an empty byte array.
 
 ## Algorithms and Data Structures
 
@@ -272,33 +167,3 @@ A node should regularly refresh the information it keeps about its neighbors. We
 When a node discovers some previously unknown node, and the corresponding k-bucket is full, the newly discovered node is put into a replacement cache sorted by time last seen. If a node in the k-bucket fails a liveness check, and the replacement cache for that bucket is non-empty, then that node is replaced by the most recently seen node in the replacement cache.
 
 Consider a node in some k-bucket to be "stale" if it fails to respond to β messages in a row, where β is a system parameter. β may be a function of the number of previous successful liveness checks or of the age of the neighbor. If the k-bucket is not full, and the corresponding replacement cache is empty, then stale nodes should only be flagged and not removed. This ensures that a node who goes offline temporarily does not void its k-buckets.
-
-### Lookup
-
-We use the lookup algorithm described in section 2.3 of the Kademlia paper. A "node lookup" is the execution of the algorithm to find the `k` closest nodes to some `node-id`. A "content lookup" is the execution of the algorithm to find the data for `content-id` or the `k` closest nodes to `content-id`.
-
-A `FindNode` request corresponds to a node lookup, and a `FindContent` request corresponds to a content lookup.
-
-The lookup algorithm is also used to identify nodes that should receive `Offer` messages to store some data.
-
-### Joining the Network
-
-We follow the join procedure described in the Kademlia paper.
-
-In order to join the network, a node `u` must know some node `v` who is already participating in the network. Node `u` inserts `v` into the appropriate k-bucket and then sends a `FindNode` request to `v` for its own node ID. Then, node `u` refreshes all k-buckets with distances further than its closest neighbor. To refresh a bucket, a node selects a random node ID in the bucket's range and performs a `FindNode` for that ID.
-
-### Finding Nodes
-
-A node's routing table is initially populated by the `FindNode` messages that the node sends when it joins the network.
-
-Following the join phase, a node's k-buckets are generally kept fresh by network traffic. When a node learns of a new contact (through node lookups), it attempts to insert the contact into the appropriate k-bucket. A node keeps track of the last node lookup it performed for each k-bucket, and it will regularly refresh any k-buckets with no recent lookups.
-
-### Finding Content
-
-To find a piece of content for `content-id`, a node performs a content lookup via `FindContent`. If the lookup succeeds, then the requestor sends a `Offer` message for the content to the closest node it observed that did not return the value and whose `radius` contains `content-id`.
-
-### Storing Content
-
-To store a piece of content with key `content-id`, a node performs a lookup to find the `k` closest nodes with radii that contain `content-id`. Then the node sends `Offer` RPCs to those nodes. For any node that responds to the `Offer` RPC with a `Accept` RPC, the local node responds with a `Store` RPC for the content.
-
-The network cannot make guarantees about the storage of particular content. A lazy node may ignore all `Offer` RPCs. A malicious node may send `Accept` RPCs and ignore the `Store` RPCs. The offer-accept mechanism is in place to require that nodes explicitly accept some data before another node attempts to transmit that data. The mechanism prevents the unnecessary consumption of bandwidth in the presence of lazy nodes. However, it does not defend against malicious nodes who accept offers for data with no intent to store it.
