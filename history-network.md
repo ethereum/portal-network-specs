@@ -29,7 +29,7 @@ The history network uses the node table structure from the Discovery v5 network 
 * Block receipts by block header hash
 
 > This sub-protocol does **not** support:
-> 
+>
 > - Header by block number
 > - Block by block number
 > - Transaction by hash
@@ -71,29 +71,96 @@ content-key = Union[blockheader, blockbody, receipt]
 serialized-content-key = serialize(content-key)
 ```
 
+#### Constants
+
+```py
+MAX_TRANSACTION_LENGTH = 2**24  # ~= 16 million
+# Maximum transaction body length is achieved by filling calldata with 0's
+# until the block limit of (currently) 30M gas is reached.
+# At a gas cost of 4 per 0-byte, that produces a 7.5MB transaction. We roughly
+# double that size to a maximum of >16 million for some headroom. Note that
+# EIP-4488 would put a roughly 1MB limit on transaction length, effectively. So
+# increases are not planned (instead, the opposite).
+
+MAX_TRANSACTION_COUNT = 2**14  # ~= 16k
+# 2**14 simple transactions would use up >340 million gas at 21k gas each.
+# Current gas limit tops out at 30 million gas.
+
+MAX_RECEIPT_LENGTH = 2**27  # ~= 134 million
+# Maximum receipt length is logging a bunch of data out, currently at a cost of
+# 8 gas per byte. Since that is double the cost of 0 calldata bytes, the
+# maximum size is roughly half that of the transaction: 3.75 million bytes.
+# But there is more reason for protocol devs to constrain the transaction length,
+# and it's not clear what the practical limits for receipts are, so we should add more buffer room.
+# Imagine the cost drops by 2x and the block gas limit goes up by 8x. So we add 2**4 = 16x buffer.
+
+_MAX_HEADER_LENGTH = 2**13  # = 8192
+# Maximum header length is fairly stable at about 500 bytes. It might change at
+# the merge, and beyond. Since the length is relatively small, and the future
+# of the format is unclear to me, I'm leaving more room for expansion, and
+# setting the max at about 8 kilobytes.
+
+MAX_ENCODED_UNCLES_LENGTH = _MAX_HEADER_LENGTH * 2**4  # = 2**17 ~= 131k
+# Maximum number of uncles is currently 2. Using 16 leaves some room for the
+# protocol to increase the number of uncles.
+```
+
 #### Block Header
 
 ```
 selector     = 0x00
 content-key  = Container(chain-id: uint16, block-hash: Bytes32)
-content       = rlp(header)
+content      = rlp(header)
 ```
 
 #### Block Body
 
 ```
-selector     = 0x01
-content-key  = Container(chain-id: uint16, block-hash: Bytes32)
-content      = rlp([transaction_list, uncle_list])
+selector                = 0x01
+content-key             = Container(chain-id: uint16, block-hash: Bytes32)
+content                 = Container(all-transactions, ssz-uncles)
+all-transactions        = SSZList(ssz-transaction, max-length=MAX_TRANSACTION_COUNT)
+ssz-transaction         = SSZList(encoded-transaction: Byte, max-length=MAX_TRANSACTION_LENGTH)
+encoded-transaction     =
+  if transaction.is_typed:
+    return type_byte + rlp.encode(transaction)
+  else:
+    return rlp.encode(transaction)
+ssz-uncles              = SSZList(encoded-uncles: Byte, max-length=MAX_ENCODED_UNCLES_LENGTH)
+encoded-uncles          = rlp.encode(list-of-uncle-headers)
 ```
+
+Note the type-specific encoding might be different in future transaction types, but this encoding
+works for all current transaction types.
 
 #### Receipts
 
 ```
-selector = 0x02
-content-key  = Container(chain-id: uint16, block-hash: Bytes32)
-content      = rlp(receipt_list)
+selector            = 0x02
+content-key         = Container(chain-id: uint16, block-hash: Bytes32)
+content             = SSZList(ssz-receipt, max-length=MAX_TRANSACTION_COUNT)
+ssz-receipt         = SSZList(encoded-receipt: Byte, max-length=MAX_RECEIPT_LENGTH)
+encoded-receipt     =
+  if receipt.is_typed:
+    return type_byte + rlp.encode(receipt)
+  else:
+    return rlp.encode(receipt)
 ```
+
+Note the type-specific encoding might be different in future receipt types, but this encoding works
+for all current receipt types.
+
+#### Encoding Content Values for Validation
+
+The encoding choices generally favor easy verification of the data, minimizing decoding. For
+example:
+- `keccak(encoded-uncles) == header.uncles_hash`
+- Each `encoded-transaction` can be inserted into a trie to compare to the
+  `header.transactions_root`
+- Each `encoded-receipt` can be inserted into a trie to compare to the `header.receipts_root`
+
+Combining all of the block body in RLP, in contrast, would require that a validator loop through
+each receipt/transaction and re-rlp-encode it, but only if it is a legacy transaction.
 
 #### Content ID
 
