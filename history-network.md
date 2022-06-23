@@ -5,6 +5,7 @@ This document is the specification for the sub-protocol that supports on-demand 
 ## Overview
 
 Execution chain history data consists of historical block headers, block bodies (transactions and ommer), and receipts.
+In addition, it facilitates acquisition of a snapshot of the "Header Accumulator" data structure.
 
 The chain history network is a [Kademlia](https://pdos.csail.mit.edu/~petar/papers/maymounkov-kademlia-lncs.pdf) DHT that forms an overlay network on top of the [Discovery v5](https://github.com/ethereum/devp2p/blob/master/discv5/discv5-wire.md) network. The term *overlay network* means that the history network operates with its own independent routing table and uses the extensible `TALKREQ` and `TALKRESP` messages from the base Discovery v5 protocol for communication.
 
@@ -21,13 +22,20 @@ The history network uses the node table structure from the Discovery v5 network 
     * Transactions
     * Omners
 * Receipts
+* Header epoch accumulators
+* Header master accumulator
 
 #### Retrieval
 
 * Block header by block header hash
 * Block body by block header hash
 * Block receipts by block header hash
+* Header epoch accumulator by epoch accumulator hash
+* Header master accumulator by master accumulator hash or by requesting latest
 
+
+<!-- TODO: we can actually provide header by block number or block by block
+number by requesting the right epoch accumulator, so this could be adjusted -->
 > This sub-protocol does **not** support:
 >
 > - Header by block number
@@ -55,6 +63,70 @@ Similarly, we define a `logdistance` function identically to the Discovery v5 ne
 logdistance(n1, n2) = log2(distance(n1, n2))
 ```
 
+### The "Header Accumulator"
+
+The "Header Accumulator" is based on the [double-batched merkle log accumulator](https://ethresear.ch/t/double-batched-merkle-log-accumulator/571) that is currently used in the beacon chain.  This data structure is designed to allow nodes in the network to "forget" the deeper history of the chain, while still being able to reliably receive historical headers with a proof that the received header is indeed from the canonical chain (as opposed to an uncle mined at the same block height).
+
+The accumulator is defined as an [SSZ](https://ssz.dev/) data structure with the following schema:
+
+```python
+EPOCH_SIZE = 8192 # blocks
+MAX_HISTORICAL_EPOCHS = 131072  # 2**17
+
+# An individual record for a historical header.
+HeaderRecord = Container[block_hash: bytes32, total_difficulty: uint256]
+
+# The records of the headers from within a single epoch
+EpochAccumulator = List[HeaderRecord, max_length=EPOCH_SIZE]
+
+MasterAccumulator = Container[
+    historical_epochs: List[bytes32, max_length=MAX_HISTORICAL_EPOCHS],
+    current_epoch: EpochAccumulator,
+]
+```
+
+The algorithm for managing the accumulator is as follows.
+
+> TODO: provide a written spec too
+
+```python
+def update_accumulator(accumulator: MasterAccumulator, new_block_header: BlockHeader) -> None:
+    # get the previous total difficulty
+    if len(accumulator.current_epoch) == 0:
+        # genesis
+        last_total_difficulty = 0
+    else:
+        last_total_difficulty = accumulator.current_epoch[-1].total_difficulty
+
+    # check if the epoch accumulator is full.
+    if len(accumulator.current_epoch) == EPOCH_SIZE:
+        # compute the final hash for this epoch
+        epoch_hash = hash_tree_root(accumulator.current_epoch)
+        # append the hash for this epoch to the list of historical epochs
+        accumulator.historical_epochs.append(epoch_hash)
+        # initialize a new empy epoch
+        accumulator.current_epoch = []
+
+    # construct the concise record for the new header and add it to the current epoch.
+    header_record = HeaderRecord(header.hash, last_total_difficulty + header.difficulty)
+    accumulator.current_epoch.append(header_record)
+```
+
+#### Growth over time
+
+Each `HeaderRecord` is 64 bytes meaning the `EpochAccumulator` can range from `0 - 64 * EPOCH_SIZE` bytes (0-512KB) over the course of a single epoch.
+
+The `Accumulator.historical_epochs` grows by 32 bytes per epoch.
+
+At a 13 second block time we expect:
+
+- ~1 epochs per day
+- ~6 epochs per week
+- ~25 epochs per month
+- ~296 epochs per year
+
+Ignoring fluxuations in the size of `Accumulator.current_epoch` we should expect the size of the accumulator to grow at a rate of roughly 10kb per year.
+
 ### Content: Keys and Values
 
 The chain history DHT stores the following data items:
@@ -62,13 +134,15 @@ The chain history DHT stores the following data items:
 * Block headers
 * Block bodies
 * Receipts
+* Header epoch accumulators
+* Header master accumulator
 
 Each of these data items are represented as a key-value pair. Denote the key for a data item by `content-key`. Denote the value for an item as `content`.
 
-All `content-key` values are encoded and decoded as an [`SSZ Union`](https://github.com/ethereum/consensus-specs/blob/dev/ssz/simple-serialize.md#union) type.
+All `content_key` values are encoded and decoded as an [`SSZ Union`](https://github.com/ethereum/consensus-specs/blob/dev/ssz/simple-serialize.md#union) type.
 ```
-content-key = Union[blockheader, blockbody, receipt]
-serialized-content-key = serialize(content-key)
+content_key = Union[block_header_key, block_body_key, receipt_key, epoch_accumulator_key, master_accumulator_key]
+serialized_content_key = SSZ.serialize(content_key)
 ```
 
 #### Constants
@@ -108,26 +182,31 @@ MAX_ENCODED_UNCLES_LENGTH = _MAX_HEADER_LENGTH * 2**4  # = 2**17 ~= 131k
 #### Block Header
 
 ```
-selector     = 0x00
-content-key  = Container(chain-id: uint16, block-hash: Bytes32)
-content      = rlp(header)
+block_header_key = Container(chain_id: uint16, block_hash: Bytes32)
+selector = 0x00
+
+content = rlp.encode(header)
 ```
 
 #### Block Body
 
 ```
+block_body_key = Container(chain_id: uint16, block_hash: Bytes32)
 selector                = 0x01
-content-key             = Container(chain-id: uint16, block-hash: Bytes32)
-content                 = Container(all-transactions, ssz-uncles)
-all-transactions        = SSZList(ssz-transaction, max-length=MAX_TRANSACTION_COUNT)
-ssz-transaction         = SSZList(encoded-transaction: Byte, max-length=MAX_TRANSACTION_LENGTH)
-encoded-transaction     =
+
+content                 = Container(all_transactions, ssz_uncles)
+all_transactions        = SSZList(ssz_transaction, max_length=MAX_TRANSACTION_COUNT)
+ssz_transaction         = SSZList(encoded_transaction: Byte, max_length=MAX_TRANSACTION_LENGTH)
+encoded_transaction     =
   if transaction.is_typed:
     return type_byte + rlp.encode(transaction)
   else:
     return rlp.encode(transaction)
-ssz-uncles              = SSZList(encoded-uncles: Byte, max-length=MAX_ENCODED_UNCLES_LENGTH)
-encoded-uncles          = rlp.encode(list-of-uncle-headers)
+ssz_uncles              = SSZList(encoded_uncles: Byte, max_length=MAX_ENCODED_UNCLES_LENGTH)
+encoded_uncles          = rlp.encode(list_of_uncle_headers)
+
+
+content = rlp([transaction_list, uncle_list])
 ```
 
 Note the type-specific encoding might be different in future transaction types, but this encoding
@@ -136,16 +215,40 @@ works for all current transaction types.
 #### Receipts
 
 ```
-selector            = 0x02
-content-key         = Container(chain-id: uint16, block-hash: Bytes32)
-content             = SSZList(ssz-receipt, max-length=MAX_TRANSACTION_COUNT)
-ssz-receipt         = SSZList(encoded-receipt: Byte, max-length=MAX_RECEIPT_LENGTH)
-encoded-receipt     =
+receipt_key = Container(chain_id: uint16, block_hash: Bytes32)
+selector = 0x02
+
+content             = SSZList(ssz_receipt, max_length=MAX_TRANSACTION_COUNT)
+ssz_receipt         = SSZList(encoded_receipt: Byte, max_length=MAX_RECEIPT_LENGTH)
+encoded_receipt     =
   if receipt.is_typed:
     return type_byte + rlp.encode(receipt)
   else:
     return rlp.encode(receipt)
 ```
+
+#### Epoch Accumulator
+
+```
+epoch_accumulator_key = Container(epoch_hash: Bytes32)
+selector = 0x03
+epoch_hash = hash_tree_root(epoch_accumulator)
+
+content = SSZ.serialize(epoch_accumulator)
+```
+
+#### Master Accumulator
+
+```
+master_accumulator_key = Union[None, master_hash: Bytes32]
+selector = 0x04
+master_hash = hash_tree_root(master_accumulator)
+
+content = SSZ.serialize(master_accumulator)
+```
+
+> A `None` in the content key is equivalent to the request of the latest
+master accumulator that the requested node has available.
 
 Note the type-specific encoding might be different in future receipt types, but this encoding works
 for all current receipt types.
@@ -165,6 +268,9 @@ each receipt/transaction and re-rlp-encode it, but only if it is a legacy transa
 #### Content ID
 
 We derive a `content-id` from the `content-key` as `H(serialized-content-key)` where `H` denotes the SHA-256 hash function, which outputs 32-byte values. The `content-id` represents the key in the DHT that we use for `distance` calculations.
+
+<!-- TODO: the content-id of the accumulators could probably be directly
+the hash_tree_root value, to avoid another hashing operation? -->
 
 ### Radius
 
@@ -196,6 +302,10 @@ custom_data = Container(data_radius: uint256)
 custom_payload = serialize(custom_data)
 ```
 
+<!-- TODO: Add the accumulator root hash as custom data to the ping/pong
+payloads as was done in the header gossip network? Lets figure this out when
+also figuring out how to kick off with a accumulator snapshot. -->
+
 
 ## Algorithms and Data Structures
 
@@ -218,3 +328,12 @@ A node should regularly refresh the information it keeps about its neighbors. We
 When a node discovers some previously unknown node, and the corresponding k-bucket is full, the newly discovered node is put into a replacement cache sorted by time last seen. If a node in the k-bucket fails a liveness check, and the replacement cache for that bucket is non-empty, then that node is replaced by the most recently seen node in the replacement cache.
 
 Consider a node in some k-bucket to be "stale" if it fails to respond to β messages in a row, where β is a system parameter. β may be a function of the number of previous successful liveness checks or of the age of the neighbor. If the k-bucket is not full, and the corresponding replacement cache is empty, then stale nodes should only be flagged and not removed. This ensures that a node who goes offline temporarily does not void its k-buckets.
+
+
+### Accumulator Acquisition
+
+New nodes entering the network will need to acquire an up-to-date snapshot of the accumulator.
+
+The Header Gossip Network does provide the ability to acquire a snapshot of another node's accumulator. Since the accumulator is not a part of the base protocol (and thus is not part of the block header), nodes will have to do their own due diligence to either build the full accumulator from genesis or to adequately verify and validate a snapshot acquired from another peer.
+
+TODO: provide basic probabilistic approach for verification of an accumulator snapshot.
