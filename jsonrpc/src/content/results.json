@@ -154,6 +154,26 @@
       }
     }
   },
+  "RecursiveFindContentResult": {
+    "name": "recursiveFindContentResult",
+    "description": "One of either the data corresponding to the lookup target or a list of ENR records closer to the lookup target.",
+    "schema": {
+      "type": "object",
+      "properties": {
+        "content": {
+          "description": "The data corresponding to the lookup target",
+          "$ref": "#/components/schemas/hexString"
+        },
+	"enrs": {
+	  "description": "A list of known ENR records closest to the lookup target",
+          "type": "array",
+          "items": {
+            "$ref": "#/components/schemas/Enr"
+	  }
+	}
+      }
+    }
+  },
   "RoutingTableInfoResult": {
     "name": "routingTableInfoResult",
     "description": "history network routing table information",
