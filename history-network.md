@@ -104,11 +104,11 @@ def update_accumulator(accumulator: MasterAccumulator, new_block_header: BlockHe
         epoch_hash = hash_tree_root(accumulator.current_epoch)
         # append the hash for this epoch to the list of historical epochs
         accumulator.historical_epochs.append(epoch_hash)
-        # initialize a new empy epoch
+        # initialize a new empty epoch
         accumulator.current_epoch = []
 
     # construct the concise record for the new header and add it to the current epoch.
-    header_record = HeaderRecord(header.hash, last_total_difficulty + header.difficulty)
+    header_record = HeaderRecord(new_block_header.hash, last_total_difficulty + new_block_header.difficulty)
     accumulator.current_epoch.append(header_record)
 ```
 
@@ -183,15 +183,15 @@ MAX_ENCODED_UNCLES_LENGTH = _MAX_HEADER_LENGTH * 2**4  # = 2**17 ~= 131k
 
 ```
 block_header_key = Container(chain_id: uint16, block_hash: Bytes32)
-selector = 0x00
+selector         = 0x00
 
-content = rlp.encode(header)
+content          = rlp.encode(header)
 ```
 
 #### Block Body
 
 ```
-block_body_key = Container(chain_id: uint16, block_hash: Bytes32)
+block_body_key          = Container(chain_id: uint16, block_hash: Bytes32)
 selector                = 0x01
 
 content                 = Container(all_transactions, ssz_uncles)
@@ -204,9 +204,6 @@ encoded_transaction     =
     return rlp.encode(transaction)
 ssz_uncles              = SSZList(encoded_uncles: Byte, max_length=MAX_ENCODED_UNCLES_LENGTH)
 encoded_uncles          = rlp.encode(list_of_uncle_headers)
-
-
-content = rlp([transaction_list, uncle_list])
 ```
 
 Note the type-specific encoding might be different in future transaction types, but this encoding
@@ -215,8 +212,8 @@ works for all current transaction types.
 #### Receipts
 
 ```
-receipt_key = Container(chain_id: uint16, block_hash: Bytes32)
-selector = 0x02
+receipt_key         = Container(chain_id: uint16, block_hash: Bytes32)
+selector            = 0x02
 
 content             = SSZList(ssz_receipt, max_length=MAX_TRANSACTION_COUNT)
 ssz_receipt         = SSZList(encoded_receipt: Byte, max_length=MAX_RECEIPT_LENGTH)
@@ -231,20 +228,20 @@ encoded_receipt     =
 
 ```
 epoch_accumulator_key = Container(epoch_hash: Bytes32)
-selector = 0x03
-epoch_hash = hash_tree_root(epoch_accumulator)
+selector              = 0x03
+epoch_hash            = hash_tree_root(epoch_accumulator)
 
-content = SSZ.serialize(epoch_accumulator)
+content               = SSZ.serialize(epoch_accumulator)
 ```
 
 #### Master Accumulator
 
 ```
 master_accumulator_key = Union[None, master_hash: Bytes32]
-selector = 0x04
-master_hash = hash_tree_root(master_accumulator)
+selector               = 0x04
+master_hash            = hash_tree_root(master_accumulator)
 
-content = SSZ.serialize(master_accumulator)
+content                = SSZ.serialize(master_accumulator)
 ```
 
 > A `None` in the content key is equivalent to the request of the latest
