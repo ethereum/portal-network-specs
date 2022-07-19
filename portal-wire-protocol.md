@@ -217,6 +217,14 @@ The maximum size allowed for this application is limited to `uint32`.
 
 The content item itself MUST be encoded as is defined for each specific network and content type.
 
+The encoded data of n encoded content items to be send over the stream can be formalized as:
+```py
+# n encoded content items to be send over the stream, with n <= 64
+encoded_content_list = [content_0, content_1, ..., content_n]
+
+# encoded data to be send over the stream
+encoded_data = varint(len(content_0)) + content_0 + varint(len(content_1)) + content_1 + ... + varint(len(content_n)) + content_n
+```
 
 ### Test Vectors
 
