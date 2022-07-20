@@ -206,14 +206,10 @@ Upon *sending* this message, the requesting node **SHOULD** *listen* for an inco
 
 Upon *receiving* this message, the serving node **SHOULD** *initiate* a uTP stream with the received `connection_id`.
 
-#### Length Prefix Content Encoding
-Content data can be transfered over the uTP stream after the `Find Content` and `Content` request and response or after the `Offer` and `Accept` request and response. The length prefix content encoding MUST be applied on all content data send over the stream.
+##### Content Encoding
+Up to 64 content items can be sent over the uTP stream after an `Offer` request and `Accept` response.
 
-Up to 64 content items can be sent over the stream after an `Offer` request and `Accept` response and the
-content encoding will allow to discern the different content items. Additionally, it MAY be used to close
-the stream early when all data is received.
-
-For length prefix content encoding, each content item that is to be send over the uTP stream MUST be prefixed with a variable length unsigned integer (varint).
+In order to be able to discern these different content items, a variable length unsigned integer (varint) MUST be prefixed to each content item.
 The varint MUST hold the size, in bytes, of the consecutive content item.
 
 The varint encoding used is [Unsigned LEB128](https://en.wikipedia.org/wiki/LEB128#Encode_unsigned_integer).
