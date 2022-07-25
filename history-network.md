@@ -206,10 +206,8 @@ ssz_uncles              = SSZList(encoded_uncles: Byte, max_length=MAX_ENCODED_U
 encoded_uncles          = rlp.encode(list_of_uncle_headers)
 ```
 
-Note 1: The type-specific encoding might be different in future transaction types, but this encoding
+Note the type-specific encoding might be different in future transaction types, but this encoding
 works for all current transaction types.
-
-Note 2: The `list_of_uncle_headers` refers to the array of uncle headers [defined in the devp2p spec](https://github.com/ethereum/devp2p/blob/master/caps/eth.md#block-encoding-and-validity).  
 
 #### Receipts
 
