@@ -209,7 +209,7 @@ encoded_uncles          = rlp.encode(list_of_uncle_headers)
 Note 1: The type-specific encoding might be different in future transaction types, but this encoding
 works for all current transaction types.
 
-Note 2: The `list_of_uncle_headers` refers to the array of uncle headers [defined in the devp2p spec](https://github.com/ethereum/devp2p/blob/master/caps/eth.md#block-encoding-and-validity).  
+Note 2: The `list_of_uncle_headers` refers to the list of uncle headers [defined in the Ethereum yellow paper](https://github.com/ethereum/yellowpaper/blob/30782852fef61f61a247dafbdad814ae7e00fb39/Paper.tex#L399) and is represented as an array of byte arrays where each byte array is the raw bytes representing an uncle header.  
 
 #### Receipts
 
