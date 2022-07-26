@@ -154,6 +154,14 @@
       }
     }
   },
+  "RecursiveFindContentResult": {
+    "name": "recursiveFindContentResult",
+    "description": "The data corresponding to the lookup target",
+    "schema": {
+      "title": "Encoded target content data",
+      "$ref": "#/components/schemas/hexString"
+    }
+  },
   "RoutingTableInfoResult": {
     "name": "routingTableInfoResult",
     "description": "history network routing table information",

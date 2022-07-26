@@ -217,6 +217,18 @@
     }
   },
   {
+    "name": "portal_historyRecursiveFindContent",
+    "summary": "Look up a target content key in the network",
+    "params": [
+      {
+        "$ref": "#/components/contentDescriptors/ContentKey"
+      }
+    ],
+    "result": {
+      "$ref": "#/components/contentDescriptors/RecursiveFindContentResult"
+    }
+  },
+  {
     "name": "portal_historySendFindContent",
     "summary": "Send FINDCONTENT message.",
     "params": [
