@@ -287,13 +287,13 @@
   },
   {
     "name": "portal_historyOffer",
-    "summary": "Request message to offer a set of content_keys that this node has content available for.",
+    "summary": "Send the provided content item to interested peers. Clients may choose to send to some or all peers.",
     "params": [
       {
-        "$ref": "#/components/contentDescriptors/Enr"
+        "$ref": "#/components/contentDescriptors/ContentKey"
       },
       {
-        "$ref": "#/components/contentDescriptors/ContentKeys"
+        "$ref": "#/components/contentDescriptors/ContentValue"
       }
     ],
     "result": {
@@ -323,7 +323,7 @@
         "$ref": "#/components/contentDescriptors/ContentKey"
       },
       {
-        "$ref": "#/components/contentDescriptors/StoreContent"
+        "$ref": "#/components/contentDescriptors/ContentValue"
       }
     ],
     "result": {

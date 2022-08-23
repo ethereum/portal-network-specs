@@ -117,9 +117,9 @@
       "$ref": "#/components/schemas/bytes8"
     }
   },
-  "StoreContent": {
-    "name": "contentData",
-    "description": "Content data to store",
+  "ContentValue": {
+    "name": "contentValue",
+    "description": "The encoded Content value",
     "required": true,
     "schema": {
       "$ref": "#/components/schemas/hexString"
