@@ -99,20 +99,10 @@
   },
   "OfferResult": {
     "name": "offerResult",
-    "description": "Returns ACCEPT message",
+    "description": "Returns the number of peers that the content was gossiped to",
     "schema": {
-      "title": "ACCEPT message",
-      "type": "object",
-      "properties": {
-        "connectionId": {
-          "description": "Connection ID to set up a uTP stream to transmit the requested data",
-          "$ref": "#/components/schemas/bytes2"
-        },
-        "contentKeys": {
-          "description": "Signals which content keys are desired",
-          "$ref": "#/components/schemas/hexString"
-        }
-      }
+      "title": "number of peers",
+      "type": "number"
     }
   },
    "SendOfferResult": {

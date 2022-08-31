@@ -323,7 +323,7 @@
         "$ref": "#/components/contentDescriptors/ContentKey"
       },
       {
-        "$ref": "#/components/contentDescriptors/StoreContent"
+        "$ref": "#/components/contentDescriptors/ContentValue"
       }
     ],
     "result": {
