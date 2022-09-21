@@ -22,9 +22,7 @@ Currently defined protocol identifiers:
 - `0x500B`: Execution History Network
 - `0x500C`: Execution Transaction Gossip Network
 - `0x500D`: Execution Canonical Transaction Index Network
-- `0x501A`: gossip channel: bc-light-client-snapshot
-- `0x501B`: gossip channel: bc-light-client-update
-- `0x501C`: DHT network: beacon-state
+- `0x501A`: Beacon Chain Light Client Network
 
 ## Content Keys and Content IDs
 
