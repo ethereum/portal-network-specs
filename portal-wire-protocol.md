@@ -35,6 +35,19 @@ Content keys are passed as byte strings to the messages defined in the Portal wi
 
 Content IDs are derived from the content keys and are used to identify where the content is located in the network. The derivation is defined per content network specification.
 
+### SHA256 Content ID Derivation Function
+
+The SHA256 Content ID derivation function is defined as:
+
+```
+content_id = sha256(content_key)
+```
+
+
+## Nodes and Node IDs
+
+Nodes in the portal network are represented by their [EIP-778 Ethereum Node Record (ENR)](https://eips.ethereum.org/EIPS/eip-778) from the Discovery v5 network. A node's `node-id` is derived according to the node's identity scheme, which is specified in the node's ENR. A node's `node-id` represents its address in the DHT.  Node IDs are interchangeable between 32 byte identifiers and 256 bit integers.
+
 ## Request - Response Messages
 
 The messages in the protocol are transmitted using the `TALKREQ` and `TALKRESP` messages from the base [Node Discovery Protocol](https://github.com/ethereum/devp2p/blob/master/discv5/discv5-wire.md#talkreq-request-0x05).
@@ -207,6 +220,7 @@ Upon *sending* this message, the requesting node **SHOULD** *listen* for an inco
 Upon *receiving* this message, the serving node **SHOULD** *initiate* a uTP stream with the received `connection_id`.
 
 ##### Content Encoding
+
 Up to 64 content items can be sent over the uTP stream after an `Offer` request and `Accept` response.
 
 In order to be able to discern these different content items, a variable length unsigned integer (varint) MUST be prefixed to each content item.
@@ -226,10 +240,69 @@ encoded_content_list = [content_0, content_1, ..., content_n]
 encoded_data = varint(len(content_0)) + content_0 + varint(len(content_1)) + content_1 + ... + varint(len(content_n)) + content_n
 ```
 
+### Distance Function
+
+Each sub protocol must specify a distance function for computing the distance
+between either two nodes in the network or a node and a piece of content.
+
+#### XOR Distance Function
+
+The XOR `distance` function is defined as:
+
+```
+distance(a: uint256, b: uint256) = a XOR b
+```
+
+Similarly, we define a `logdistance` function identically to the Discovery v5 network.
+
+```
+logdistance(a: uint256, b: uint256) = log2(distance(a, b))
+```
+
+
 ### Test Vectors
 
 A collection of test vectors for this specification can be found in the
 [Portal wire test vectors](./portal-wire-test-vectors.md) document.
+
+
+## Routing Table
+
+Most networks that use the Portal Wire Protocol will form an independent DHT which requires individual nodes to maintain a routing table.
+
+### Standard Routing Table
+
+We define the "standard" routing table as follows:
+
+We adapt the node state from the Discovery v5 protocol. Assume identical definitions for the replication parameter `k` and a node's k-bucket table. Also assume that the routing table follows the structure and evolution described in section 2.4 of the Kademlia paper.
+
+Nodes keep information about other nodes in a routing table of k-buckets. This routing table is specific to a sub protocol and is distinct from the node's underlying Discovery v5 routing table or the routing table of any other sub protocols.
+
+A node should regularly refresh the information it keeps about its neighbors. We follow section 4.1 of the Kademlia paper to improve efficiency of these refreshes. A node delays `Ping` checks until it has a useful message to send to its neighbor.
+
+When a node discovers some previously unknown node, and the corresponding k-bucket is full, the newly discovered node is put into a replacement cache sorted by time last seen. If a node in the k-bucket fails a liveness check, and the replacement cache for that bucket is non-empty, then that node is replaced by the most recently seen node in the replacement cache.
+
+Consider a node in some k-bucket to be "stale" if it fails to respond to β messages in a row, where β is a system parameter. β may be a function of the number of previous successful liveness checks or of the age of the neighbor. If the k-bucket is not full, and the corresponding replacement cache is empty, then stale nodes should only be flagged and not removed. This ensures that a node who goes offline temporarily does not void its k-buckets.
+
+## Node State
+
+Most networks that use the Portal Wire Protocol will track some additional state about nodes in the network.
+
+### Base Node State
+
+Nodes in the network are expected to maintain a database of information with the following information:
+
+```
+node-entry := (node-id, ip, port)
+node-id    := uint256
+ip         := IPv4 or IPv6 address
+port       := UDP port number
+```
+
+### Protocl Specific Node State
+
+Sub protocols may defined additional node state information which should be tracked in the node state database.  This information will typically be transmitted in the `Ping.custom_data` and `Pong.custom_data` fields.
+
 
 ## Algorithms
 

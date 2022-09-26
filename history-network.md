@@ -38,21 +38,10 @@ The history network uses a modified version of the routing table structure from 
 
 ## Specification
 
-### Distance
+### Distance Function
 
-Nodes in the history network are represented by their [EIP-778 Ethereum Node Record (ENR)](https://eips.ethereum.org/EIPS/eip-778) from the Discovery v5 network. A node's `node-id` is derived according to the node's identity scheme, which is specified in the node's ENR. A node's `node-id` represents its address in the DHT.
+The history network uses the stock XOR distance metric defined in the portal wire protocol specification.
 
-The `node-id` is a 32-byte identifier. We define the `distance` function that maps a pair of `node-id` values to a 256-bit unsigned integer identically to the Discovery v5 network.
-
-```
-distance(n1, n2) = n1 XOR n2
-```
-
-Similarly, we define a `logdistance` function identically to the Discovery v5 network.
-
-```
-logdistance(n1, n2) = log2(distance(n1, n2))
-```
 
 ### The "Header Accumulator"
 
@@ -234,9 +223,9 @@ example:
 Combining all of the block body in RLP, in contrast, would require that a validator loop through
 each receipt/transaction and re-rlp-encode it, but only if it is a legacy transaction.
 
-#### Content ID
+#### Content ID Derivation Function
 
-We derive a `content-id` from the `content_key` as `H(content_key)` where `H` denotes the SHA-256 hash function, which outputs 32-byte values. The `content-id` represents the key in the DHT that we use for `distance` calculations.
+The history network uses the SHA256 Content ID derivation function from the portal wire protocol sepecification.
 
 
 ### Radius
