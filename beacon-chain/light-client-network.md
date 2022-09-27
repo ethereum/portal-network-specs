@@ -23,7 +23,7 @@ The `TALKREQ` and `TALKRESP` protocol messages are application-level messages wh
 
 The Beacon Chain Light Client network uses a modified version of the routing table structure from the Discovery v5 network and the lookup algorithm from section 2.3 of the Kademlia paper.
 
-### Gossip Algorithm
+### Portal Gossip Algorithm
 
 A gossip network allows participants to receive regular updates on a particular data type. The key point of differentiation between a portal network gossip
 channel and a regular gossip channel, e.g. the gossip topic `beacon_block` used by regular beacon chain clients, is that a portal network participant could choose an <em>interest radius</em> `r`.
@@ -78,6 +78,9 @@ The beacon chain light client DHT stores the following data items:
 
 * LightClientBootstrap
 * LightClientUpdate
+
+The following data objects are ephemeral and we store only the latest values:
+
 * LightClientFinalityUpdate
 * LightClientOptimisticUpdate
 
@@ -118,12 +121,11 @@ content_key                = selector + SSZ.serialize(light_client_update_keys)
 #### LightClientFinalityUpdate
 
 ```
-light_client_finality_update_key   = Union[None, light_client_finality_update_hash: Bytes32]
-selector                           = 0x02
-light_client_finality_update_hash  = hash_tree_root(light_client_finality_update)
+light_client_finality_update_key  = Container(None)
+selector                          = 0x02
 
-content                            = SSZ.serialize(light_client_finality_update)
-content_key                        = selector + SSZ.serialize(light_client_finality_update_key)
+content                           = SSZ.serialize(light_client_finality_update)
+content_key                       = selector + SSZ.serialize(light_client_finality_update_key)
 ```
 
 > A `None` in the content key is equivalent to the request for the latest
@@ -132,9 +134,8 @@ LightClientFinalityUpdate that the requested node has available.
 #### LightClientOptimisticUpdate
 
 ```
-light_client_optimistic_update_key   = Union[None, light_client_optimistic_update_hash: Bytes32]
+light_client_optimistic_update_key   = Container(None)
 selector                             = 0x03
-light_client_optimistic_update_hash  = hash_tree_root(light_client_optimistic_update)
 
 content                              = SSZ.serialize(light_client_optimistic_update)
 content_key                          = selector + SSZ.serialize(light_client_optimistic_update_key)
