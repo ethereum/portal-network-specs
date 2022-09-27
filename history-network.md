@@ -83,7 +83,7 @@ The history network uses the standard routing table structure from the Portal Wi
 
 #### Data Radius
 
-The history network includes one additional piece of node state that should be tracked.  Nodes must track the `data_radius` from the Ping and Pong messages for other nodes in the network.  This value is a 256 bit integer and represents the data that a node is "interested" in.  We define the following function to determine whether  node in the network should be interested in a piece of content.
+The history network includes one additional piece of node state that should be tracked.  Nodes must track the `data_radius` from the Ping and Pong messages for other nodes in the network.  This value is a 256 bit integer and represents the data that a node is "interested" in.  We define the following function to determine whether node in the network should be interested in a piece of content.
 
 ```
 interested(node, content) = distance(node.id, content.id) <= node.radius
