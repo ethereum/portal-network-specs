@@ -4,14 +4,11 @@ This document is the specification for the sub-protocol that supports on-demand 
 
 ## Overview
 
-Execution chain history data consists of historical block headers, block bodies (transactions and ommer), and receipts.
-In addition, it facilitates acquisition of a snapshot of the "Header Accumulator" data structure.
+The chain history network is a [Kademlia](https://pdos.csail.mit.edu/~petar/papers/maymounkov-kademlia-lncs.pdf) DHT that uses the [Portal Wire Protocol](./portal-wire-protocol.md) to establish an overlay network on top of the [Discovery v5](https://github.com/ethereum/devp2p/blob/master/discv5/discv5-wire.md) protocol.
 
-The chain history network is a [Kademlia](https://pdos.csail.mit.edu/~petar/papers/maymounkov-kademlia-lncs.pdf) DHT that forms an overlay network on top of the [Discovery v5](https://github.com/ethereum/devp2p/blob/master/discv5/discv5-wire.md) network. The term *overlay network* means that the history network operates with its own routing table independent of the base Discovery v5 routing table and uses the extensible `TALKREQ` and `TALKRESP` messages from the base Discovery v5 protocol for communication.
+Execution chain history data consists of historical block headers, block bodies (transactions and ommer) and block receipts.
 
-The `TALKREQ` and `TALKRESP` protocol messages are application-level messages whose contents are specific to the history network. We specify these messages below.
-
-The history network uses a modified version of the routing table structure from the Discovery v5 network and the lookup algorithm from section 2.3 of the Kademlia paper.
+In addition, the chain history network provides individual epoch accumulators for the full range of pre-merge blocks mined before the transition to proof of stake.
 
 ### Data
 
@@ -26,6 +23,8 @@ The history network uses a modified version of the routing table structure from 
 
 #### Retrieval
 
+The network supports the following mechanisms for data retrieval:
+
 * Block header by block header hash
 * Block body by block header hash
 * Block receipts by block header hash
@@ -38,90 +37,67 @@ The history network uses a modified version of the routing table structure from 
 
 ## Specification
 
-### Distance
+### Distance Function
 
-Nodes in the history network are represented by their [EIP-778 Ethereum Node Record (ENR)](https://eips.ethereum.org/EIPS/eip-778) from the Discovery v5 network. A node's `node-id` is derived according to the node's identity scheme, which is specified in the node's ENR. A node's `node-id` represents its address in the DHT.
+The history network uses the stock XOR distance metric defined in the portal wire protocol specification.
 
-The `node-id` is a 32-byte identifier. We define the `distance` function that maps a pair of `node-id` values to a 256-bit unsigned integer identically to the Discovery v5 network.
+
+### Content ID Derivation Function
+
+The history network uses the SHA256 Content ID derivation function from the portal wire protocol specification.
+
+
+### Wire Protocol
+
+The [Portal wire protocol](./portal-wire-protocol.md) is used as wire protocol for the history network.
+
+
+#### Protocol Identifier
+
+As specified in the [Protocol identifiers](./portal-wire-protocol.md#protocol-identifiers) section of the Portal wire protocol, the `protocol` field in the `TALKREQ` message **MUST** contain the value of `0x500B`.
+
+#### Supported Message Types
+
+The history network supports the following protocol messages:
+- `Ping` - `Pong`
+- `Find Nodes` - `Nodes`
+- `Find Content` - `Found Content`
+- `Offer` - `Accept`
+
+
+#### `Ping.custom_data` & `Pong.custom_data`
+
+In the history network the `custom_payload` field of the `Ping` and `Pong` messages is the serialization of an SSZ Container specified as `custom_data`:
 
 ```
-distance(n1, n2) = n1 XOR n2
+custom_data = Container(data_radius: uint256)
+custom_payload = SSZ.serialize(custom_data)
 ```
 
-Similarly, we define a `logdistance` function identically to the Discovery v5 network.
+
+### Routing Table 
+
+The history network uses the standard routing table structure from the Portal Wire Protocol.
+
+### Node State
+
+#### Data Radius
+
+The history network includes one additional piece of node state that should be tracked.  Nodes must track the `data_radius` from the Ping and Pong messages for other nodes in the network.  This value is a 256 bit integer and represents the data that a node is "interested" in.  We define the following function to determine whether node in the network should be interested in a piece of content.
 
 ```
-logdistance(n1, n2) = log2(distance(n1, n2))
+interested(node, content) = distance(node.id, content.id) <= node.radius
 ```
 
-### The "Header Accumulator"
+A node is expected to maintain `radius` information for each node in its local node table. A node's `radius` value may fluctuate as the contents of its local key-value store change.
 
-The "Header Accumulator" is based on the [double-batched merkle log accumulator](https://ethresear.ch/t/double-batched-merkle-log-accumulator/571) that is currently used in the beacon chain.  This data structure is designed to allow nodes in the network to "forget" the deeper history of the chain, while still being able to reliably receive historical headers with a proof that the received header is indeed from the canonical chain (as opposed to an uncle mined at the same block height).  This data structure is only used for pre-merge blocks.
+A node should track their own radius value and provide this value in all Ping or Pong messages it sends to other nodes.
 
-The accumulator is defined as an [SSZ](https://ssz.dev/) data structure with the following schema:
-
-```python
-EPOCH_SIZE = 8192 # blocks
-MAX_HISTORICAL_EPOCHS = 131072  # 2**17
-
-# An individual record for a historical header.
-HeaderRecord = Container[block_hash: bytes32, total_difficulty: uint256]
-
-# The records of the headers from within a single epoch
-EpochAccumulator = List[HeaderRecord, max_length=EPOCH_SIZE]
-
-MasterAccumulator = Container[
-    historical_epochs: List[bytes32, max_length=MAX_HISTORICAL_EPOCHS],
-    current_epoch: EpochAccumulator,
-]
-```
-
-The algorithm for building the accumulator is as follows.
-
-
-```python
-def update_accumulator(accumulator: MasterAccumulator, new_block_header: BlockHeader) -> None:
-    # get the previous total difficulty
-    if len(accumulator.current_epoch) == 0:
-        # genesis
-        last_total_difficulty = 0
-    else:
-        last_total_difficulty = accumulator.current_epoch[-1].total_difficulty
-
-    # check if the epoch accumulator is full.
-    if len(accumulator.current_epoch) == EPOCH_SIZE:
-        # compute the final hash for this epoch
-        epoch_hash = hash_tree_root(accumulator.current_epoch)
-        # append the hash for this epoch to the list of historical epochs
-        accumulator.historical_epochs.append(epoch_hash)
-        # initialize a new empty epoch
-        accumulator.current_epoch = []
-
-    # construct the concise record for the new header and add it to the current epoch.
-    header_record = HeaderRecord(new_block_header.hash, last_total_difficulty + new_block_header.difficulty)
-    accumulator.current_epoch.append(header_record)
-```
-
-The network provides no mechanism for acquiring the *master* version of this accumulator.  Clients are encouraged to solve this however they choose, with the suggestion that they include a frozen copy of the accumulator at the point of the merge within their client code, and provide a mechanism for users to override this value if they so choose.
-
-
-### Content: Keys and Values
-
-The chain history DHT stores the following data items:
-
-* Block headers
-* Block bodies
-* Receipts
-* Header epoch accumulators
-
-Each of these data items are represented as a key-value pair. 
-
-- The "key" for each data item is defined as `content_key`. 
-- The "value" for each data item is defined as `content`.
-
-See each of the individual data item definitions for their individual `content` and `content_key` definitions.
+### Data Types
 
 #### Constants
+
+We define the following constants which are used in the various data type definitions.
 
 ```py
 MAX_TRANSACTION_LENGTH = 2**24  # ~= 16 million
@@ -154,6 +130,19 @@ MAX_ENCODED_UNCLES_LENGTH = _MAX_HEADER_LENGTH * 2**4  # = 2**17 ~= 131k
 # Maximum number of uncles is currently 2. Using 16 leaves some room for the
 # protocol to increase the number of uncles.
 ```
+
+#### Encoding Content Values for Validation
+
+The encoding choices generally favor easy verification of the data, minimizing decoding. For
+example:
+- `keccak(encoded-uncles) == header.uncles_hash`
+- Each `encoded-transaction` can be inserted into a trie to compare to the
+  `header.transactions_root`
+- Each `encoded-receipt` can be inserted into a trie to compare to the `header.receipts_root`
+
+Combining all of the block body in RLP, in contrast, would require that a validator loop through
+each receipt/transaction and re-rlp-encode it, but only if it is a legacy transaction.
+
 
 #### Block Header
 
@@ -222,73 +211,55 @@ content               = SSZ.serialize(epoch_accumulator)
 content_key           = selector + SSZ.serialize(epoch_accumulator_key)
 ```
 
-#### Encoding Content Values for Validation
 
-The encoding choices generally favor easy verification of the data, minimizing decoding. For
-example:
-- `keccak(encoded-uncles) == header.uncles_hash`
-- Each `encoded-transaction` can be inserted into a trie to compare to the
-  `header.transactions_root`
-- Each `encoded-receipt` can be inserted into a trie to compare to the `header.receipts_root`
+### Algorithms
 
-Combining all of the block body in RLP, in contrast, would require that a validator loop through
-each receipt/transaction and re-rlp-encode it, but only if it is a legacy transaction.
+#### The "Header Accumulator"
 
-#### Content ID
+The "Header Accumulator" is based on the [double-batched merkle log accumulator](https://ethresear.ch/t/double-batched-merkle-log-accumulator/571) that is currently used in the beacon chain.  This data structure is designed to allow nodes in the network to "forget" the deeper history of the chain, while still being able to reliably receive historical headers with a proof that the received header is indeed from the canonical chain (as opposed to an uncle mined at the same block height).  This data structure is only used for pre-merge blocks.
 
-We derive a `content-id` from the `content_key` as `H(content_key)` where `H` denotes the SHA-256 hash function, which outputs 32-byte values. The `content-id` represents the key in the DHT that we use for `distance` calculations.
+The accumulator is defined as an [SSZ](https://ssz.dev/) data structure with the following schema:
 
+```python
+EPOCH_SIZE = 8192 # blocks
+MAX_HISTORICAL_EPOCHS = 131072  # 2**17
 
-### Radius
+# An individual record for a historical header.
+HeaderRecord = Container[block_hash: bytes32, total_difficulty: uint256]
 
-We define a `distance` function that maps a `node-id` and `content-id` pair to a 256-bit unsigned integer identically to the `distance` function for pairs of `node-id` values.
+# The records of the headers from within a single epoch
+EpochAccumulator = List[HeaderRecord, max_length=EPOCH_SIZE]
 
-Each node specifies a `radius` value, a 256-bit unsigned integer that represents the data that a node is "interested" in.
-
-```
-interested(node, content) = distance(node.id, content.id) <= node.radius
+MasterAccumulator = Container[
+    historical_epochs: List[bytes32, max_length=MAX_HISTORICAL_EPOCHS],
+    current_epoch: EpochAccumulator,
+]
 ```
 
-A node is expected to maintain `radius` information for each node in its local node table. A node's `radius` value may fluctuate as the contents of its local key-value store change.
+The algorithm for building the accumulator is as follows.
 
 
-### Wire Protocol
+```python
+def update_accumulator(accumulator: MasterAccumulator, new_block_header: BlockHeader) -> None:
+    # get the previous total difficulty
+    if len(accumulator.current_epoch) == 0:
+        # genesis
+        last_total_difficulty = 0
+    else:
+        last_total_difficulty = accumulator.current_epoch[-1].total_difficulty
 
-The [Portal wire protocol](./portal-wire-protocol.md) is used as wire protocol for the history network.
+    # check if the epoch accumulator is full.
+    if len(accumulator.current_epoch) == EPOCH_SIZE:
+        # compute the final hash for this epoch
+        epoch_hash = hash_tree_root(accumulator.current_epoch)
+        # append the hash for this epoch to the list of historical epochs
+        accumulator.historical_epochs.append(epoch_hash)
+        # initialize a new empty epoch
+        accumulator.current_epoch = []
 
-As specified in the [Protocol identifiers](./portal-wire-protocol.md#protocol-identifiers) section of the Portal wire protocol, the `protocol` field in the `TALKREQ` message **MUST** contain the value of `0x500B`.
-
-The history network supports the following protocol messages:
-- `Ping` - `Pong`
-- `Find Nodes` - `Nodes`
-- `Find Content` - `Found Content`
-- `Offer` - `Accept`
-
-In the history network the `custom_payload` field of the `Ping` and `Pong` messages is the serialization of an SSZ Container specified as `custom_data`:
-```
-custom_data = Container(data_radius: uint256)
-custom_payload = SSZ.serialize(custom_data)
-```
-
-
-## Algorithms and Data Structures
-
-### Node State
-
-We adapt the node state from the Discovery v5 protocol. Assume identical definitions for the replication parameter `k` and a node's k-bucket table. Also assume that the routing table follows the structure and evolution described in section 2.4 of the Kademlia paper.
-
-Nodes keep information about other nodes in a routing table of k-buckets. This routing table is distinct from the node's underlying Discovery v5 routing table.
-
-A node associates the following tuple with each entry in its routing table:
-
-```
-node-entry := (node-id, radius, ip, udp)
+    # construct the concise record for the new header and add it to the current epoch.
+    header_record = HeaderRecord(new_block_header.hash, last_total_difficulty + new_block_header.difficulty)
+    accumulator.current_epoch.append(header_record)
 ```
 
-The `radius` value is the only node information specific to the overlay protocol. This information is refreshed by the `Ping` and `Pong` protocol messages.
-
-A node should regularly refresh the information it keeps about its neighbors. We follow section 4.1 of the Kademlia paper to improve efficiency of these refreshes. A node delays `Ping` checks until it has a useful message to send to its neighbor.
-
-When a node discovers some previously unknown node, and the corresponding k-bucket is full, the newly discovered node is put into a replacement cache sorted by time last seen. If a node in the k-bucket fails a liveness check, and the replacement cache for that bucket is non-empty, then that node is replaced by the most recently seen node in the replacement cache.
-
-Consider a node in some k-bucket to be "stale" if it fails to respond to β messages in a row, where β is a system parameter. β may be a function of the number of previous successful liveness checks or of the age of the neighbor. If the k-bucket is not full, and the corresponding replacement cache is empty, then stale nodes should only be flagged and not removed. This ensures that a node who goes offline temporarily does not void its k-buckets.
+The network provides no mechanism for acquiring the *master* version of this accumulator.  Clients are encouraged to solve this however they choose, with the suggestion that they include a frozen copy of the accumulator at the point of the merge within their client code, and provide a mechanism for users to override this value if they so choose.
