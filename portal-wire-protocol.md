@@ -299,7 +299,7 @@ ip         := IPv4 or IPv6 address
 port       := UDP port number
 ```
 
-### Protocl Specific Node State
+### Protocol Specific Node State
 
 Sub protocols may define additional node state information which should be tracked in the node state database.  This information will typically be transmitted in the `Ping.custom_data` and `Pong.custom_data` fields.
 
