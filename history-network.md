@@ -44,7 +44,7 @@ The history network uses the stock XOR distance metric defined in the portal wir
 
 ### Content ID Derivation Function
 
-The history network uses the SHA256 Content ID derivation function from the portal wire protocol sepecification.
+The history network uses the SHA256 Content ID derivation function from the portal wire protocol specification.
 
 
 ### Wire Protocol
