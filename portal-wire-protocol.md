@@ -306,7 +306,7 @@ Sub protocols may define additional node state information which should be track
 
 ## Algorithms
 
-Here we define a collection of generic algorithms which can be applied to sub-protocol implementing the wire protocol.
+Here we define a collection of generic algorithms which can be applied to a sub-protocol implementing the wire protocol.
 
 
 ### Lookup
