@@ -23,18 +23,6 @@ The `TALKREQ` and `TALKRESP` protocol messages are application-level messages wh
 
 The Beacon Chain Light Client network uses a modified version of the routing table structure from the Discovery v5 network and the lookup algorithm from section 2.3 of the Kademlia paper.
 
-### Portal Gossip Algorithm
-
-A gossip network allows participants to receive regular updates on a particular data type. The key point of differentiation between a portal network gossip
-channel and a regular gossip channel, e.g. the gossip topic `beacon_block` used by regular beacon chain clients, is that a portal network participant could choose an <em>interest radius</em> `r`.
-Participants only process messages that are within their chosen radius boundary.
-
-- Each gossip participant has a `node_id`. A `node_id` is a 256 bit unsigned integer, i.e. `0 <= node_id < 2**256`.
-- There is a distance function. It measures the distance between two `node_id`. It also measures the distance between `node_id` and `content_id`.
-
-#### Validation
-Validating `LightClientFinalityUpdate` and `LightClientOptimisticUpdate` follows the gossip domain(gossipsub) [consensus specs](https://github.com/ethereum/consensus-specs/blob/dev/specs/altair/light-client/p2p-interface.md#the-gossip-domain-gossipsub).
-
 ### Data
 
 #### Types
@@ -48,31 +36,72 @@ All data types are specified in light client [sync protocol](https://github.com/
 
 #### Retrieval
 
-* Requests the `LightClientBootstrap` structure corresponding to a given post-Altair beacon block root.
+The network supports the following mechanisms for data retrieval:
+
+* `LightClientBootstrap` structure by a post-Altair beacon block root.
 * `LightClientUpdatesByRange` - requests the `LightClientUpdate` instances in the sync committee period range [start_period, start_period + count), leading up to the current head sync committee period as selected by fork choice.
 * The latest `LightClientFinalityUpdate` known by a peer.
 * The latest `LightClientOptimisticUpdate` known by a peer.
 
 ## Specification
 
-### Distance
+### Distance Function
 
-Nodes in the light client network are represented by their [EIP-778 Ethereum Node Record (ENR)](https://eips.ethereum.org/EIPS/eip-778) from the Discovery v5 network.
-A node's `node-id` is derived according to the node's identity scheme, which is specified in the node's ENR. A node's `node-id` represents its address in the DHT.
+The beacon chain light client network uses the stock XOR distance metric defined in the portal wire protocol specification.
 
-The `node-id` is a 32-byte identifier. We define the `distance` function that maps a pair of `node-id` values to a 256-bit unsigned integer identically to the Discovery v5 network.
+### Content ID Derivation Function
+
+The beacon chain light client network uses the SHA256 Content ID derivation function from the portal wire protocol specification.
+
+### Wire Protocol
+
+The [Portal wire protocol](./portal-wire-protocol.md) is used as the wire protocol for the Beacon Chain Light Client network.
+
+#### Protocol Identifier
+
+As specified in the [Protocol identifiers](./portal-wire-protocol.md#protocol-identifiers) section of the Portal wire protocol, the `protocol` field in the `TALKREQ` message **MUST** contain the value of `0x501A`.
+
+#### Supported Messages Types
+
+The beacon chain light client network supports the following protocol messages:
+
+- `Ping` - `Pong`
+- `Find Nodes` - `Nodes`
+- `Find Content` - `Found Content`
+- `Offer` - `Accept`
+
+#### `Ping.custom_data` & `Pong.custom_data`
+
+In the beacon chain light client network the `custom_payload` field of the `Ping` and `Pong` messages is the serialization of an SSZ Container specified as `custom_data`:
 
 ```
-distance(n1, n2) = n1 XOR n2
+custom_data = Container(data_radius: uint256)
+custom_payload = serialize(custom_data)
 ```
 
-Similarly, we define a `logdistance` function identically to the Discovery v5 network.
+### Routing Table
+
+The Beacon CHain Light Client Network uses the standard routing table structure from the Portal Wire Protocol.
+
+### Node State
+
+#### Data Radius
+
+The Beacon Chain Light Client Network includes one additional piece of node state that should be tracked. Nodes must track the `data_radius`
+from the Ping and Pong messages for other nodes in the network. This value is a 256 bit integer and represents the data that
+a node is "interested" in.
+
+We define the following function to determine whether node in the network should be interested in a piece of content:
 
 ```
-logdistance(n1, n2) = log2(distance(n1, n2))
+interested(node, content) = distance(node.id, content.id) <= node.radius
 ```
 
-### Content: Keys and Values
+A node is expected to maintain `radius` information for each node in its local node table. A node's `radius` value may fluctuate as the contents of its local key-value store change.
+
+A node should track their own radius value and provide this value in all Ping or Pong messages it sends to other nodes.
+
+### Data Types
 
 The beacon chain light client DHT stores the following data items:
 
@@ -84,14 +113,9 @@ The following data objects are ephemeral and we store only the latest values:
 * LightClientFinalityUpdate
 * LightClientOptimisticUpdate
 
-Each of these data items are represented as a key-value pair.
-
-- The "key" for each data item is defined as `content_key`.
-- The "value" for each data item is defined as `content`.
-
-See each of the individual data item definitions for their individual `content` and `content_key` definitions.
-
 #### Constants
+
+We define the following constants which are used in the various data type definitions:
 
 ```py
 # Maximum number of `LightClientUpdate` instances in a single request
@@ -144,58 +168,12 @@ content_key                          = selector + SSZ.serialize(light_client_opt
 > A `None` in the content key is equivalent to the request for the latest
 LightClientOptimisticUpdate that the requested node has available.
 
-#### Content ID
+### Algorithms
 
-We derive a `content-id` from the `content_key` as `H(content_key)` where `H` denotes the SHA-256 hash function, which outputs 32-byte values. The `content-id` represents the key in the DHT that we use for `distance` calculations.
+#### Portal Gossip
 
-### Radius
+TODO
 
-We define a `distance` function that maps a `node-id` and `content-id` pair to a 256-bit unsigned integer identically to the `distance` function for pairs of `node-id` values.
+#### Validation
 
-Each node specifies a `radius` value, a 256-bit unsigned integer that represents the data that a node is "interested" in.
-
-```
-interested(node, content) = distance(node.id, content.id) <= node.radius
-```
-
-A node is expected to maintain `radius` information for each node in its local node table. A node's `radius` value may fluctuate as the contents of its local key-value store change.
-
-### Wire Protocol
-
-The [Portal wire protocol](./portal-wire-protocol.md) is used as the wire protocol for the Beacon Chain Light Client network.
-
-As specified in the [Protocol identifiers](./portal-wire-protocol.md#protocol-identifiers) section of the Portal wire protocol, the `protocol` field in the `TALKREQ` message **MUST** contain the value of `0x501A`.
-
-The beacon chain light client network supports the following protocol messages:
-- `Ping` - `Pong`
-- `Find Nodes` - `Nodes`
-- `Find Content` - `Found Content`
-- `Offer` - `Accept`
-
-In the beacon chain light client network the `custom_payload` field of the `Ping` and `Pong` messages is the serialization of an SSZ Container specified as `custom_data`:
-```
-custom_data = Container(data_radius: uint256)
-custom_payload = serialize(custom_data)
-```
-
-## Algorithms and Data Structures
-
-### Node State
-
-We adopt the node state from the Discovery v5 protocol. Assume identical definitions for the replication parameter `k` and a node's k-bucket table. Also, assume that the routing table follows the structure and evolution described in section 2.4 of the Kademlia paper.
-
-Nodes keep information about other nodes in a routing table of k-buckets. This routing table is distinct from the node's underlying Discovery v5 routing table.
-
-A node associates the following tuple with each entry in its routing table:
-
-```
-node-entry := (node-id, radius, ip, udp)
-```
-
-The `radius` value is the only node information specific to the overlay protocol. This information is refreshed by the `Ping` and `Pong` protocol messages.
-
-A node should regularly refresh the information it keeps about its neighbors. We follow section 4.1 of the Kademlia paper to improve the efficiency of these refreshes. A node delays `Ping` checks until it has a useful message to send to its neighbor.
-
-When a node discovers some previously unknown node and the corresponding k-bucket is full, the newly discovered node is put into a replacement cache sorted by the time last seen. If a node in the k-bucket fails a liveliness check, and the replacement cache for that bucket is non-empty, then that node is replaced by the most recently seen node in the replacement cache.
-
-Consider a node in some k-bucket to be "stale" if it fails to respond to β messages in a row, where β is a system parameter. β may be a function of the number of previous successful liveliness checks or the age of the neighbor. If the k-bucket is not full, and the corresponding replacement cache is empty, then stale nodes should only be flagged and not removed. This ensures that a node that goes offline temporarily does not void its k-buckets.
+Validating `LightClientFinalityUpdate` and `LightClientOptimisticUpdate` follows the gossip domain(gossipsub) [consensus specs](https://github.com/ethereum/consensus-specs/blob/dev/specs/altair/light-client/p2p-interface.md#the-gossip-domain-gossipsub).
