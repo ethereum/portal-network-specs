@@ -154,18 +154,13 @@ All data retrieved from the history network is addressed by block hash.  Headers
 All data retrieved from the history network can be immediately verified by the requesting node. For block headers, the requesting node always knows the expected hash of the requested data and can reject responses with an incorrect hash.  For block bodies and receipts, the requesting node is expected to have the corresponding header and can reject responses that do not validate against the corresponding header fields.
 
 
-### Canonical Indices Network: Transactions by Hash and Blocks by Number
+### Canonical Transaction Index Network: Transactions by Hash
 
-The Canonical Indices Network is a pair of indices enabling faster access to transactions and blocks. It includes:
+The Canonical Transaction Index Network facilitates retrieval of individual transactions by their hash.
 
-- An index which maps each transaction hash to the block within which the transaction was included
-- An index which maps each block number to the hash of the canonical block with that number
-
-The responsibility for storing the records that make up these two indices should be evently distributed across the nodes in the network.  Nodes must be able to choose how many records from these indices they wish to store.  The records must be distributed across the network in a manner that allows nodes to determine the appropriate nodes to query for an individual record.
+The responsibility for storing the records that make up this should be evently distributed across the nodes in the network.  Nodes must be able to choose how many records from this index they wish to store.  The records must be distributed across the network in a manner that allows nodes to determine the appropriate nodes to query for an individual record.
 
 Transaction information returned from this network includes a merkle proof against the `Header.transactions_trie` for validation purposes.
-
-Block number information returned from this network includes a merkle proof against the header accumulator.
 
 
 ### Transaction Gossip Network: Sending Transactions
@@ -181,13 +176,6 @@ Transactions which are part of this network's gossip are able to be validated wi
 This network is a pure gossip network and does not implement any form of content lookup or retrieval.
 
 
-### Header Gossip Network: New Blocks
-
-The Header Gossip Network faciliates tracking and following the canonical chain of block headers.
-
-A [double batched merkle log accumulator](https://ethresear.ch/t/double-batched-merkle-log-accumulator/571) is used to minimize storage overhead while still allowing nodes to verify the historical headers without requiring nodes to store the full history.  The network also exposes functionality to allow new nodes joining the network to acquire a copy of another node's accumulator.
-
-
 ## Network Specifications
 
 - [uTP over DiscoveryV5](./discv5-utp.md)
@@ -200,8 +188,6 @@ A [double batched merkle log accumulator](https://ethresear.ch/t/double-batched-
 - [Transaction Gossip Network](./transaction-gossip.md):
     - Spec is preliminary
     - Prior work: https://ethresear.ch/t/scalable-transaction-gossip/8660
-- [Header Gossip Network](./header-gossip-network.md)
-    - Spec is preliminary
-- [Canonical Indices Network]A(./canonical-indices-network.md)
+- [Canonical Transaction Index Network](./canonical-transaction-index-network.md)
     - Spec is preliminary.
     - Network design borrows heavily from history network.
