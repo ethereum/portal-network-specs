@@ -30,8 +30,7 @@ The Portal Network is divided into the following sub-protocols.
 
 - Execution State Network
 - Execution History Network
-- Transaction Gossip Network
-- Execution Header Gossip Network
+- Execution Transaction Gossip Network
 - Execution Canonical Indices Network
 
 Each of these sub-protocols is designed to deliver a specific unit of functionality.  Most portal clients will participate in all of these sub-protocols in order to deliver the full JSON-RPC API.  Each sub-protocol however is designed to be independent of the others, allowing clients the option of only participating in a subset of them if they wish.
