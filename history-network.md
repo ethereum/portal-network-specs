@@ -32,7 +32,7 @@ The network supports the following mechanisms for data retrieval:
 
 > The presence of the pre-merge header accumulators provides an indirect way to lookup blocks by their number, but is restricted to pre-merge blocks.  Retrieval of blocks by their number for post-merge blocks is not intrinsically supported within this network.
 
-> This sub-protocol does **not** support retrieval of transactions by hash, only the full set of transactions for a given block. See the "Transaction Canonical Indices" sub-protocol of the Portal Network for more information on how the portal network implements lookup of transactions by their individual hashes.
+> This sub-protocol does **not** support retrieval of transactions by hash, only the full set of transactions for a given block. See the "Canonical Transaction Index" sub-protocol of the Portal Network for more information on how the portal network implements lookup of transactions by their individual hashes.
 
 
 ## Specification
