@@ -59,6 +59,7 @@ As specified in the [Protocol identifiers](./portal-wire-protocol.md#protocol-id
 #### Supported Message Types
 
 The history network supports the following protocol messages:
+
 - `Ping` - `Pong`
 - `Find Nodes` - `Nodes`
 - `Find Content` - `Found Content`

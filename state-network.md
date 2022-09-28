@@ -5,135 +5,51 @@ This document is the specification for the sub-protocol that supports on-demand 
 
 ## Overview
 
-State data from the execution chain consists of:
+The execution state network is a [Kademlia](https://pdos.csail.mit.edu/~petar/papers/maymounkov-kademlia-lncs.pdf) DHT that uses the [Portal Wire Protocol](./portal-wire-protocol.md) to establish an overlay network on top of the [Discovery v5](https://github.com/ethereum/devp2p/blob/master/discv5/discv5-wire.md) protocol.
 
-- The set of all accounts from the main account trie referenced by `Header.state_root`
-- The set of all contract storage values from all contracts
-- The set of all contract bytecodes
-- Any information required to prove inclusion of the above data in the state.
+State data from the execution chain consists of all account data from the main storage trie, all contract storage data from all of the individual contract storage tries, and the individul bytecodes for all contracts.
 
-The network supports "on-demand" availability of the Ethereum execution state including proof of exclusion for non-existent data.
+### Data
 
-The execution state network is a [Kademlia](https://pdos.csail.mit.edu/~petar/papers/maymounkov-kademlia-lncs.pdf) DHT that forms an overlay network on top of the [Discovery v5](https://github.com/ethereum/devp2p/blob/master/discv5/discv5-wire.md) network. The term *overlay network* means that the history network operates with its own independent routing table and uses the extensible `TALKREQ` and `TALKRESP` messages from the base Discovery v5 protocol for communication.
+All of the execution layer state data is stored in two different formats.
 
-## DHT Network
+- Raw trie nodes
+- Leaf data with merkle proof
 
-Our DHT will be an overlay network on the existing [Discovery V5](https://github.com/ethereum/devp2p/blob/master/discv5/discv5.md) network.
+This duplication is present to enable fast O(1) lookups of leaf information while still allowing one to fall back to the raw trie node data in cases where an exclusion proof must be generated.
 
-Nodes **must** support the `utp` Discovery v5 sub-protocol to facilitate transmission of merkle proofs which will in most cases exceed the UDP packet size.
+#### Types
 
-We use the same routing table structure as the core protocol.
+The network stores the full execution layer state which emcompases the following:
 
-We use a custom distance function defined below.
+- Account trie and leaf nodes.
+- Account leaf nodes with accompanying trie proof.
+- Contract storage trie and leaf nodes.
+- Contract storage leaf nodes with accompanying trie proof.
+- Contract bytecode
 
-A separate instance of the routing table must be maintained for the state network, independent of the base routing table managed by the base discovery v5 protocol, only containing nodes that support the `portal-state` sub-protocol.  We refer to this as the *"overlay routing table"*.
 
-We use custom PING/PONG/FINDNODES/NODES messages which are transmitted over the TALKREQ/TALKRESP messages from the base discovery v5 protocol.
+#### Retrieval
 
-We use the same PING/PONG/FINDNODES/NODES rules from base discovery v5 protocol for management of the overlay routing table.
+- Account trie leaf data by account address and state root.
+- Contract storage leaf data by account address, state root, and slot number.
+- Account trie leaf and intermediate nodes by address, trie path, and node hash.
+- Contract storage trie leaf and intermediate nodes by address, trie path, and node hash.
+- Contract bytecode by address and code hash.
 
-### Content Keys and Content IDs
+## Specification
 
-The network supports the following schemes for addressing different types of content.
-
-All content keys are encoded as an [SSZ Union](https://github.com/ethereum/consensus-specs/blob/dev/ssz/simple-serialize.md#union) type.
-
-```
-content_key = Union[account_trie_node, contract_storage_trie_node, account_trie_proof, contract_storage_trie_proof, contract_bytecode]
-serialized_content_key = serialize(content_key)
-```
-
-We define a custom SSZ sedes alias `Nibbles` to mean `List[uint8, max_length=64]` where each individual value **must** be constrained to a valid "nibbles" value of `0 - 15`.
-
-> TODO: we may want to use a more efficient definition for the `Nibbles` encoding.  Current approach incurs 2x overhead.
-
-#### Account Trie Node (0x00)
-
-An individual trie node from the main account trie.
-
-> TODO: consult on best way to define trie paths
-```
-account_trie_node = Container(path: Nibbles, node_hash: Bytes32, state_root: Bytes32)
-selector = 0x00
-
-content_id  = sha256(path | node_hash)
-
-node_hash   = Bytes32
-state_root  = Bytes32
-path        = TODO
-```
-
-#### Contract Storage Trie Node
-
-An individual trie node from a contract storage trie.
-
-```
-contract_storage_trie_node = Container(address: Bytes20, path: Nibbles, node_hash: Bytes32, state_root: Bytes32)
-selector = 0x01
-
-content_id  = sha256(address | path | node_hash)
-
-address     = Bytes20
-node_hash   = Bytes32
-path        = TODO
-```
-
-#### Account Trie Proof
-
-A leaf node from the main account trie and accompanying merkle proof against a recent `Header.state_root`
-
-```
-account_trie_proof = Container(address: Bytes20, state_root: Bytes32)
-selector = 0x02
-
-content_id  = keccak(address)
-
-address     = Bytes20
-state_root  = Bytes32
-```
-
-#### Contract Storage Trie Proof
-
-A leaf node from a contract storage trie and accompanying merkle proof against the `Account.storage_root`.
-
-```
-contract_storage_trie_proof = Container(address: Bytes20, slot: uint256, state_root: Bytes32)
-selector = 0x03
-
-content_id  = (keccak(address) + keccak(slot)) % 2**256
-
-address     = Bytes20
-slot        = uint256
-state_root  = Bytes32
-```
-
-#### Contract Bytecode
-
-The bytecode for a specific contract as referenced by `Account.code_hash`
-
-```
-contract_bytecode = Container(address: Bytes20, code_hash: Bytes32)
-selector = 0x04
-
-content_id  = sha256(address | code_hash)
-
-address     = Bytes20
-code_hash   = Bytes32
-```
-
+<!-- This section is where the actual technical specification is written -->
 
 ### Distance Function
 
-The overlay DHT uses the following distance function for determining both:
-
-* The distance between two DHT nodes in the network.
-* The distance between a DHT node and a piece of content.
+The state network uses the following "ring geometry" distance function.
 
 ```python
 MODULO = 2**256
 MID = 2**255
 
-def distance(node_id: int, content_id: int) -> int:
+def distance(node_id: uint256, content_id: uint256) -> uint256:
     """
     A distance function for determining proximity between a node and content.
 
@@ -166,30 +82,125 @@ def distance(node_id: int, content_id: int) -> int:
 This distance function is designed to preserve locality of leaf data within main account trie and the individual contract storage tries.  The term "locality" in this context means that two trie nodes which are adjacent to each other in the trie will also be adjacent to each other in the DHT.
 
 
-#### Radius
+### Content ID Derivation Function
 
-Nodes on the network will be responsible for tracking and publishing a `radius` value to their peers.  This value serves as both a signal about what data a node should be interested in storing, as well as what data a node can be expected to have.  The `radius` is a 256 bit integer.  We define `MAX_RADIUS = 2**256 - 1`
-
-A node is said to be *"interested"* in a piece of content if `distance(node_id, content_id) <= radius`.  Nodes are expected to store content they are "interested" in.
+The derivation function for Content ID values is defined separately for each data type.
 
 
 ### Wire Protocol
 
-The [Portal wire protocol](./portal-wire-protocol.md) is used as wire protocol for the state network.
+#### Protocol Identifier
 
 As specified in the [Protocol identifiers](./portal-wire-protocol.md#protocol-identifiers) section of the Portal wire protocol, the `protocol` field in the `TALKREQ` message **MUST** contain the value of `0x500A`.
 
-The state network supports the following protocol messages:
+
+#### Supported Message Types
+
+The execution state network supports the following protocol messages:
+
 - `Ping` - `Pong`
 - `Find Nodes` - `Nodes`
 - `Find Content` - `Found Content`
 - `Offer` - `Accept`
 
-In the state network the `custom_payload` field of the `Ping` and `Pong` messages is the serialization of an SSZ Container specified as `custom_data`:
+#### `Ping.custom_data` & `Pong.custom_data`
+
+In the execution state network the `custom_payload` field of the `Ping` and `Pong` messages is the serialization of an SSZ Container specified as `custom_data`:
+
 ```
 custom_data = Container(data_radius: uint256)
-custom_payload = serialize(custom_data)
+custom_payload = SSZ.serialize(custom_data)
 ```
+
+
+### Routing Table 
+
+The execution state network uses the standard routing table structure from the Portal Wire Protocol.
+
+
+### Node State
+
+#### Data Radius
+
+The execution state network includes one additional piece of node state that should be tracked.  Nodes must track the `data_radius` from the Ping and Pong messages for other nodes in the network.  This value is a 256 bit integer and represents the data that a node is "interested" in.  We define the following function to determine whether node in the network should be interested in a piece of content.
+
+```
+interested(node, content) = distance(node.id, content.id) <= node.radius
+```
+
+A node is expected to maintain `radius` information for each node in its local node table. A node's `radius` value may fluctuate as the contents of its local key-value store change.
+
+A node should track their own radius value and provide this value in all Ping or Pong messages it sends to other nodes.
+
+
+### Data Types
+
+#### Nibbles
+
+We define a custom SSZ sedes alias `Nibbles` to mean `List[uint8, max_length=64]` where each individual value **must** be constrained to a valid "nibbles" value of `0 - 15`.
+
+
+#### Account Trie Node (0x00)
+
+An individual trie node from the main account trie.
+
+```
+account_trie_node_key := Container(path: Nibbles, node_hash: Bytes32, state_root: Bytes32)
+content               := RLP.encode(trie_node)
+selector              := 0x00
+
+content_id            := sha256(path | node_hash)
+content_key           := selector + SSZ.serialize(account_trie_node_key)
+```
+
+#### Contract Storage Trie Node
+
+An individual trie node from a contract storage trie.
+
+```
+storage_trie_node_key := Container(address: Bytes20, path: Nibbles, node_hash: Bytes32, state_root: Bytes32)
+selector              := 0x01
+
+content_id            := sha256(address | path | node_hash)
+content_key           := selector + SSZ.serialize(storage_trie_node_key)
+```
+
+#### Account Trie Proof
+
+A leaf node from the main account trie and accompanying merkle proof against a recent `Header.state_root`
+
+```
+account_trie_proof_key := Container(address: Bytes20, state_root: Bytes32)
+selector               := 0x02
+
+content_id             := keccak(address)
+content_key            := selector + SSZ.serialize(account_trie_proof_key)
+```
+
+#### Contract Storage Trie Proof
+
+A leaf node from a contract storage trie and accompanying merkle proof against the `Account.storage_root`.
+
+```
+storage_trie_proof_key := Container(address: Bytes20, slot: uint256, state_root: Bytes32)
+selector               := 0x03
+
+content_id             := (keccak(address) + keccak(slot)) % 2**256
+content_key            := selector + SSZ.serialize(storage_trie_proof_key)
+```
+
+#### Contract Bytecode
+
+The bytecode for a specific contract as referenced by `Account.code_hash`
+
+```
+contract_bytecode_key := Container(address: Bytes20, code_hash: Bytes32)
+selector              := 0x04
+
+content_id            := sha256(address | code_hash)
+content_key           := selector + SSZ.serialize(contract_bytecode_key)
+```
+
 
 ## Gossip
 
