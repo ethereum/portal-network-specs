@@ -122,13 +122,16 @@ We define the following constants which are used in the various data type defini
 MAX_REQUEST_LIGHT_CLIENT_UPDATES = 2**7  # = 128
 ```
 
+#### ForkDigest
+4-byte fork digest for the current beacon chain version and ``genesis_validators_root``.
+
 #### LightClientBootstrap
 
 ```
 light_client_bootstrap_key = Container(block_hash: Bytes32)
 selector                   = 0x00
 
-content                    = SSZ.serialize(LightlientBootstrap)
+content                    = SSZ.serialize(ForkDigest + LightlientBootstrap)
 content_key                = selector + SSZ.serialize(light_client_bootstrap_key)
 ```
 
@@ -138,7 +141,7 @@ content_key                = selector + SSZ.serialize(light_client_bootstrap_key
 light_client_update_keys   = Container(start_period: uint64, count: uint64)
 selector                   = 0x01
 
-content                    = SSZList(LightClientUpdate, max_lenght=MAX_REQUEST_LIGHT_CLIENT_UPDATES)
+content                    = SSZList(ForkDigest + LightClientUpdate, max_lenght=MAX_REQUEST_LIGHT_CLIENT_UPDATES)
 content_key                = selector + SSZ.serialize(light_client_update_keys)
 ```
 
@@ -148,7 +151,7 @@ content_key                = selector + SSZ.serialize(light_client_update_keys)
 light_client_finality_update_key  = Container(None)
 selector                          = 0x02
 
-content                           = SSZ.serialize(light_client_finality_update)
+content                           = SSZ.serialize(ForkDigest + light_client_finality_update)
 content_key                       = selector + SSZ.serialize(light_client_finality_update_key)
 ```
 
@@ -161,7 +164,7 @@ LightClientFinalityUpdate that the requested node has available.
 light_client_optimistic_update_key   = Container(None)
 selector                             = 0x03
 
-content                              = SSZ.serialize(light_client_optimistic_update)
+content                              = SSZ.serialize(ForkDigest + light_client_optimistic_update)
 content_key                          = selector + SSZ.serialize(light_client_optimistic_update_key)
 ```
 
