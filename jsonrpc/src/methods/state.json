@@ -152,6 +152,18 @@
     }
   },
   {
+    "name": "portal_stateLocalContent",
+    "summary": "Get a content from the local database",
+    "params": [
+      {
+        "$ref": "#/components/contentDescriptors/ContentKey"
+      }
+    ],
+    "result": {
+      "$ref": "#/components/contentDescriptors/LocalContentResult"
+    }
+  },
+  {
     "name": "portal_statePing",
     "summary": "Send a PING message to the designated node and wait for a PONG response.",
     "params": [
