@@ -1,37 +1,10 @@
-[ {
-    "name": "portal_stateAccept",
-    "summary": "Signals interest in receiving the offered data from the corresponding Offer message.",
-    "params": [
-      {
-        "$ref": "#/components/contentDescriptors/Enr"
-      },
-      {
-        "$ref": "#/components/contentDescriptors/ConnectionId"
-      },
-      {
-        "$ref": "#/components/contentDescriptors/ContentKeys"
-      }
-    ],
-    "result": {
-      "$ref": "#/components/contentDescriptors/AcceptResult"
-    }
-  },
+[
   {
-    "name": "portal_stateSendAccept",
-    "summary": "Signals interest in receiving the offered data from the corresponding Offer message.",
-    "params": [
-      {
-        "$ref": "#/components/contentDescriptors/Enr"
-      },
-      {
-        "$ref": "#/components/contentDescriptors/ConnectionId"
-      },
-      {
-        "$ref": "#/components/contentDescriptors/ContentKeys"
-      }
-    ],
+    "name": "portal_stateRoutingTableInfo",
+    "summary": "Returns meta information about state network routing table.",
+    "params": [],
     "result": {
-      "$ref": "#/components/contentDescriptors/SendAcceptResult"
+      "$ref": "#/components/contentDescriptors/RoutingTableInfoResult"
     }
   },
   {
@@ -152,15 +125,72 @@
     }
   },
   {
-    "name": "portal_stateLocalContent",
-    "summary": "Get a content from the local database",
+    "name": "portal_stateSendFindContent",
+    "summary": "Send FINDCONTENT message..",
     "params": [
+      {
+        "$ref": "#/components/contentDescriptors/Enr"
+      },
       {
         "$ref": "#/components/contentDescriptors/ContentKey"
       }
     ],
     "result": {
-      "$ref": "#/components/contentDescriptors/LocalContentResult"
+      "$ref": "#/components/contentDescriptors/SendFindContentResult"
+    }
+  },
+  {
+    "name": "portal_stateSendContent",
+    "summary": "Send CONTENT message. This message can contain either a uTP connection ID, a list of ENRs or the requested content.",
+    "params": [
+      {
+        "$ref": "#/components/contentDescriptors/Enr"
+      },
+      {
+        "$ref": "#/components/contentDescriptors/ConnectionId"
+      },
+      {
+        "$ref": "#/components/contentDescriptors/Content"
+      },
+      {
+        "$ref": "#/components/contentDescriptors/Enrs"
+      }
+    ],
+    "result": {
+      "$ref": "#/components/contentDescriptors/SendContentResult"
+    }
+  },
+  {
+    "name": "portal_stateSendOffer",
+    "summary": "Request message to offer a set of content_keys that this node has content available for.",
+    "params": [
+      {
+        "$ref": "#/components/contentDescriptors/Enr"
+      },
+      {
+        "$ref": "#/components/contentDescriptors/ContentKeys"
+      }
+    ],
+    "result": {
+      "$ref": "#/components/contentDescriptors/SendOfferResult"
+    }
+  },
+  {
+    "name": "portal_stateSendAccept",
+    "summary": "Signals interest in receiving the offered data from the corresponding Offer message.",
+    "params": [
+      {
+        "$ref": "#/components/contentDescriptors/Enr"
+      },
+      {
+        "$ref": "#/components/contentDescriptors/ConnectionId"
+      },
+      {
+        "$ref": "#/components/contentDescriptors/ContentKeys"
+      }
+    ],
+    "result": {
+      "$ref": "#/components/contentDescriptors/SendAcceptResult"
     }
   },
   {
@@ -194,26 +224,6 @@
     }
   },
   {
-    "name": "portal_stateRecursiveFindNodes",
-    "summary": "Lookup a target node within in the network",
-    "params": [
-      {
-        "$ref": "#/components/contentDescriptors/NodeId"
-      }
-    ],
-    "result": {
-      "$ref": "#/components/contentDescriptors/RecursiveFindNodeResult"
-    }
-  },
-  {
-    "name": "portal_stateRoutingTableInfo",
-    "summary": "Returns meta information about state network routing table.",
-    "params": [],
-    "result": {
-      "$ref": "#/components/contentDescriptors/RoutingTableInfoResult"
-    }
-  },
-  {
     "name": "portal_stateFindContent",
     "summary": "Send FINDCONTENT message to get the content with a content key.",
     "params": [
@@ -226,75 +236,6 @@
     ],
     "result": {
       "$ref": "#/components/contentDescriptors/FindContentResult"
-    }
-  },
-  {
-    "name": "portal_stateRecursiveFindContent",
-    "summary": "Look up a target content key in the network",
-    "params": [
-      {
-        "$ref": "#/components/contentDescriptors/ContentKey"
-      }
-    ],
-    "result": {
-      "$ref": "#/components/contentDescriptors/RecursiveFindContentResult"
-    }
-  },
-  {
-    "name": "portal_stateSendFindContent",
-    "summary": "Send FINDCONTENT message..",
-    "params": [
-      {
-        "$ref": "#/components/contentDescriptors/Enr"
-      },
-      {
-        "$ref": "#/components/contentDescriptors/ContentKey"
-      }
-    ],
-    "result": {
-      "$ref": "#/components/contentDescriptors/SendFindContentResult"
-    }
-  },
-  {
-    "name": "portal_stateContent",
-    "summary": "Send CONTENT message. This message can contain either a uTP connection ID, a list of ENRs or the requested content.",
-    "params": [
-      {
-        "$ref": "#/components/contentDescriptors/Enr"
-      },
-      {
-        "$ref": "#/components/contentDescriptors/ConnectionId"
-      },
-      {
-        "$ref": "#/components/contentDescriptors/Content"
-      },
-      {
-        "$ref": "#/components/contentDescriptors/Enrs"
-      }
-    ],
-    "result": {
-      "$ref": "#/components/contentDescriptors/ContentResult"
-    }
-  },
-  {
-    "name": "portal_stateSendContent",
-    "summary": "Send CONTENT message. This message can contain either a uTP connection ID, a list of ENRs or the requested content.",
-    "params": [
-      {
-        "$ref": "#/components/contentDescriptors/Enr"
-      },
-      {
-        "$ref": "#/components/contentDescriptors/ConnectionId"
-      },
-      {
-        "$ref": "#/components/contentDescriptors/Content"
-      },
-      {
-        "$ref": "#/components/contentDescriptors/Enrs"
-      }
-    ],
-    "result": {
-      "$ref": "#/components/contentDescriptors/SendContentResult"
     }
   },
   {
@@ -313,18 +254,27 @@
     }
   },
   {
-    "name": "portal_stateSendOffer",
-    "summary": "Request message to offer a set of content_keys that this node has content available for.",
+    "name": "portal_stateRecursiveFindNodes",
+    "summary": "Lookup a target node within in the network",
     "params": [
       {
-        "$ref": "#/components/contentDescriptors/Enr"
-      },
-      {
-        "$ref": "#/components/contentDescriptors/ContentKeys"
+        "$ref": "#/components/contentDescriptors/NodeId"
       }
     ],
     "result": {
-      "$ref": "#/components/contentDescriptors/SendOfferResult"
+      "$ref": "#/components/contentDescriptors/RecursiveFindNodeResult"
+    }
+  },
+  {
+    "name": "portal_stateRecursiveFindContent",
+    "summary": "Look up a target content key in the network",
+    "params": [
+      {
+        "$ref": "#/components/contentDescriptors/ContentKey"
+      }
+    ],
+    "result": {
+      "$ref": "#/components/contentDescriptors/RecursiveFindContentResult"
     }
   },
   {
@@ -340,6 +290,19 @@
     ],
     "result": {
       "$ref": "#/components/contentDescriptors/ContentResult"
+    }
+  },
+  {
+    "name": "portal_stateLocalContent",
+    "summary": "Get a content from the local database",
+    "params": [
+      {
+        "$ref": "#/components/contentDescriptors/ContentKey"
+      }
+    ],
+    "result": {
+
+      "$ref": "#/components/contentDescriptors/LocalContentResult"
     }
   }
 ]
