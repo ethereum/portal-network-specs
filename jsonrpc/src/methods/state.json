@@ -240,13 +240,16 @@
   },
   {
     "name": "portal_stateOffer",
-    "summary": "Request message to offer a set of content_keys that this node has content available for.",
+    "summary": "Send an OFFER request with given ContentKey, to the designated peer and wait for a response.",
     "params": [
       {
         "$ref": "#/components/contentDescriptors/Enr"
       },
       {
-        "$ref": "#/components/contentDescriptors/ContentKeys"
+        "$ref": "#/components/contentDescriptors/ContentKey"
+      },
+      {
+        "$ref": "#/components/contentDescriptors/ContentValue"
       }
     ],
     "result": {
@@ -301,8 +304,22 @@
       }
     ],
     "result": {
-
       "$ref": "#/components/contentDescriptors/LocalContentResult"
+    }
+  },
+  {
+    "name": "portal_stateGossip",
+    "summary": "Send the provided content item to interested peers. Clients may choose to send to some or all peers.",
+    "params": [
+      {
+        "$ref": "#/components/contentDescriptors/ContentKey"
+      },
+      {
+        "$ref": "#/components/contentDescriptors/ContentValue"
+      }
+    ],
+    "result": {
+      "$ref": "#/components/contentDescriptors/GossipResult"
     }
   }
 ]
