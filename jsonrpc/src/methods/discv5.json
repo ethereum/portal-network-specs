@@ -300,7 +300,7 @@
         "$ref": "#/components/contentDescriptors/Enr"
       },
       {
-        "$ref": "#/components/contentDescriptors/Enr"
+        "$ref": "#/components/contentDescriptors/ProtocolId"
       },
       {
         "$ref": "#/components/contentDescriptors/Discv5Payload"
