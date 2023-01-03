@@ -99,10 +99,9 @@
   },
   "OfferResult": {
     "name": "offerResult",
-    "description": "Returns the number of peers that the content was gossiped to",
+    "description": "Returns \"true\" upon success",
     "schema": {
-      "title": "number of peers",
-      "type": "number"
+      "type": "boolean"
     }
   },
    "SendOfferResult": {
@@ -237,6 +236,14 @@
           "$ref": "#/components/schemas/hexString"
         }
       }
+    }
+  },
+  "GossipResult": {
+    "name": "gossipResult",
+    "description": "Returns the number of peers that the content was gossiped to",
+    "schema": {
+      "title": "number of peers",
+      "type": "number"
     }
   }
 }
