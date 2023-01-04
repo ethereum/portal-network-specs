@@ -288,3 +288,23 @@ def update_accumulator(accumulator: MasterAccumulator, new_block_header: BlockHe
 ```
 
 The network provides no mechanism for acquiring the *master* version of this accumulator.  Clients are encouraged to solve this however they choose, with the suggestion that they include a frozen copy of the accumulator at the point of the merge within their client code, and provide a mechanism for users to override this value if they so choose.
+
+#### AccumulatorProof
+
+The `AccumulatorProof` is a Merkle proof as specified in the
+[SSZ Merke proofs specification](https://github.com/ethereum/consensus-specs/blob/dev/ssz/merkle-proofs.md#merkle-multiproofs).
+
+It is a Merkle proof for the `BlockHeader`'s block hash on the relevant
+`EpochAccumulator` object. The selected `EpochAccumulator` must be the one where
+the `BlockHeader`'s block hash is part of. The `GeneralizedIndex` selected must
+match the leave of the `EpochAccumulator` merkle tree which holds the
+`BlockHeader`'s block hash.
+
+An `AccumulatorProof` for a specific `BlockHeader` can be used to verify that
+this `BlockHeader` is part of the canonical chain. This is done by verifying the
+Merkle proof with the `BlockHeader`'s block hash as leave and the
+`EpochAccumulator` digest as root. This digest is available in the
+`MasterAccumulator`.
+
+As the `MasterAccumulator` only accounts for blocks pre-merge, this proof can
+only be used to verify blocks pre-merge.
