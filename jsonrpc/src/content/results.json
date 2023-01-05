@@ -99,9 +99,10 @@
   },
   "OfferResult": {
     "name": "offerResult",
-    "description": "Returns \"true\" upon success",
+    "description": "Returns the content keys bitlist upon successful content transmission or empty bitlist receival",
     "schema": {
-      "type": "boolean"
+      "title": "Encoded content keys bitlist",
+      "$ref": "#/components/schemas/hexString"
     }
   },
    "SendOfferResult": {
