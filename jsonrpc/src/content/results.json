@@ -225,5 +225,18 @@
     "schema": {
       "type": "boolean"
     }
+  },
+  "LocalContentResult": {
+    "name": "localContentResult",
+    "description": "Returns a hex content value. If content is not available, returns \"0x0\"",
+    "schema": {
+      "type": "object",
+      "properties": {
+        "contentValue": {
+          "description": "Hex encoded content value",
+          "$ref": "#/components/schemas/hexString"
+        }
+      }
+    }
   }
 }
