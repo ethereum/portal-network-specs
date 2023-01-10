@@ -148,7 +148,7 @@ content_key                = selector + SSZ.serialize(light_client_update_keys)
 #### LightClientFinalityUpdate
 
 ```
-light_client_finality_update_key  = Container(None)
+light_client_finality_update_key  = 0 (uint8)
 selector                          = 0x02
 
 content                           = ForkDigest || SSZ.serialize(light_client_finality_update)
@@ -161,7 +161,7 @@ LightClientFinalityUpdate that the requested node has available.
 #### LightClientOptimisticUpdate
 
 ```
-light_client_optimistic_update_key   = Container(None)
+light_client_optimistic_update_key   = 0 (uint8)
 selector                             = 0x03
 
 content                              = ForkDigest || SSZ.serialize(light_client_optimistic_update)
