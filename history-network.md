@@ -76,7 +76,7 @@ custom_payload = SSZ.serialize(custom_data)
 ```
 
 
-### Routing Table 
+### Routing Table
 
 The history network uses the standard routing table structure from the Portal Wire Protocol.
 
@@ -147,13 +147,37 @@ each receipt/transaction and re-rlp-encode it, but only if it is a legacy transa
 
 #### Block Header
 
+
 ```
+# Content types
+
+AccumulatorProof = Vector[Bytes32, 15]
+
+BlockHeaderProof = Union[None, AccumulatorProof]
+
+BlockHeaderWithProof = Container[
+  header: ByteList, # RLP encoded header in SSZ ByteList
+  proof: BlockHeaderProof
+]
+```
+
+```
+# Content and content key
+
 block_header_key = Container(block_hash: Bytes32)
 selector         = 0x00
 
-content          = rlp.encode(header)
+block_header_with_proof = BlockHeaderWithProof(header: rlp.encode(header)), proof: proof)
+
+content          = SSZ.serialize(block_header_with_proof)
 content_key      = selector + SSZ.serialize(block_header_key)
 ```
+
+> **_Note:_** The `BlockHeaderProof` allows to provide headers without a proof (`None`).
+For pre-merge headers, clients SHOULD NOT accept headers without a proof
+as there is the `AccumulatorProof` solution available.
+For post-merge headers, there is currently no proof solution and clients SHOULD
+accept headers without a proof.
 
 #### Block Body
 
@@ -178,7 +202,7 @@ content_key             = selector + SSZ.serialize(block_body_key)
 Note 1: The type-specific encoding might be different in future transaction types, but this encoding
 works for all current transaction types.
 
-Note 2: The `list_of_uncle_headers` refers to the array of uncle headers [defined in the devp2p spec](https://github.com/ethereum/devp2p/blob/master/caps/eth.md#block-encoding-and-validity).  
+Note 2: The `list_of_uncle_headers` refers to the array of uncle headers [defined in the devp2p spec](https://github.com/ethereum/devp2p/blob/master/caps/eth.md#block-encoding-and-validity).
 
 #### Receipts
 
@@ -264,3 +288,23 @@ def update_accumulator(accumulator: MasterAccumulator, new_block_header: BlockHe
 ```
 
 The network provides no mechanism for acquiring the *master* version of this accumulator.  Clients are encouraged to solve this however they choose, with the suggestion that they include a frozen copy of the accumulator at the point of the merge within their client code, and provide a mechanism for users to override this value if they so choose.
+
+#### AccumulatorProof
+
+The `AccumulatorProof` is a Merkle proof as specified in the
+[SSZ Merke proofs specification](https://github.com/ethereum/consensus-specs/blob/dev/ssz/merkle-proofs.md#merkle-multiproofs).
+
+It is a Merkle proof for the `BlockHeader`'s block hash on the relevant
+`EpochAccumulator` object. The selected `EpochAccumulator` must be the one where
+the `BlockHeader`'s block hash is part of. The `GeneralizedIndex` selected must
+match the leave of the `EpochAccumulator` merkle tree which holds the
+`BlockHeader`'s block hash.
+
+An `AccumulatorProof` for a specific `BlockHeader` can be used to verify that
+this `BlockHeader` is part of the canonical chain. This is done by verifying the
+Merkle proof with the `BlockHeader`'s block hash as leave and the
+`EpochAccumulator` digest as root. This digest is available in the
+`MasterAccumulator`.
+
+As the `MasterAccumulator` only accounts for blocks pre-merge, this proof can
+only be used to verify blocks pre-merge.
