@@ -4,7 +4,7 @@
 
 ## Introduction
 
-The Portal Network is an in progess effort to enable lightweight protocol access by resource constrained devices.  The term *"portal"* is used to indicate that these networks provide a *view* into the protocol but are not critical to the operation of the core Ethereum protocol.
+The Portal Network is an in progress effort to enable lightweight protocol access by resource constrained devices.  The term *"portal"* is used to indicate that these networks provide a *view* into the protocol but are not critical to the operation of the core Ethereum protocol.
 
 The Portal Network is comprised of multiple peer-to-peer networks which together provide the data and functionality necessary to expose the standard [JSON-RPC API](https://eth.wiki/json-rpc/API).  These networks are specially designed to ensure that clients participating in these networks can do so with minimal expenditure of networking bandwidth, CPU, RAM, and HDD resources.
 
@@ -17,7 +17,7 @@ The Portal Network is focused on delivering reliable, lightweight, and decentral
 
 ### Prior Work on the "Light Ethereum Subprotocol" (LES)
 
-The term "light client" has historically refered to a client of the existing [DevP2P](https://github.com/ethereum/devp2p/blob/master/rlpx.md) based [LES](https://github.com/ethereum/devp2p/blob/master/caps/les.md) network.  This network is designed using a client/server architecture.  The LES network has a total capacity dictated by the number of "servers" on the network.  In order for this network to scale, the "server" capacity has to increase.  This also means that at any point in time the network has some total capacity which if exceeded will cause service degradation across the network.  Because of this the LES network is unreliable when operating near capacity.
+The term "light client" has historically referred to a client of the existing [DevP2P](https://github.com/ethereum/devp2p/blob/master/rlpx.md) based [LES](https://github.com/ethereum/devp2p/blob/master/caps/les.md) network.  This network is designed using a client/server architecture.  The LES network has a total capacity dictated by the number of "servers" on the network.  In order for this network to scale, the "server" capacity has to increase.  This also means that at any point in time the network has some total capacity which if exceeded will cause service degradation across the network.  Because of this the LES network is unreliable when operating near capacity.
 
 
 ## Architecture
@@ -157,7 +157,7 @@ All data retrieved from the history network can be immediately verified by the r
 
 The Canonical Transaction Index Network facilitates retrieval of individual transactions by their hash.
 
-The responsibility for storing the records that make up this should be evently distributed across the nodes in the network.  Nodes must be able to choose how many records from this index they wish to store.  The records must be distributed across the network in a manner that allows nodes to determine the appropriate nodes to query for an individual record.
+The responsibility for storing the records that make up this should be evenly distributed across the nodes in the network.  Nodes must be able to choose how many records from this index they wish to store.  The records must be distributed across the network in a manner that allows nodes to determine the appropriate nodes to query for an individual record.
 
 Transaction information returned from this network includes a merkle proof against the `Header.transactions_trie` for validation purposes.
 
@@ -183,7 +183,7 @@ This network is a pure gossip network and does not implement any form of content
 - [Chain History Network](./history-network.md)
     - Prior work: https://notes.ethereum.org/oUJE4ZX2Q6eMOgEMiQPkpQ?view
     - Prior Python proof-of-concept: https://github.com/ethereum/ddht/tree/341e84e9163338556cd48dd2fcfda9eedec3eb45
-        - This POC should NOT be considered representative of the end goal.  It incorperates mechanisms that aren't likely to be apart of the actual implementation, specifically the "advertisement" system which proved to be a big bottleneck, as well as the SSZ merkle root system which was a work-around for large data transfer which we now intend to solve with uTP.
+        - This POC should NOT be considered representative of the end goal.  It incorporates mechanisms that aren't likely to be apart of the actual implementation, specifically the "advertisement" system which proved to be a big bottleneck, as well as the SSZ merkle root system which was a workaround for large data transfer which we now intend to solve with uTP.
 - [Transaction Gossip Network](./transaction-gossip.md):
     - Spec is preliminary
     - Prior work: https://ethresear.ch/t/scalable-transaction-gossip/8660
