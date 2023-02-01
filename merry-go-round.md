@@ -112,7 +112,7 @@ The process for syncing then becomes the following.
 3. Repeat the following until the head of the chain passes an epoch boundary.
     A. Find a node that is close to `L` and request it's proof data which will be anchored to the most recent epoch boundary.
     B. Merge the received proof data with `P`.
-    C. Update `L` based on the updated proof `P` to point at the next largest missing key.
+    C. Update `L` based on the updated proof `P` to point at the next lowest missing key.
 4. Once the chain passes the next epoch boundary, step 3 should be continued while also performing the following.
     A. Let `P_start` and `P_end` represent the start and end keys of the accumulated proof `P` that is anchored to the most recent epoch boundary.
     B. Let `D` be the state diff that would allow us to update `P` to the next epoch boundary.  The initial value of `D` is an empty proof.
