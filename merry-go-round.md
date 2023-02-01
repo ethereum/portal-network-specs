@@ -99,7 +99,7 @@ each block to the nodes in the network that would store that data.
 
 The network exposes request/response primatives for:
 
-* retrieving a node's proof of the state from a recent epoch boundary, likely bounded by a range of keys within the trie.
+* retrieving a node's proof of the state at a recent epoch boundary, likely bounded by a range of keys within the trie.
 * retrieving a a node's proof diff that allows you to update their state proof to either a newer state root or the latest epoch boundary.
 
 
