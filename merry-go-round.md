@@ -118,7 +118,7 @@ The process for syncing then becomes the following.
     B. Let `D` be the state diff that would allow us to update `P` to the next epoch boundary.  The initial value of `D` is an empty proof.
     C. Let `L` be the largest key between `P_start and `P_end` for which we do not yet have a state diff within `D`
     D. Repeat the following until `D` is complete.
-        1. Find a node that is close to `L` and request it's state diff.
+        1. Find a node that is close to `L` and request its state diff.
         2. Merge the received diff with `D`
         3. Update `L` based on the updated diff `D` to point at the next largest missing key from the diff.
     E. Once `D` is complete, apply it to `P` to update the proof to now be anchored to the next and latest epoch boundary.
