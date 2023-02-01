@@ -108,7 +108,7 @@ The network exposes request/response primatives for:
 The process for syncing then becomes the following.
 
 1. Let `P` be our proof against the state at the most recent epoch boundary.  The initial value of `P` is an empty proof.
-2. Let `L` be the largest key within the trie that we are missing leaf data.  The initial value of `L` would be the `0x0` key.
+2. Let `L` be the lowest key within the trie that we are missing leaf data for.  The initial value of `L` would be the `0x0` key.
 3. Repeat the following until the head of the chain passes an epoch boundary.
     A. Find a node that is close to `L` and request it's proof data which will be anchored to the most recent epoch boundary.
     B. Merge the received proof data with `P`.
