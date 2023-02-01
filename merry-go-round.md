@@ -36,7 +36,7 @@ The high level design of the "merry go round" is that a node wishing to sync
 the state would iterate through all of the nodes in the network, requesting the
 proofs they are storing about the state, and merging them into a single
 wholistic view of the entire trie.  In an environment where the Ethereum state
-was static, and didn't change, this approach would result in having a fully
+was static, and didn't change, this approach would result in having a full
 copy of all of the state data after a node had fully traversed the DHT and
 recieved all of the individual state proofs.
 
