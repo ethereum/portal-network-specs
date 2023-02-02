@@ -130,4 +130,4 @@ fetch the necessary proof diffs to update our accumulated proof data to the
 latest epoch boundary, while continuing to fetch new state proofs for the new
 epoch boundary, merging the two once the previous epoch data has been updated
 to the latest epoch.  Once the full network has been traversed, a client should
-have accumulated a complete and up-to-date copy of the ethereum state.
+have accumulated a complete and up-to-date copy of the Ethereum state.
