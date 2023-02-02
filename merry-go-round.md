@@ -116,7 +116,7 @@ The process for syncing then becomes the following.
 4. Once the chain passes the next epoch boundary, step 3 should be continued while also performing the following.
     A. Let `P_start` and `P_end` represent the start and end keys of the accumulated proof `P` that is anchored to the most recent epoch boundary.
     B. Let `D` be the state diff that would allow us to update `P` to the next epoch boundary.  The initial value of `D` is an empty proof.
-    C. Let `L` be the largest key between `P_start and `P_end` for which we do not yet have a state diff within `D`
+    C. Let `L` be the largest key between `P_start` and `P_end` for which we do not yet have a state diff within `D`
     D. Repeat the following until `D` is complete.
         1. Find a node that is close to `L` and request its state diff.
         2. Merge the received diff with `D`
