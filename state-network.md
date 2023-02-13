@@ -223,10 +223,8 @@ Each time a new block is added to their view of the chain, a set of merkle proof
 
 - Account trie Data:
     - All of the intermediate and leaf trie nodes from the account trie necessary to prove new and modified accounts.
-    - All of the intermediate and leaf trie nodes from the account trie necessary for exclusion proofs for deleted accounts.
 - Contract Storage trie data:
     - All of the intermediate and leaf trie nodes from each contract storage trie necessary to prove new and modified storage slots.
-    - All of the intermediate and leaf trie nodes from each contract storage trie necessary for exclusion proofs for zero'd storage slots.
 - All contract bytecode for newly created contracts
 
 > TODO: Figure out language for defining which trie nodes from this proof the bridge node must initialize gossip.
