@@ -219,7 +219,7 @@ The merkle proof which contains a leaf node and the intermediate trie nodes nece
 
 ### Gossip 
 
-Each time a new block is added to their view of the chain, a set of merkle proofs which are all anchored to `Header.state_root` is generated which contains.
+Each time a new block is added to their view of the chain, a set of merkle proofs which are all anchored to `Header.state_root` is generated which contains:
 
 - Account trie Data:
     - All of the intermediate and leaf trie nodes from the account trie necessary to prove new and modified accounts.
