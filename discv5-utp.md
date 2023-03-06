@@ -77,12 +77,13 @@ A typical flow of messages:
         Alice->>Bob: ...
         Bob->>Alice: ...
         Note left of Bob: Once DATA sent & acknowledged
-        Alice->>Bob: uTP ST_FIN
+        Alice<<-Bob: uTP ST_FIN
 
 ```
 
-The uTP connection can also be terminated by an uTP `ST_FIN` from Alice to Bob
-if Alice can conclude that it received all the data.
+The typical flow is that Bob sends the `ST_FIN` to terminate the uTP connection.
+But Alice MAY also send a `ST_FIN` if Alice can conclude that it received all the
+data, and there are situations where this may happen (e.g. lost `ST_FIN` packet).
 
 ### Data Offer
 Suppose we have a sub-protocol with the following messages:
@@ -118,9 +119,9 @@ A typical message flow:
         Bob->>Alice: ...
         Alice->>Bob: ...
         Note left of Bob: Once DATA sent & acknowledged
-        Bob->>Alice: uTP ST_FIN
+        Bob<<-Alice: uTP ST_FIN
 
 ```
-
-The uTP connection can also be terminated by an uTP `ST_FIN` from Bob to Alice
-if Bob can conclude that it received all the data.
+The typical flow is that Alice sends the `ST_FIN` to terminate the uTP connection.
+But Bob MAY also send a `ST_FIN` if Bob can conclude that it received all the
+data, and there are situations where this may happen (e.g. lost `ST_FIN` packet).
