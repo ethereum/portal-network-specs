@@ -60,11 +60,11 @@ Bob, upon sending the `Data` message containing the `connection_id` will
 When this new connection is opened, Alice can then read the bytes from the stream
 until the connection closes.
 
-The `connection_id` send over the sub-protocol response message is the
-`connection_id_send` value for node sending this response, and thus the
-`connection_id_recv` value for initiator of the uTP connection.
+The `connection_id` sent in the sub-protocol response message is the
+`connection_id_send` value for the node sending the response, and thus the
+`connection_id_recv` value for the initiator of the uTP connection.
 
-A typically flow of messages:
+A typical flow of messages:
 
 ```mermaid
     sequenceDiagram
@@ -76,13 +76,14 @@ A typically flow of messages:
         Bob->>Alice: uTP ST_DATA
         Alice->>Bob: ...
         Bob->>Alice: ...
-        Note left of Bob: Once DATA send & acknowledged
-        Bob->>Alice: uTP ST_FIN
+        Note left of Bob: Once DATA sent & acknowledged
+        Alice<<-Bob: uTP ST_FIN
 
 ```
 
-The uTP connection can also be terminated by an uTP `ST_FIN` from Alice to Bob
-if Alice can conclude that it received all the data.
+The typical flow is that Bob sends the `ST_FIN` to terminate the uTP connection.
+But Alice MAY also send a `ST_FIN` if Alice can conclude that it received all the
+data, and there are situations where this may happen (e.g. lost `ST_FIN` packet).
 
 ### Data Offer
 Suppose we have a sub-protocol with the following messages:
@@ -101,11 +102,11 @@ Bob, upon sending the `Accept` message containing the `connection_id` will
 When this new connection is opened, Bob can then read the bytes from the stream
 until the connection closes.
 
-The `connection_id` send over the sub-protocol response message is the
-`connection_id_send` value for node sending this response, and thus the
-`connection_id_recv` value for initiator of the uTP connection.
+The `connection_id` sent in the response message is the `connection_id_send`
+value for the node sending the response, and thus the `connection_id_recv` value
+for the initiator of the uTP connection.
 
-A typically flow of messages:
+A typical message flow:
 
 ```mermaid
     sequenceDiagram
@@ -117,10 +118,10 @@ A typically flow of messages:
         Alice->>Bob: uTP ST_DATA
         Bob->>Alice: ...
         Alice->>Bob: ...
-        Note left of Bob: Once DATA send & acknowledged
-        Alice->>Bob: uTP ST_FIN
+        Note left of Bob: Once DATA sent & acknowledged
+        Bob<<-Alice: uTP ST_FIN
 
 ```
-
-The uTP connection can also be terminated by an uTP `ST_FIN` from Bob to Alice
-if Bob can conclude that it received all the data.
+The typical flow is that Alice sends the `ST_FIN` to terminate the uTP connection.
+But Bob MAY also send a `ST_FIN` if Bob can conclude that it received all the
+data, and there are situations where this may happen (e.g. lost `ST_FIN` packet).
