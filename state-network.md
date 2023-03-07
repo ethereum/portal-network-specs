@@ -128,9 +128,9 @@ A node should track their own radius value and provide this value in all Ping or
 #### Component Data Elements
 
 #### Proofs
-Merkle Patricia Trie (MPT) proofs consist of a list of witness nodes that correspond to each trie node that consists of various data elements depending on the type of node (e.g.blank, branch, extension, leaf).  When serialized, each witness node is represented as an RLP serialized list of the component elements with the largest possible node type being the branch node which when serialized is a list of up to sixteen hashes in `Bytes32` (representing the hashes of each of the 16 nodes in that branch and level of the tree) plus the 4 elements of the node's value (balance, nonce, codehash, storageroot) represented as `Bytes32`.  When combined with the RLP prefixes, this yields a possible maximum length of 667 bytes.
+Merkle Patricia Trie (MPT) proofs consist of a list of witness nodes that correspond to each trie node that consists of various data elements depending on the type of node (e.g.blank, branch, extension, leaf).  When serialized, each witness node is represented as an RLP serialized list of the component elements with the largest possible node type being the branch node which when serialized is a list of up to sixteen hashes in `Bytes32` (representing the hashes of each of the 16 nodes in that branch and level of the tree) plus the 4 elements of the node's value (balance, nonce, codehash, storageroot) represented as `Bytes32`.  When combined with the RLP prefixes, this yields a possible maximum length of 667 bytes.  We specify 1024 as the maximum length due to constraints in the SSZ spec for list lengths being a power of 2 (for easier merkleization.)
 ```
-mpt_witness_node       := ByteList(667)
+mpt_witness_node       := ByteList(1024)
 mpt_witnesses          := List(witnesses: mpt_witness_node[], max_length=32)
 ```
 
@@ -155,7 +155,7 @@ A leaf node from a contract storage trie and accompanying merkle proof against t
 storage_trie_proof_key := Container(address: Bytes20, slot: uint256, state_root: Bytes32)
 selector               := 0x01
 
-content                := Container(witnesses: mpt_witnesses, data: Bytes32)
+content                := Container(witnesses: mpt_witnesses, slot_value: Bytes32)
 content_id             := (keccak(address) + keccak(slot)) % 2**256
 content_key            := selector + SSZ.serialize(storage_trie_proof_key)
 ```
