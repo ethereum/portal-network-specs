@@ -155,7 +155,7 @@ A leaf node from a contract storage trie and accompanying merkle proof against t
 storage_trie_proof_key := Container(address: Bytes20, slot: uint256, state_root: Bytes32)
 selector               := 0x01
 
-content                := Container(witnesses: MPTWitness)
+content                := Container(witness: MPTWitness)
 content_id             := (keccak(address) + keccak(slot)) % 2**256
 content_key            := selector + SSZ.serialize(storage_trie_proof_key)
 ```
