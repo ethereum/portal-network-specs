@@ -77,7 +77,7 @@ A typical flow of messages:
         Alice->>Bob: ...
         Bob->>Alice: ...
         Note left of Bob: Once DATA sent & acknowledged
-        Alice<<-Bob: uTP ST_FIN
+        Bob->>Alice: uTP ST_FIN
 
 ```
 
@@ -119,7 +119,7 @@ A typical message flow:
         Bob->>Alice: ...
         Alice->>Bob: ...
         Note left of Bob: Once DATA sent & acknowledged
-        Bob<<-Alice: uTP ST_FIN
+        Alice->>Bob: uTP ST_FIN
 
 ```
 The typical flow is that Alice sends the `ST_FIN` to terminate the uTP connection.
