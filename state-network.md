@@ -142,7 +142,8 @@ A leaf node from the main account trie and accompanying merkle proof against a r
 account_trie_proof_key := Container(address: Bytes20, state_root: Bytes32)
 selector               := 0x00
 
-content                := Container(witness: MPTWitness)
+leaf_node              := Container(nonce: uint64, balance: uint256, codeHash: Bytes32, storageRoot: Bytes32)
+content                := Container(witness: MPTWitness, account: leaf_node)
 content_id             := keccak(address)
 content_key            := selector + SSZ.serialize(account_trie_proof_key)
 ```
