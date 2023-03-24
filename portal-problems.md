@@ -125,3 +125,21 @@ need to accomplish the following.
 - No dependency on Full Nodes.
 - Individually tunable resource requirements
 - Support for known retrieval patterns
+
+
+### Removing "Full Nodes"
+
+We intentionally move away from the network requiring any individual node to be
+a "full node".  Our design instead focuses on dividing the data up across the
+nodes of the network such that individual nodes are only expected to store a
+small portion of the data and such that individual nodes have control over how
+much data they store.
+
+Our networks are all Distributed Hash Tables which gives them the nice property
+of having a "topology" onto which we can map the data.  Nodes in the network
+are automatically evenly distributed across the 256 bit address space.  This
+means that we can apply a similar mapping to the data to evenly map it to the
+same address space, which then gives us a simple mechanism to distribute
+responsibility for data storage evenly across the different nodes in the
+network.
+
