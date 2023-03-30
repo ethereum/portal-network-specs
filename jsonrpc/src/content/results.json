@@ -6,8 +6,8 @@
       "type": "boolean"
     }
   },
-  "ContentResult": {
-    "name": "contentResult",
+  "StoreResult": {
+    "name": "storeResult",
     "description": "Returns \"true\" upon success",
     "schema": {
       "type": "boolean"
@@ -113,14 +113,6 @@
       }
     }
   },
-  "RecursiveFindContentResult": {
-    "name": "recursiveFindContentResult",
-    "description": "The data corresponding to the lookup target",
-    "schema": {
-      "title": "Encoded target content data",
-      "$ref": "#/components/schemas/hexString"
-    }
-  },
   "RoutingTableInfoResult": {
     "name": "routingTableInfoResult",
     "description": "history network routing table information",
@@ -147,9 +139,9 @@
       }
     }
   },
-  "LocalContentResult": {
-    "name": "localContentResult",
-    "description": "Returns a hex content value. If content is not available, returns \"0x0\"",
+  "ContentResult": {
+    "name": "ContentResult",
+    "description": "Returns the hex encoded content value. If the content is not available, returns \"0x\"",
     "schema": {
       "type": "object",
       "properties": {

@@ -142,7 +142,7 @@
       }
     ],
     "result": {
-      "$ref": "#/components/contentDescriptors/RecursiveFindContentResult"
+      "$ref": "#/components/contentDescriptors/ContentResult"
     }
   },
   {
@@ -157,7 +157,7 @@
       }
     ],
     "result": {
-      "$ref": "#/components/contentDescriptors/ContentResult"
+      "$ref": "#/components/contentDescriptors/StoreResult"
     }
   },
   {
@@ -169,7 +169,7 @@
       }
     ],
     "result": {
-      "$ref": "#/components/contentDescriptors/LocalContentResult"
+      "$ref": "#/components/contentDescriptors/ContentResult"
     }
   },
   {
