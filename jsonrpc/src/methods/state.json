@@ -123,14 +123,14 @@
   },
   {
     "name": "portal_stateRecursiveFindNodes",
-    "summary": "Lookup a target node within in the network",
+    "summary": "Look up ENRs closest to the given target, that are members of the state network",
     "params": [
       {
         "$ref": "#/components/contentDescriptors/NodeId"
       }
     ],
     "result": {
-      "$ref": "#/components/contentDescriptors/RecursiveFindNodeResult"
+      "$ref": "#/components/contentDescriptors/RecursiveFindNodesResult"
     }
   },
   {
