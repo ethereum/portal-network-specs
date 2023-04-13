@@ -6,6 +6,12 @@ The Portal Network JSON-RPC is a collection of methods that all clients implemen
 This interface allows downstream tooling and infrastructure to treat different
 Portal Network clients as modules that can be swapped at will.
 
+## Setup
+
+When this doc was written, the build and test steps required node.js version
+v16+. Verify if this version is current by inspecting the `node-version`
+defined in the [project's test config file](../.github/workflows/test.yaml).
+
 ## Building
 
 The specification is split into multiple files to improve readability. It
@@ -19,6 +25,9 @@ Build successful.
 
 This will output the file `openrpc.json` in the root of the project. This file
 will have all schema `#ref`s resolved.
+
+Preview the built result by copying the `openrpc.json` file into the [open-rpc
+playground](https://playground.open-rpc.org/).
 
 ## Contributing
 

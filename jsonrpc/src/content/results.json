@@ -104,8 +104,9 @@
       }
     }
   },
-  "RecursiveFindNodeResult": {
-    "name": "recursiveFindNodeResult",
+  "RecursiveFindNodesResult": {
+    "name": "recursiveFindNodesResult",
+    "description": "Up to 16 ENRs of the closest nodes, sorted by distance.",
     "schema": {
       "type": "array",
       "items": {

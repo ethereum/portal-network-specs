@@ -210,15 +210,15 @@
     }
   },
   {
-    "name": "discv5_recursiveFindNode",
-    "summary": "Lookup a target node within in the network",
+    "name": "discv5_recursiveFindNodes",
+    "summary": "Look up ENRs closest to the given target",
     "params": [
       {
         "$ref": "#/components/contentDescriptors/NodeId"
       }
     ],
     "result": {
-      "$ref": "#/components/contentDescriptors/RecursiveFindNodeResult"
+      "$ref": "#/components/contentDescriptors/RecursiveFindNodesResult"
     }
   }
 ]
