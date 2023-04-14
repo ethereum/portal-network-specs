@@ -7,7 +7,9 @@ They can be used to verify the serialization and deserialization of the type and
 to verify both the generation and the verification of the proof.
 
 The test vectors are for `BlockHeader`s from Mainnet. The specific block numbers
-can be found as keys of the JSON objects.
+can be found as keys of the JSON objects. The `BlockHeader` can be used to
+further verify the corresponding content of the `BlockBody` and `Receipts` test
+vectors.
 
 ### Test Vectors
 
