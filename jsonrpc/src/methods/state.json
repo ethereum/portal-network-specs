@@ -21,7 +21,7 @@
   },
   {
     "name": "portal_stateGetEnr",
-    "summary": "Fetch the latest ENR associated with the given node ID",
+    "summary": "Fetch from the local node the latest ENR associated with the given NodeId",
     "params": [
       {
         "$ref": "#/components/contentDescriptors/NodeId"
@@ -45,13 +45,10 @@
   },
   {
     "name": "portal_stateLookupEnr",
-    "summary": "Fetch the ENR representation associated with the given Node ID and optional sequence number",
+    "summary": "Fetch from the DHT the latest ENR associated with the given NodeId",
     "params": [
       {
         "$ref": "#/components/contentDescriptors/NodeId"
-      },
-      {
-        "$ref": "#/components/contentDescriptors/EnrSeq"
       }
     ],
     "result": {
