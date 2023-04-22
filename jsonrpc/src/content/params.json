@@ -6,28 +6,11 @@
       "type": "number"
     }
   },
-  "Content": {
-    "name": "content",
-    "description": "Content data",
-    "schema": {
-      "$ref": "#/components/schemas/hexString"
-    }
-  },
   "ContentKey": {
     "name": "contentKey",
     "required": true,
     "schema": {
       "$ref": "#/components/schemas/hexString"
-    }
-  },
-  "ContentKeys": {
-    "name": "contentKeys",
-    "description": "A list of encoded content_key entries",
-    "schema": {
-      "type": "array",
-      "items": {
-        "$ref": "#/components/schemas/hexString"
-      }
     }
   },
    "Discv5Payload": {
@@ -57,16 +40,6 @@
       "$ref": "#/components/schemas/Enr"
     }
   },
-  "Enrs": {
-    "name": "enrs",
-    "description": "List of ENR records of nodes.",
-    "schema": {
-      "type": "array",
-      "items": {
-        "$ref": "#/components/schemas/Enr"
-      }
-    }
-  },
   "EnrSeq": {
     "name": "enrSeq",
     "schema": {
@@ -79,17 +52,6 @@
     "schema": {
       "title": "NodeId",
       "$ref": "#/components/schemas/bytes32"
-    }
-  },
-  "Nodes": {
-    "name": "nodes",
-    "required": true,
-    "schema": {
-      "title": "nodes",
-      "type": "array",
-      "items": {
-        "$ref": "#/components/schemas/Enr"
-      }
     }
   },
   "DataRadius": {
@@ -106,15 +68,6 @@
     "schema": {
       "title": "protocol id",
       "$ref": "#/components/schemas/hexString"
-    }
-  },
-  "RequestId": {
-    "name": "requestId",
-    "description": "request-id element of message-data",
-    "required": true,
-    "schema": {
-      "title": "Hex encoded RLP byte array of length <= 8 bytes",
-      "$ref": "#/components/schemas/bytes8"
     }
   },
   "ContentValue": {
