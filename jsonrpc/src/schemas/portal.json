@@ -8,8 +8,8 @@
     }
   },
   "DataRadius": {
-    "title": "256-bit unsigned integer",
-    "type": "number"
+    "title": "Data radius as a hex encoded uint256",
+    "$ref": "#/components/schemas/uint256"
   },
   "Enr": {
     "title": "Base64 encoded ENR",
