@@ -8,15 +8,33 @@
   },
   "ContentKey": {
     "name": "contentKey",
+    "description": "The encoded Portal content key",
     "required": true,
     "schema": {
       "$ref": "#/components/schemas/hexString"
     }
   },
-   "Discv5Payload": {
-    "name": "payload",
+  "ContentValue": {
+    "name": "contentValue",
+    "description": "The encoded Portal content value",
     "required": true,
-    "description": "request element of message-data",
+    "schema": {
+      "$ref": "#/components/schemas/hexString"
+    }
+  },
+  "ProtocolId": {
+    "name": "protocolId",
+    "required": true,
+    "description": "The protocol element of discv5 TALKREQ message-data",
+    "schema": {
+      "title": "protocol id",
+      "$ref": "#/components/schemas/hexString"
+    }
+  },
+   "TalkReqPayload": {
+    "name": "talkReqPayload",
+    "required": true,
+    "description": "The request element of discv5 TALKREQ message-data",
     "schema": {
       "$ref": "#/components/schemas/hexString"
     }
@@ -43,6 +61,7 @@
   "EnrSeq": {
     "name": "enrSeq",
     "schema": {
+      "title": "The ENR sequence number",
       "type": "number"
     }
   },
@@ -59,23 +78,6 @@
     "description": "Data radius value",
     "schema": {
       "$ref": "#/components/schemas/DataRadius"
-    }
-  },
-   "ProtocolId": {
-    "name": "protocolId",
-    "required": true,
-    "description": "protocol element of message-data",
-    "schema": {
-      "title": "protocol id",
-      "$ref": "#/components/schemas/hexString"
-    }
-  },
-  "ContentValue": {
-    "name": "contentValue",
-    "description": "The encoded Content value",
-    "required": true,
-    "schema": {
-      "$ref": "#/components/schemas/hexString"
     }
   }
 }

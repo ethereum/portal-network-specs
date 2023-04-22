@@ -195,7 +195,7 @@
         "$ref": "#/components/contentDescriptors/ProtocolId"
       },
       {
-        "$ref": "#/components/contentDescriptors/Discv5Payload"
+        "$ref": "#/components/contentDescriptors/TalkReqPayload"
       }
     ],
     "result": {
