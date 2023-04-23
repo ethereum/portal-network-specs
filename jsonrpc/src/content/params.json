@@ -6,34 +6,35 @@
       "type": "number"
     }
   },
-  "Content": {
-    "name": "content",
-    "description": "Content data",
-    "schema": {
-      "$ref": "#/components/schemas/hexString"
-    }
-  },
   "ContentKey": {
     "name": "contentKey",
+    "description": "The encoded Portal content key",
     "required": true,
     "schema": {
       "$ref": "#/components/schemas/hexString"
     }
   },
-  "ContentKeys": {
-    "name": "contentKeys",
-    "description": "A list of encoded content_key entries",
+  "ContentValue": {
+    "name": "contentValue",
+    "description": "The encoded Portal content value",
+    "required": true,
     "schema": {
-      "type": "array",
-      "items": {
-        "$ref": "#/components/schemas/hexString"
-      }
+      "$ref": "#/components/schemas/hexString"
     }
   },
-   "Discv5Payload": {
-    "name": "payload",
+  "ProtocolId": {
+    "name": "protocolId",
     "required": true,
-    "description": "request element of message-data",
+    "description": "The protocol element of discv5 TALKREQ message-data",
+    "schema": {
+      "title": "protocol id",
+      "$ref": "#/components/schemas/hexString"
+    }
+  },
+   "TalkReqPayload": {
+    "name": "talkReqPayload",
+    "required": true,
+    "description": "The request element of discv5 TALKREQ message-data",
     "schema": {
       "$ref": "#/components/schemas/hexString"
     }
@@ -57,19 +58,10 @@
       "$ref": "#/components/schemas/Enr"
     }
   },
-  "Enrs": {
-    "name": "enrs",
-    "description": "List of ENR records of nodes.",
-    "schema": {
-      "type": "array",
-      "items": {
-        "$ref": "#/components/schemas/Enr"
-      }
-    }
-  },
   "EnrSeq": {
     "name": "enrSeq",
     "schema": {
+      "title": "The ENR sequence number",
       "type": "number"
     }
   },
@@ -81,48 +73,11 @@
       "$ref": "#/components/schemas/bytes32"
     }
   },
-  "Nodes": {
-    "name": "nodes",
-    "required": true,
-    "schema": {
-      "title": "nodes",
-      "type": "array",
-      "items": {
-        "$ref": "#/components/schemas/Enr"
-      }
-    }
-  },
   "DataRadius": {
     "name": "dataRadius",
     "description": "Data radius value",
     "schema": {
       "$ref": "#/components/schemas/DataRadius"
-    }
-  },
-   "ProtocolId": {
-    "name": "protocolId",
-    "required": true,
-    "description": "protocol element of message-data",
-    "schema": {
-      "title": "protocol id",
-      "$ref": "#/components/schemas/hexString"
-    }
-  },
-  "RequestId": {
-    "name": "requestId",
-    "description": "request-id element of message-data",
-    "required": true,
-    "schema": {
-      "title": "Hex encoded RLP byte array of length <= 8 bytes",
-      "$ref": "#/components/schemas/bytes8"
-    }
-  },
-  "ContentValue": {
-    "name": "contentValue",
-    "description": "The encoded Content value",
-    "required": true,
-    "schema": {
-      "$ref": "#/components/schemas/hexString"
     }
   }
 }
