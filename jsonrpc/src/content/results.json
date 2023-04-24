@@ -29,9 +29,7 @@
       "properties": {
         "connectionId": {
           "description": "uTP connection ID",
-          "schema": {
-            "type": "number"
-          }
+          "$ref": "#/components/schemas/bytes2"
         },
         "content": {
           "description": "Requested content",
