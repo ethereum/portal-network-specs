@@ -1,11 +1,4 @@
 {
-  "ConnectionId": {
-    "name": "connectionId",
-    "description": "uTP connection ID",
-    "schema": {
-      "type": "number"
-    }
-  },
   "ContentKey": {
     "name": "contentKey",
     "description": "The encoded Portal content key",
