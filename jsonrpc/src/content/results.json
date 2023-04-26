@@ -30,6 +30,10 @@
         {
           "title": "ContentInfo",
           "type": "object",
+          "required": [
+            "content",
+            "utpTransfer"
+          ],
           "properties": {
             "content": {
               "title": "Requested content",
@@ -46,6 +50,7 @@
           "title": "ENRs",
           "description": "List of ENR records of nodes that are closer than the recipient is to the requested content",
           "type": "object",
+          "required": ["enrs"],
           "properties": {
             "enrs": {
               "type": "array",
