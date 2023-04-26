@@ -61,9 +61,6 @@
     "params": [
       {
         "$ref": "#/components/contentDescriptors/Enr"
-      },
-      {
-        "$ref": "#/components/contentDescriptors/DataRadius"
       }
     ],
     "result": {
