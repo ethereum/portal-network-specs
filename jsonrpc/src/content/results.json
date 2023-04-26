@@ -45,9 +45,14 @@
         {
           "title": "ENRs",
           "description": "List of ENR records of nodes that are closer than the recipient is to the requested content",
-          "type": "array",
-          "items": {
-            "$ref": "#/components/schemas/Enr"
+          "type": "object",
+          "properties": {
+            "enrs": {
+              "type": "array",
+              "items": {
+                "$ref": "#/components/schemas/Enr"
+              }
+            }
           }
         }
       ]
