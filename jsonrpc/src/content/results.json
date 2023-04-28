@@ -21,28 +21,46 @@
     }
   },
   "FindContentResult": {
-    "name": "findContentResult",
-    "description": "Returns CONTENT message with a content or, in case the recipient does not have the data, a list of ENR records of nodes that are closer than the recipient is to the requested content.",
+    "name": "FindContentResult",
+    "description": "Returns either the requested content, received directly from the CONTENT message or transferred over uTP, or, in case the recipient does not have the content, a list of ENR records of nodes that are closer than the recipient is to the requested content.",
     "schema": {
-      "title": "CONTENT message",
+      "title": "FindContentResult",
       "type": "object",
-      "properties": {
-        "connectionId": {
-          "description": "uTP connection ID",
-          "$ref": "#/components/schemas/bytes2"
+      "oneOf" :[
+        {
+          "title": "ContentInfo",
+          "type": "object",
+          "required": [
+            "content",
+            "utpTransfer"
+          ],
+          "properties": {
+            "content": {
+              "title": "Requested content",
+              "description": "Encoded requested content",
+              "$ref": "#/components/schemas/hexString"
+            },
+            "utpTransfer": {
+              "description": "Indicates whether the content was transferred over a uTP connection or not.",
+              "type": "boolean"
+            }
+          }
         },
-        "content": {
-          "description": "Requested content",
-          "$ref": "#/components/schemas/hexString"
-        },
-        "enrs": {
-          "description": "list of ENR records of nodes that are closer than the recipient is to the requested content",
-          "type": "array",
-          "items": {
-            "$ref": "#/components/schemas/Enr"
+        {
+          "title": "ENRs",
+          "description": "List of ENR records of nodes that are closer than the recipient is to the requested content",
+          "type": "object",
+          "required": ["enrs"],
+          "properties": {
+            "enrs": {
+              "type": "array",
+              "items": {
+                "$ref": "#/components/schemas/Enr"
+              }
+            }
           }
         }
-      }
+      ]
     }
   },
   "FindNodeResult": {
