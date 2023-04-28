@@ -32,22 +32,10 @@
   },
   {
     "name": "discv5_updateNodeInfo",
-    "summary": "Add, update, or remove a key-value pair from the local node record",
+    "summary": "Add, update, or remove a key-value pairs from the local node ENR. Attempt to update the id or secp256k1 key must result in failure.",
     "params": [
       {
-        "name": "socketAddr",
-        "required": true,
-        "schema": {
-          "title": "ENR socket address",
-          "$ref": "#/components/schemas/socketAddr"
-        }
-      },
-      {
-        "name": "isTcp",
-        "description": "TCP or UDP socket",
-        "schema": {
-          "type": "boolean"
-        }
+        "$ref": "#/components/contentDescriptors/EnrKeyValuePairs"
       }
     ],
     "result": {
