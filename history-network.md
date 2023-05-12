@@ -130,6 +130,17 @@ _MAX_HEADER_LENGTH = 2**13  # = 8192
 MAX_ENCODED_UNCLES_LENGTH = _MAX_HEADER_LENGTH * 2**4  # = 2**17 ~= 131k
 # Maximum number of uncles is currently 2. Using 16 leaves some room for the
 # protocol to increase the number of uncles.
+
+MAX_WITHDRAWAL_COUNT = 16
+# Number sourced from EIP-4895
+
+MAX_WITHDRAWAL_LENGTH = 64
+# Withdrawal: index (u64), validator_index (u64), address, amount (u64)
+#   - 8 + 8 + 20 + 8 = 44 bytes
+#   - round up to nearest power of 2 => 64
+
+SHANGHAI_TIMESTAMP = 1681338455
+# Number sourced from EIP-4895
 ```
 
 #### Encoding Content Values for Validation
@@ -181,6 +192,16 @@ accept headers without a proof.
 
 #### Block Body
 
+After the addition of `withdrawals` to the block body in the [EIP-4895](https://eips.ethereum.org/EIPS/eip-4895),
+clients need to support multiple encodings for the block body content type. For the time being,
+since a client is required for block body validation it is recommended that clients implement
+the following sequence to decode & validate block bodies.
+- Receive raw block body content value.
+- Fetch respective header from the network.
+- Compare header timestamp against `SHANGHAI_TIMESTAMP` to determine what encoding scheme the block body uses.
+- Decode the block body using either pre-shanghai or post-shanghai encoding.
+- Validate the decoded block body against the roots in the header.
+
 ```
 block_body_key          = Container(block_hash: Bytes32)
 selector                = 0x01
@@ -194,8 +215,12 @@ encoded_transaction     =
     return rlp.encode(transaction)
 ssz_uncles              = SSZList(encoded_uncles: ByteList, max_length=MAX_ENCODED_UNCLES_LENGTH)
 encoded_uncles          = rlp.encode(list_of_uncle_headers)
+all_withdrawals         = SSZList(ssz_withdrawal, max_length=MAX_WITHDRAWAL_COUNT)
+ssz_withdrawal          = SSZList(encoded_withdrawal: ByteList, max_length=MAX_WITHDRAWAL_LENGTH)
+encoded_withdrawal      = rlp.encode(withdrawal)
 
-content                 = Container(all_transactions: SSZList(...), ssz_uncles: SSZList(...))
+pre-shanghai content    = Container(all_transactions: SSZList(...), ssz_uncles: SSZList(...))
+post-shanghai content   = Container(all_transactions: SSZList(...), ssz_uncles: SSZList(encoded_uncles), all_withdrawals: SSZList(...))
 content_key             = selector + SSZ.serialize(block_body_key)
 ```
 
