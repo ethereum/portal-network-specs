@@ -132,12 +132,14 @@ MAX_ENCODED_UNCLES_LENGTH = _MAX_HEADER_LENGTH * 2**4  # = 2**17 ~= 131k
 # protocol to increase the number of uncles.
 
 MAX_WITHDRAWAL_COUNT = 16
-# Number sourced from EIP-4895
+# Number sourced from consensus specs
+# https://github.com/ethereum/consensus-specs/blob/f7352d18cfb91c58b1addb4ea509aedd6e32165c/presets/mainnet/capella.yaml#L12
+# MAX_WITHDRAWAL_COUNT = MAX_WITHDRAWALS_PER_PAYLOAD
 
-MAX_WITHDRAWAL_LENGTH = 64
+WITHDRAWAL_LENGTH = 64
 # Withdrawal: index (u64), validator_index (u64), address, amount (u64)
 #   - 8 + 8 + 20 + 8 = 44 bytes
-#   - round up to nearest power of 2 => 64
+#   - allow extra space for rlp encoding overhead
 
 SHANGHAI_TIMESTAMP = 1681338455
 # Number sourced from EIP-4895
