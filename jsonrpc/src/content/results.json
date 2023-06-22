@@ -90,6 +90,13 @@
       "$ref": "#/components/schemas/Enr"
     }
   },
+  "ValidateContentResult": {
+    "name": "validateContentResult",
+    "description": "Returns true or false depending on if the client could validate the given data",
+    "schema": {
+      "type": "boolean"
+    }
+  },
   "OfferResult": {
     "name": "offerResult",
     "description": "Returns the content keys bitlist upon successful content transmission or empty bitlist receival",

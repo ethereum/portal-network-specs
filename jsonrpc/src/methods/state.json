@@ -98,6 +98,21 @@
     }
   },
   {
+    "name": "portal_stateValidateContent",
+    "summary": "Returns true or false depending on if the client was able to validate a given state content key and content data.",
+    "params": [
+      {
+        "$ref": "#/components/contentDescriptors/ContentKey"
+      },
+      {
+        "$ref": "#/components/contentDescriptors/ContentValue"
+      }
+    ],
+    "result": {
+      "$ref": "#/components/contentDescriptors/ValidateContentResult"
+    }
+  },
+  {
     "name": "portal_stateOffer",
     "summary": "Send an OFFER request with given ContentKey, to the designated peer and wait for a response.",
     "params": [
