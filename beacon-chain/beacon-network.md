@@ -158,28 +158,38 @@ content_key                = selector + SSZ.serialize(light_client_update_keys)
 #### LightClientFinalityUpdate
 
 ```
-light_client_finality_update_key  = 0 (uint8)
+light_client_finality_update_key  = Container(optimistic_slot: uint64, finalized_slot: uint64)
 selector                          = 0x02
 
 content                           = ForkDigest || SSZ.serialize(light_client_finality_update)
 content_key                       = selector + SSZ.serialize(light_client_finality_update_key)
 ```
 
-> A `0` in the content key is equivalent to the request for the latest
-LightClientFinalityUpdate that the requested node has available.
+> The `LightClientFinalityUpdate` objects are ephemeral and only the latest is
+of use to the node. The content key requires the `optimistic_slot` and
+`finalized_slot` to be provided so that this object can be more efficiently
+gossiped. Nodes should decide to reject an `LightClientFinalityUpdate` in case
+it is not newer than the one they already have.
+For `FindContent` requests, a node should know the current slot as it is time
+based.
 
 #### LightClientOptimisticUpdate
 
 ```
-light_client_optimistic_update_key   = 0 (uint8)
+light_client_optimistic_update_key   = Container(optimistic_slot: uint64)
 selector                             = 0x03
 
 content                              = ForkDigest || SSZ.serialize(light_client_optimistic_update)
 content_key                          = selector + SSZ.serialize(light_client_optimistic_update_key)
 ```
 
-> A `0` in the content key is equivalent to the request for the latest
-LightClientOptimisticUpdate that the requested node has available.
+> The `LightClientFinalityUpdate` objects are ephemeral and only the latest is
+of use to the node. The content key requires the `optimistic_slot` to be
+provided so that this object can be more efficiently gossiped. Nodes should
+decide to reject an `LightClientFinalityUpdate` in case it is not newer than the
+one they already have.
+For `FindContent` requests, a node should know the current slot as it is time
+based.
 
 #### HistoricalSummaries
 
@@ -189,7 +199,7 @@ HistoricalSummariesProof = Vector[Bytes32, 5]
 
 historical_summaries_with_proof = HistoricalSummariesWithProof(
     epoch: uint64,
-    # HistoricalSummary object is defined in consensus specs: 
+    # HistoricalSummary object is defined in consensus specs:
     # https://github.com/ethereum/consensus-specs/blob/dev/specs/capella/beacon-chain.md#historicalsummary.
     historical_summaries: SSZList(HistoricalSummary, max_length=HISTORICAL_ROOTS_LIMIT),
     proof: HistoricalSummariesProof
