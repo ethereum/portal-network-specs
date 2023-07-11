@@ -141,7 +141,7 @@ HISTORICAL_ROOTS_LIMIT = 2**24  # = 16,777,216
 light_client_bootstrap_key = Container(block_hash: Bytes32)
 selector                   = 0x00
 
-content                    = ForkDigest || SSZ.serialize(LightlientBootstrap)
+content                    = ForkDigest + SSZ.serialize(LightlientBootstrap)
 content_key                = selector + SSZ.serialize(light_client_bootstrap_key)
 ```
 
@@ -151,7 +151,7 @@ content_key                = selector + SSZ.serialize(light_client_bootstrap_key
 light_client_update_keys   = Container(start_period: uint64, count: uint64)
 selector                   = 0x01
 
-content                    = SSZList(ForkDigest || LightClientUpdate, max_lenght=MAX_REQUEST_LIGHT_CLIENT_UPDATES)
+content                    = SSZList(ForkDigest + LightClientUpdate, max_lenght=MAX_REQUEST_LIGHT_CLIENT_UPDATES)
 content_key                = selector + SSZ.serialize(light_client_update_keys)
 ```
 
@@ -161,7 +161,7 @@ content_key                = selector + SSZ.serialize(light_client_update_keys)
 light_client_finality_update_key  = 0 (uint8)
 selector                          = 0x02
 
-content                           = ForkDigest || SSZ.serialize(light_client_finality_update)
+content                           = ForkDigest + SSZ.serialize(light_client_finality_update)
 content_key                       = selector + SSZ.serialize(light_client_finality_update_key)
 ```
 
@@ -174,7 +174,7 @@ LightClientFinalityUpdate that the requested node has available.
 light_client_optimistic_update_key   = 0 (uint8)
 selector                             = 0x03
 
-content                              = ForkDigest || SSZ.serialize(light_client_optimistic_update)
+content                              = ForkDigest + SSZ.serialize(light_client_optimistic_update)
 content_key                          = selector + SSZ.serialize(light_client_optimistic_update_key)
 ```
 
@@ -198,7 +198,7 @@ historical_summaries_with_proof = HistoricalSummariesWithProof(
 historical_summaries_key   = 0 (uint8)
 selector                   = 0x04
 
-content                    = ForkDigest || SSZ.serialize(historical_summaries_with_proof)
+content                    = ForkDigest + SSZ.serialize(historical_summaries_with_proof)
 content_key                = selector + SSZ.serialize(historical_summaries_key)
 ```
 
