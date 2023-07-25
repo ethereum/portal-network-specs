@@ -25,4 +25,47 @@ We propose that the Enclave system be built as an additive layer to the existing
 
 ## Overview
 
-TODO
+### Design Principles
+
+The ideal design here seems to be to firmly specify the core API for enclaves for these things:
+
+- How they are discovered
+- How they are interacted with for retrieval of data
+
+Then we likely want to keep the specificatiion flexible enough that we can support a range of enclave types:
+
+- Public enclaves that any "random" node could join
+- Staked enclaves where joining requires nodes to have something "at stake"
+- Private enclaves that implement their own structure.
+
+The goal here would be to keep enough freedom for there to be a diverse set of enclaves, while still providing a clear and "secure enough" structure for Public enclaves.
+
+### Enclave Mechanics and Ideas
+
+> Everything here is "first draft" and needs to be picked apart and reviewed.  Take this as an attempt to provide a rough description that is expected to have flaws that need to be addressed.
+
+#### Gateways
+
+A "Gateway" is how enclaves communicate externally.  An enclave can have a single gateway, or many gateways.  A gateway is a node that receives external requests for data, proxies those requests internally to the appropriate nodes within the enclave and serves the returned data to the original external requester.
+
+
+#### Public Enclave Operation
+
+The naive starting point for establishing public enclaves is to have individual nodes opt-in to being the coordinator for an enclave and act as the "gateway" node for that enclave.  They would then need a mechanism to solicit new nodes to join their enclave, likely listing areas of the address space where coverage is needed.  There would also likely need to be mechaniccs for "auditing" a new enclave member for whether they are able to adequately respond to requests for data, as well as a way to evict enclave members who are not performing their duties adequately.
+
+#### Full Coverage of DHT Address Space
+
+For "Public" enclaves, the internal structure would be made up of many individual nodes.  These nodes would likely be somewhat evenly spaced throughout the DHT such that they provide full coverage of the full DHT address space.  An enclave would likely want to work towards redundancy in this reguard ensuring that they have multiple nodes covering every portion of the address space to account for attrition and under-performing nodes.
+
+#### Internal Communication
+
+Ideally, one benefit of being in an enclave would be that you should be able to request data from other nodes in the enclave and receive responses faster than you might in the public network.  In this manner, an enclave could operate in much the same way as the overall DHT does, with nodes maintaining a kind of "routing table" that is populated with the other nodes of the enclave and being able to traverse the enclave nodes to find the ones that have the necessary data.
+
+#### Security Things
+
+It will be important for public enclaves to be able to do the following.
+
+- Induction verification of new nodes joining the enclave to ensure they are able to perform their duties (serving data from a portion of the DHT)
+- Ongoing auditing of enclave nodes to detect underperforming or malicious nodes (TODO: modes of maliciousness should be defined here)
+- Quality-Of-Service control to limit requests/response in times of high load.
+- Internal QOS control to prevent individual nodes over-using the resources of the enclave.
