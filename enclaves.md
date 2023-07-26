@@ -69,3 +69,16 @@ It will be important for public enclaves to be able to do the following.
 - Ongoing auditing of enclave nodes to detect underperforming or malicious nodes (TODO: modes of maliciousness should be defined here)
 - Quality-Of-Service control to limit requests/response in times of high load.
 - Internal QOS control to prevent individual nodes over-using the resources of the enclave.
+
+## Securing Public Enclaves
+
+In order for this system to work well, public enclaves need to be viable which means that they will need to be able to have some level of mitigation for the following issues:
+
+- Leaching: Enclave node that is "leaching" too much data.
+- Censorship: Enclave node that is selectively responding to queries for data (censorship)
+- <what else?>
+
+### Leaching
+
+All nodes in the enclave 
+
