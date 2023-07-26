@@ -78,7 +78,17 @@ In order for this system to work well, public enclaves need to be viable which m
 - Censorship: Enclave node that is selectively responding to queries for data (censorship)
 - <what else?>
 
+> My intuition is that we *can* secure enclaves in a way that we cannot secure the whole DHT simply because enclaves would be smaller, and their full membership known.  These small changes seem to allow a class of security improvemments that are otherwise not feasible in the full DHT.
+
 ### Leaching
 
-All nodes in the enclave 
+All nodes in the enclave should be able to be heald accountable for their internode communication.  This can be done by having nodes sign some kind of accumulated running total/tally of the total message bytes passed between them and regular reporting of this data to the "Gateway" node or whatever node is acting as coordinator for the enclave.  This shouold allow for enclaves to evict, throttle, or otherwise deal with nodes that are consuming a disporportionate amount of enclave resources.
 
+## Censorship
+
+In the event that a node in the network fails to respond to a query for a piece of data, there are two possibilities
+
+- They don't have the data
+- They are censoring the data
+
+Censorship should be detectable by first providing the node in question with known data via gossip and then requesting the data from that node.  This operation could be performed opaquely by multiple nodes, one performing the gossip, and another performing the request to prevent a situation where the node in question is able to correctly guess that they are being audited.  There are many way this scheme could be subtly augmented to increase the guarantees or confidence it provides.
