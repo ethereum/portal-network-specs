@@ -156,8 +156,29 @@
       }
     }
   },
-  "ContentResult": {
-    "name": "ContentResult",
+  "RecursiveFindContentResult": {
+    "name": "RecursiveFindContentResult",
+    "description": "Returns the hex encoded content value and utp transfer flag. If the content is not available, returns \"0x\"",
+    "schema": {
+      "type": "object",
+      "required": [
+        "contentValue",
+        "utpTransfer"
+      ],
+      "properties": {
+        "contentValue": {
+          "description": "Hex encoded content value",
+          "$ref": "#/components/schemas/hexString"
+        },
+        "utpTransfer": {
+          "description": "Indicates whether the content was transferred over a uTP connection or not.",
+          "type": "boolean"
+        }
+      }
+    }
+  },
+  "LocalContentResult": {
+    "name": "LocalContentResult",
     "description": "Returns the hex encoded content value. If the content is not available, returns \"0x\"",
     "schema": {
       "type": "object",

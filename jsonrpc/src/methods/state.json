@@ -136,7 +136,7 @@
       }
     ],
     "result": {
-      "$ref": "#/components/contentDescriptors/ContentResult"
+      "$ref": "#/components/contentDescriptors/RecursiveFindContentResult"
     }
   },
   {
@@ -163,7 +163,7 @@
       }
     ],
     "result": {
-      "$ref": "#/components/contentDescriptors/ContentResult"
+      "$ref": "#/components/contentDescriptors/LocalContentResult"
     }
   },
   {
