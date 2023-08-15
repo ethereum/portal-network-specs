@@ -128,7 +128,7 @@ nodes        = Container(total: uint8, enrs: List[ByteList, max_length=32])
 
 #### Find Content (0x04)
 
-Request message to get the `content` with `content_key`, **or**, in case the recipient does not have the data, a list of ENR records of nodes that are closer than the recipient is to the requested content.
+Request message to get the `content` with `content_key`, **or**, in case the recipient does not have the data, a list of ENR records of nodes that are closest to the requested content.
 
 ```
 selector     = 0x04
