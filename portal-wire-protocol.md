@@ -128,7 +128,7 @@ nodes        = Container(total: uint8, enrs: List[ByteList, max_length=32])
 
 #### Find Content (0x04)
 
-Request message to get the `content` with `content_key`, **or**, in case the recipient does not have the data, a list of ENR records of nodes that are closer than the recipient is to the requested content.
+Request message to get the `content` with `content_key`, **or**, in case the recipient does not have the data, a list of ENR records of nodes that are closest to the requested content.
 
 ```
 selector     = 0x04
@@ -154,7 +154,7 @@ content      = Union[connection_id: Bytes2, content: ByteList, enrs: List[ByteLi
 *  `content`: byte string of the requested content.
     * This field **MUST** be used when the requested data can fit in this single response.
 * `enrs`: List of byte strings, each of which is an RLP encoded ENR record.
-    * Individual ENR records **MUST** be closer to the requested content than the responding node.
+    * The list of ENR records **MUST** be closest nodes to the requested content that the responding node has stored.
     * The set of derived `node_id` values from the ENR records **MUST** be unique.
 
 If the node does not hold the requested content, and the node does not know of any nodes with eligible ENR values, then the node **MUST** return `enrs` as an empty list.
