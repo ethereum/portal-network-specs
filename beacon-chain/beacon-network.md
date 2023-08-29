@@ -89,6 +89,22 @@ The Beacon Chain Network uses the standard routing table structure from the Port
 
 ### Node State
 
+#### Data Storage and Retrieval
+
+Nodes running the beacon chain network MUST store and provide all beacon light
+client content for the range as is specified by the consensus light client
+specifications: https://github.com/ethereum/consensus-specs/blob/dev/specs/altair/light-client/full-node.md#deriving-light-client-data
+
+This means that data radius and the concept of closeness to data is not
+applicable for this content.
+
+When a node cannot fulfill a request for any of this data it SHOULD return an
+empty list of ENRs. It MAY return a list of ENRs of nodes that have provided
+this data in the past.
+
+When a node gossips any of this data, it MUST use [random gossip](./beacon-network.md/#random-gossip) instead of neighborhood gossip.
+
+
 #### Data Radius
 
 The Beacon Chain Network includes one additional piece of node state that should be tracked. Nodes must track the `data_radius`
@@ -155,6 +171,9 @@ content                    = SSZList(ForkDigest + LightClientUpdate, max_lenght=
 content_key                = selector + SSZ.serialize(light_client_update_keys)
 ```
 
+> If a node cannot provide one of the `LightClientUpdate` objects in the
+the requested range it MUST NOT reply any content.
+
 #### LightClientFinalityUpdate
 
 ```
@@ -189,7 +208,7 @@ HistoricalSummariesProof = Vector[Bytes32, 5]
 
 historical_summaries_with_proof = HistoricalSummariesWithProof(
     epoch: uint64,
-    # HistoricalSummary object is defined in consensus specs: 
+    # HistoricalSummary object is defined in consensus specs:
     # https://github.com/ethereum/consensus-specs/blob/dev/specs/capella/beacon-chain.md#historicalsummary.
     historical_summaries: SSZList(HistoricalSummary, max_length=HISTORICAL_ROOTS_LIMIT),
     proof: HistoricalSummariesProof
@@ -207,9 +226,15 @@ HistoricalSummaries that the requested node has available.
 
 ### Algorithms
 
-#### Portal Gossip
+#### Random Gossip
 
-TODO
+We use the term *random gossip* to refer to the process through which content is disseminated to a random set DHT nodes.
+
+The process works as follows:
+- A DHT node is offered piece of content that is specified to be gossiped via
+random gossip.
+- The node selects a random node from a random bucket and does this for `n` nodes.
+- The node offers the content to the `n` selected nodes.
 
 #### Validation
 
