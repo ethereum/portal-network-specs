@@ -177,28 +177,39 @@ the requested range it MUST NOT reply any content.
 #### LightClientFinalityUpdate
 
 ```
-light_client_finality_update_key  = 0 (uint8)
+light_client_finality_update_key  = Container(finalized_slot: uint64)
 selector                          = 0x02
 
 content                           = ForkDigest + SSZ.serialize(light_client_finality_update)
 content_key                       = selector + SSZ.serialize(light_client_finality_update_key)
 ```
 
-> A `0` in the content key is equivalent to the request for the latest
-LightClientFinalityUpdate that the requested node has available.
+> The `LightClientFinalityUpdate` objects are ephemeral and only the latest is
+of use to the node. The content key requires the `finalized_slot` to be provided
+so that this object can be more efficiently gossiped. Nodes should decide to
+reject an `LightClientFinalityUpdate` in case it is not newer than the one they
+already have.
+For `FindContent` requests, a node will either know the last previous finalized
+slot, if it has been following the updates, or it will have to guess slots that
+are potentially finalized.
 
 #### LightClientOptimisticUpdate
 
 ```
-light_client_optimistic_update_key   = 0 (uint8)
+light_client_optimistic_update_key   = Container(optimistic_slot: uint64)
 selector                             = 0x03
 
 content                              = ForkDigest + SSZ.serialize(light_client_optimistic_update)
 content_key                          = selector + SSZ.serialize(light_client_optimistic_update_key)
 ```
 
-> A `0` in the content key is equivalent to the request for the latest
-LightClientOptimisticUpdate that the requested node has available.
+> The `LightClientOptimisticUpdate` objects are ephemeral and only the latest is
+of use to the node. The content key requires the `optimistic_slot` to be
+provided so that this object can be more efficiently gossiped. Nodes should
+decide to reject an `LightClientOptimisticUpdate` in case it is not newer than
+the one they already have.
+For `FindContent` requests, a node should know the current slot as it is time
+based.
 
 #### HistoricalSummaries
 
