@@ -205,7 +205,7 @@ content_key                          = selector + SSZ.serialize(light_client_opt
 
 > The `LightClientOptimisticUpdate` objects are ephemeral and only the latest is
 of use to the node. The content key requires the `optimistic_slot` (corresponding to
-the `slot` in the `attested_header` contained in the update to be provided so that this
+the `slot` in the `attested_header` contained in the update) to be provided so that this
 object can be more efficiently gossiped. Nodes should decide to reject an
 `LightClientOptimisticUpdate` in case it is not newer than the one they already have.
 For `FindContent` requests, a node should compute the current slot based on its local clock
