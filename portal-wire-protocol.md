@@ -123,6 +123,7 @@ nodes        = Container(total: uint8, enrs: List[ByteList, max_length=32])
 * `enrs`: List of byte strings, each of which is an RLP encoded ENR record.
     * Individual ENR records **MUST** correspond to one of the requested distances.
     * It is invalid to return multiple ENR records for the same `node_id`.
+    * The ENR record of the requesting & responding node **SHOULD** be filtered out of the list.
 
 > Note: If the number of ENR records cannot be encoded into a single message, then they should be sent back using multiple messages, with the `total` field representing the total number of messages that are being sent.
 
@@ -156,6 +157,7 @@ content      = Union[connection_id: Bytes2, content: ByteList, enrs: List[ByteLi
 * `enrs`: List of byte strings, each of which is an RLP encoded ENR record.
     * The list of ENR records **MUST** be closest nodes to the requested content that the responding node has stored.
     * The set of derived `node_id` values from the ENR records **MUST** be unique.
+    * The ENR record of the requesting & responding node **SHOULD** be filtered out of the list.
 
 If the node does not hold the requested content, and the node does not know of any nodes with eligible ENR values, then the node **MUST** return `enrs` as an empty list.
 
