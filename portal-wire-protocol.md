@@ -349,7 +349,7 @@ We use the term *neighborhood gossip* to refer to the process through which cont
 The process works as follows:
 
 - A DHT node is offered and receives a piece of content that it is interested in.
-- This DHT node checks their routing table for `k` nearby DHT nodes that should also be interested in the content.
+- This DHT node checks their routing table for `k` nearby DHT nodes that should also be interested in the content. Those `k` nodes **SHOULD** not include the node that originally provided aformentioned content.
 - If the DHT node finds `n` or more DHT nodes interested it selects `n` of these nodes and offers the content to them.
 - If the DHT node finds less than `n` DHT nodes interested, it launches a node lookup with target `content-id` and it
 offers the content to maximum `n` of the newly discovered nodes.
