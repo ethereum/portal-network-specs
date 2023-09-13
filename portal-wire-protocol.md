@@ -123,7 +123,7 @@ nodes        = Container(total: uint8, enrs: List[ByteList, max_length=32])
 * `enrs`: List of byte strings, each of which is an RLP encoded ENR record.
     * Individual ENR records **MUST** correspond to one of the requested distances.
     * It is invalid to return multiple ENR records for the same `node_id`.
-    * The ENR record of the requesting & responding node **SHOULD** be filtered out of the list.
+    * The ENR record of the requesting node **SHOULD** be filtered out of the list.
 
 > Note: If the number of ENR records cannot be encoded into a single message, then they should be sent back using multiple messages, with the `total` field representing the total number of messages that are being sent.
 
