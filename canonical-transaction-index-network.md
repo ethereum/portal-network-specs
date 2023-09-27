@@ -36,7 +36,7 @@ The canonical transaction index network uses the SHA256 Content ID derivation fu
 
 ### Wire Protocol
 
-The [Portal wire protocol](./portal-wire-protocol.md) is used as wire protocol for the history network.
+The [Portal wire protocol](./portal-wire-protocol.md) is used as wire protocol for the canonical transaction index network.
 
 
 #### Protocol Identifier
@@ -66,13 +66,13 @@ custom_payload = SSZ.serialize(custom_data)
 
 ### Routing Table 
 
-The history network uses the standard routing table structure from the Portal Wire Protocol.
+The canonical transaction index network uses the standard routing table structure from the Portal Wire Protocol.
 
 ### Node State
 
 #### Data Radius
 
-The history network includes one additional piece of node state that should be tracked.  Nodes must track the `data_radius` from the Ping and Pong messages for other nodes in the network.  This value is a 256 bit integer and represents the data that a node is "interested" in.  We define the following function to determine whether node in the network should be interested in a piece of content.
+The canonical transaction index network includes one additional piece of node state that should be tracked.  Nodes must track the `data_radius` from the Ping and Pong messages for other nodes in the network.  This value is a 256 bit integer and represents the data that a node is "interested" in.  We define the following function to determine whether node in the network should be interested in a piece of content.
 
 ```
 interested(node, content) = distance(node.id, content.id) <= node.radius
