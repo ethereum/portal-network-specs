@@ -140,7 +140,7 @@ A leaf node from the main account trie and accompanying merkle proof against a r
 
 ```
 account_trie_proof_key := Container(address: Bytes20, state_root: Bytes32)
-selector               := 0x00
+selector               := 0x20
 
 content                := Container(witness: MPTWitness)
 content_id             := keccak(address)
@@ -153,7 +153,7 @@ A leaf node from a contract storage trie and accompanying merkle proof against t
 
 ```
 storage_trie_proof_key := Container(address: Bytes20, slot: uint256, state_root: Bytes32)
-selector               := 0x01
+selector               := 0x21
 
 content                := Container(witness: MPTWitness)
 content_id             := (keccak(address) + keccak(slot)) % 2**256
@@ -166,7 +166,7 @@ The bytecode for a specific contract as referenced by `Account.code_hash`
 
 ```
 contract_bytecode_key := Container(address: Bytes20, code_hash: Bytes32)
-selector              := 0x02
+selector              := 0x22
 
 content               := ByteList(24756)  // Represents maximum possible size of contract bytecode
 content_id            := sha256(address + code_hash)
