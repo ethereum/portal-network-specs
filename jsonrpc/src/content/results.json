@@ -192,7 +192,7 @@
   },
   "GossipResult": {
     "name": "gossipResult",
-    "description": "Returns the number of peers that the content was gossiped to",
+    "description": "Returns the number of peers that accepted the gossiped content",
     "schema": {
       "title": "number of peers",
       "type": "number"
