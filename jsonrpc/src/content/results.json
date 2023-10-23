@@ -162,11 +162,11 @@
     "schema": {
       "type": "object",
       "required": [
-        "contentValue",
+        "content",
         "utpTransfer"
       ],
       "properties": {
-        "contentValue": {
+        "content": {
           "description": "Hex encoded content value",
           "$ref": "#/components/schemas/hexString"
         },
@@ -183,7 +183,7 @@
     "schema": {
       "type": "object",
       "properties": {
-        "contentValue": {
+        "content": {
           "description": "Hex encoded content value",
           "$ref": "#/components/schemas/hexString"
         }
