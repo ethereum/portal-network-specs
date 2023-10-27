@@ -62,7 +62,7 @@
     "type": "object",
     "properties" : {
       "durationsMs": {
-        "description": "Time it took from the beginning of the original request up to receiving this response.",
+        "description": "Time it took from the beginning of the lookup(JSON-RPC request) up to receiving this response.",
         "type": "integer",
         "minimum": 0
       },
