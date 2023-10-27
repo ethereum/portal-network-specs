@@ -1,0 +1,95 @@
+{
+  "traceResultObject": {
+    "title": "traceResultObject",
+    "description": "Trace data for the result of tracing content request.",
+    "type": "object",
+    "required": [
+      "origin",
+      "targetId",
+      "responses",
+      "metadata",
+      "startedAtMs"
+    ],
+    "properties": {
+      "origin": {
+        "description": "Local Node ID",
+        "$ref": "#/components/schemas/uint256"
+      },
+      "targetId": {
+        "description": "Target content ID",
+        "$ref": "#/components/schemas/uint256"
+      },
+      "receivedFrom": {
+        "description": "Node ID from which the content was received.",
+        "$ref": "#/components/schemas/uint256"
+      },
+      "responses": {
+        "$ref": "#/components/schemas/traceResultResponses"
+      },
+      "metadata": {
+        "$ref": "#/components/schemas/traceResultMetadata"
+      },
+      "startedAtMs": {
+        "type": "integer",
+        "minimum": 0,
+        "description": "Timestamp of the beginning of this request in milliseconds."
+      },
+      "cancelled": {
+        "description": "List of node IDs requests to which were sent but cancelled due to receiving content from somewhere else, before receiving response from those nodes.",
+        "$ref": "#/components/schemas/listOfNodeIds"
+      }
+    }
+  },
+  "listOfNodeIds": {
+    "title": "listOfNodeIds",
+    "description": "Contains list of nodes IDs.",
+    "type": "array",
+    "items": {
+      "$ref": "#/components/schemas/uint256"
+    }
+  },
+  "traceResultResponses": {
+    "title": "traceResultResponses",
+    "description": "Contains a map of remote node IDs with the node IDs each node responded with. For the node ID that is in the `receivedFrom` field, `respondedWith` MUST be empty array.",
+    "type": "object",
+    "additionalProperties": {
+      "$ref": "#/components/schemas/traceResultResponseItem"
+    }
+  },
+  "traceResultResponseItem": {
+    "title": "traceResultResponseItem",
+    "description": "Contains the node's response, including the duration of the request.",
+    "type": "object",
+    "properties" : {
+      "durationsMs": {
+        "description": "Time it took from the beginning of the lookup(JSON-RPC request) up to receiving this response.",
+        "type": "integer",
+        "minimum": 0
+      },
+      "respondedWith": {
+        "$ref": "#/components/schemas/listOfNodeIds"
+      }
+    }
+  },
+  "traceResultMetadata": {
+    "title": "traceResultMetadata",
+    "description": "Contains a map from node ID to the metadata object for that node.",
+    "type": "object",
+    "additionalProperties": {
+      "$ref": "#/components/schemas/traceResultMetadataObject"
+    }
+  },
+  "traceResultMetadataObject": {
+    "title": "traceResultMetadataObject",
+    "description": "Contains metadata for each node ID mentioned in the trace response.",
+    "type": "object",
+    "properties": {
+      "enr": {
+        "$ref": "#/components/schemas/Enr"
+      },
+      "distance": {
+        "$ref": "#/components/schemas/uint256"
+      }
+    }
+  }
+}

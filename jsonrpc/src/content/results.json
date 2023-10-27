@@ -162,11 +162,11 @@
     "schema": {
       "type": "object",
       "required": [
-        "contentValue",
+        "content",
         "utpTransfer"
       ],
       "properties": {
-        "contentValue": {
+        "content": {
           "description": "Hex encoded content value",
           "$ref": "#/components/schemas/hexString"
         },
@@ -177,17 +177,37 @@
       }
     }
   },
+  "TraceRecursiveFindContentResult": {
+    "name": "TraceRecursiveFindContentResult",
+    "description": "Returns the hex encoded content value and trace data object. If the content is not available, returns \"0x\"",
+    "schema": {
+      "type": "object",
+      "required": [
+        "content",
+        "utpTransfer",
+        "trace"
+      ],
+      "properties": {
+        "content": {
+          "description": "Hex encoded content value",
+          "$ref": "#/components/schemas/hexString"
+        },
+        "utpTransfer": {
+          "description": "Indicates whether the content was transferred over a uTP connection or not.",
+          "type": "boolean"
+        },
+        "trace": {
+          "description": "Contains trace data for the request.",
+          "$ref": "#/components/schemas/traceResultObject"
+        }
+      }
+    }
+  },
   "LocalContentResult": {
     "name": "LocalContentResult",
     "description": "Returns the hex encoded content value. If the content is not available, returns \"0x\"",
     "schema": {
-      "type": "object",
-      "properties": {
-        "contentValue": {
-          "description": "Hex encoded content value",
-          "$ref": "#/components/schemas/hexString"
-        }
-      }
+      "$ref": "#/components/schemas/hexString"
     }
   },
   "GossipResult": {
