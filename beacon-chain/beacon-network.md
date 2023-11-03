@@ -189,14 +189,16 @@ of use to the node. The content key requires the `finalized_slot` to be provided
 so that this object can be more efficiently gossiped. Nodes should decide to
 reject an `LightClientFinalityUpdate` in case it is not newer than the one they
 already have.
-For `FindContent` requests, a node will either know the last previous finalized
-slot, if it has been following the updates, or it will have to guess slots that
-are potentially finalized.
+For `FindContent` requests:
+- a requesting node will either know the last previous finalized slot, if it has been following the updates, or it will 
+have to guess slots that are potentially finalized.  
+- a responding node SHOULD reply with its current finality update if it corresponds the same or a newer slot than the one
+specified in the `light_client_finality_update_key` in the `FINDCONTENT` message.
 
 #### LightClientOptimisticUpdate
 
 ```
-light_client_optimistic_update_key   = Container(optimistic_slot: uint64)
+light_client_optimistic_update_key   = Container(signature_slot: uint64)
 selector                             = 0x03
 
 content                              = ForkDigest + SSZ.serialize(light_client_optimistic_update)
@@ -204,7 +206,7 @@ content_key                          = selector + SSZ.serialize(light_client_opt
 ```
 
 > The `LightClientOptimisticUpdate` objects are ephemeral and only the latest is
-of use to the node. The content key requires the `optimistic_slot` (corresponding to
+of use to the node. The content key requires the `signature_slot` (corresponding to
 the `signature_slot` in the the update) to be provided so that this
 object can be more efficiently gossiped. Nodes should decide to reject an
 `LightClientOptimisticUpdate` in case it is not newer than the one they already have.
