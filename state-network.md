@@ -38,41 +38,8 @@ The network stores the full execution layer state which emcompases the following
 
 ### Distance Function
 
-The state network uses the following "ring geometry" distance function.
+TODO: Same aS hISTORY
 
-```python
-MODULO = 2**256
-MID = 2**255
-
-def distance(node_id: uint256, content_id: uint256) -> uint256:
-    """
-    A distance function for determining proximity between a node and content.
-
-    Treats the keyspace as if it wraps around on both ends and
-    returns the minimum distance needed to traverse between two
-    different keys.
-
-    Examples:
-
-    >>> assert distance(10, 10) == 0
-    >>> assert distance(5, 2**256 - 1) == 6
-    >>> assert distance(2**256 - 1, 6) == 7
-    >>> assert distance(5, 1) == 4
-    >>> assert distance(1, 5) == 4
-    >>> assert distance(0, 2**255) == 2**255
-    >>> assert distance(0, 2**255 + 1) == 2**255 - 1
-    """
-    if node_id > content_id:
-        diff = node_id - content_id
-    else:
-        diff = content_id - node_id
-
-    if diff > MID:
-        return MODULO - diff
-    else:
-        return diff
-
-```
 
 This distance function is designed to preserve locality of leaf data within main account trie and the individual contract storage tries.  The term "locality" in this context means that two trie nodes which are adjacent to each other in the trie will also be adjacent to each other in the DHT.
 
@@ -125,53 +92,86 @@ A node should track their own radius value and provide this value in all Ping or
 
 ### Data Types
 
+* Content in **Offer/Accept** differs from content in **Find/Found**
+* **OFFER** contains a proof
+* **FIND** *does not* contain a proof
+
 #### Component Data Elements
 
 #### Proofs
 Merkle Patricia Trie (MPT) proofs consist of a list of witness nodes that correspond to each trie node that consists of various data elements depending on the type of node (e.g.blank, branch, extension, leaf).  When serialized, each witness node is represented as an RLP serialized list of the component elements with the largest possible node type being the branch node which when serialized is a list of up to sixteen hashes in `Bytes32` (representing the hashes of each of the 16 nodes in that branch and level of the tree) plus the 4 elements of the node's value (balance, nonce, codehash, storageroot) represented as `Bytes32`.  When combined with the RLP prefixes, this yields a possible maximum length of 667 bytes.  We specify 1024 as the maximum length due to constraints in the SSZ spec for list lengths being a power of 2 (for easier merkleization.)
+
+> TODO: Define proof such that there is one canonical representation of a witness that is streamable and minimal??
+> Specs should specify order of proof nodes, and disallow inclusion of superflous nodes.
+
 ```
 WitnessNode            := ByteList(1024)
 MPTWitness             := List(witness: WitnessNode, max_length=32)
 ```
 
-#### Account Trie Proof
+#### Paths (Nibbles)
 
-A leaf node from the main account trie and accompanying merkle proof against a recent `Header.state_root`
+We define nibbles as a sequence of single hex values
+```
+nibble := {0,1,2,3,4,5,6,7,8,9,a,b,c,d,e,f} // 16 possible values
+NibblePair := Byte // 2 nibbles tightly packed into a single byte
+Nibbles := List(NibblePair, max_length=32) //
+```
+
+To serialize nibbles, we use the following encoding:
+ - All Nibbles tightly packed into bytes
+ - For even number of nibbles: 0x00 byte appended to the end
+ - For odd number of nibbles: 0x1 nibble appended to the end
+ - Empty list of nibbles is encoded as 0x00
+ - example:
+```
+[] = 0x00
+[1] = 0x11
+[1,a] = 0x1a00
+[1,a,2] = 0x1a21
+[d,e,a,d,b,e,e,f] = 0xdeadbeef00
+[b,f,f,0,5,2,e] = 0xbff052e1
+```
+
+#### Account Trie Node *
+
+Offer Content: A leaf node from the main account trie and accompanying merkle proof against a recent `Header.state_root`
+
+
+Retrieval Content: 
 
 ```
-account_trie_proof_key := Container(address: Bytes20, state_root: Bytes32)
+account_trie_node_key := Container(path: Nibbles, node_hash: Bytes32)
 selector               := 0x20
 
-content                := Container(witness: MPTWitness)
-content_id             := keccak(address)
-content_key            := selector + SSZ.serialize(account_trie_proof_key)
+content_for_offer       := Container( proof: MPTWitness)
+content_for_retrieval   := Container()
+content_id             := 
+content_key            := 
 ```
+#### Contract Trie Node *
 
-#### Contract Storage Trie Proof
-
-A leaf node from a contract storage trie and accompanying merkle proof against the `Account.storage_root`.
 
 ```
-storage_trie_proof_key := Container(address: Bytes20, slot: uint256, state_root: Bytes32)
+storage_trie_node_key := 
 selector               := 0x21
 
-content                := Container(witness: MPTWitness)
-content_id             := (keccak(address) + keccak(slot)) % 2**256
-content_key            := selector + SSZ.serialize(storage_trie_proof_key)
+content                := 
+content_id             := 
+content_key            := 
 ```
+#### Contract Code *
 
-#### Contract Bytecode
-
-The bytecode for a specific contract as referenced by `Account.code_hash`
 
 ```
-contract_bytecode_key := Container(address: Bytes20, code_hash: Bytes32)
-selector              := 0x22
+contract_codee_key := 
+selector               := 0x22
 
-content               := ByteList(24756)  // Represents maximum possible size of contract bytecode
-content_id            := sha256(address + code_hash)
-content_key           := selector + SSZ.serialize(contract_bytecode_key)
+content                := 
+content_id             := 
+content_key            := 
 ```
+
 
 ## Gossip
 
