@@ -38,43 +38,7 @@ The network stores the full execution layer state which emcompases the following
 
 ### Distance Function
 
-The state network uses the following "ring geometry" distance function.
-
-```python
-MODULO = 2**256
-MID = 2**255
-
-def distance(node_id: uint256, content_id: uint256) -> uint256:
-    """
-    A distance function for determining proximity between a node and content.
-
-    Treats the keyspace as if it wraps around on both ends and
-    returns the minimum distance needed to traverse between two
-    different keys.
-
-    Examples:
-
-    >>> assert distance(10, 10) == 0
-    >>> assert distance(5, 2**256 - 1) == 6
-    >>> assert distance(2**256 - 1, 6) == 7
-    >>> assert distance(5, 1) == 4
-    >>> assert distance(1, 5) == 4
-    >>> assert distance(0, 2**255) == 2**255
-    >>> assert distance(0, 2**255 + 1) == 2**255 - 1
-    """
-    if node_id > content_id:
-        diff = node_id - content_id
-    else:
-        diff = content_id - node_id
-
-    if diff > MID:
-        return MODULO - diff
-    else:
-        return diff
-
-```
-
-This distance function is designed to preserve locality of leaf data within main account trie and the individual contract storage tries.  The term "locality" in this context means that two trie nodes which are adjacent to each other in the trie will also be adjacent to each other in the DHT.
+> TODO: COPY FROM HISTORY-NETWORK
 
 
 ### Content ID Derivation Function
@@ -246,13 +210,3 @@ Each time a new block is added to their view of the chain, a set of merkle proof
 
 The receiving DHT node will propagate the data to nearby nodes from their routing table.
 
-### Updating cold Leaf Proofs
-
-Anytime the state root changes for either the main account trie or a contract storage trie, every leaf proof under that root will need to be updated.  The primary gossip mechanism will ensure that leaf data that was added, modified, or removed will receive and updated proof.  However, we need a mechanism for updating the leaf proofs for "cold" data that has not been changed.
-
-Each time a new block is added to the chain, the DHT nodes storing leaf proof data will need to perform a walk of the trie starting at the state root. This walk of the trie will be directed towards the slice of the trie dictated by the set of leaves that the node is storing. As the trie is walked it should be compared to the previous proof from the previous state root. This walk concludes once all of the in-range leaves can be proven with the new state root.
-
-
-> TODO: reverse diffs and storing only the latest proof.
-
-> TODO: gossiping proof updates to neighbors to reduce duplicate work.
