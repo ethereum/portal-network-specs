@@ -116,43 +116,145 @@ NibblePair := Byte // 2 nibbles tightly packed into a single byte
 Nibbles := Vector(NibblePair, length=8) // fixed path length of 8 bytes
 ```
 
-#### Functions
+#### Helper Functions
 
+We define these helper functions.
 
-The combine path and node has functions is designed to use bits from the path as the 'high bits' for computed content_id
-Using the remaining bits from the node hash as the 'low bits' for the 32 Byte computed content_id
 ##### `combine_path_and_node_hash(path: Nibbles, node_hash: Bytes32) -> Bytes32`
-> TODO: Write a valid function
-> TODO: Nibbles MUST occupy *8* bytes
-> TODO: Define nibble function (pack_nibbles)
-> TODO: Test vectors
-> TODO: Explore attack vectors (mine a collision - same path and same node_hash bytes)
-```python
-def combine_path_and_node_hash(path: Nibbles, node_hash: Bytes32) -> Bytes32:
-        return pack_nibbles(path) + node_hash[8:]
+
+This function is designed to combine the "nibbles" which define the path of a
+node in the hexary merkle trie with the `node_hash` of that node in the trie
+into a 32 byte content-id value.  This function is designed such that the trie
+path occupies the *highest* bits of the content-id and the remaining bits are
+sourced from the `node_hash`.  The result of this is that trie nodes which are
+close to eacch other in the trie will be statistically likely to also be close
+to each other when compared using the XOR distance metric in the DHT.
+
+```
+# The maximum number of bytes in the resulting content-id that may be sourced
+# from the trie path
+MAX_PATH_BYTES = 8
+
+# The allowed values for a 'nibble'
+NIBBLES_VALUES = {
+    0x00, 0x01, 0x02, 0x03,
+    0x04, 0x05, 0x06, 0x07,
+    0x08, 0x09, 0x0a, 0x0b,
+    0x0c, 0x0d, 0x0e, 0x0f,
+}
+
+def tightly_pack_nibbles(path: Nibbles) -> bytes:
+    """
+    Take an even length bytestring of loosely packed nibbles values and return
+    them tightly packed as a byte string
+
+    >>> pack_nibbles(b'\x0a\x01\x03\x0f')
+    b'\xa1\x3f'
+    """
+    assert len(path) % 2 == 0
+    ipath = iter(path)
+    packed_values = []
+    for _ in range(len(path) // 2):
+        high, low = next(ipath), next(ipath)
+        packed = high << 4 | low
+        packed_values.append(packed)
+
+    return bytes(packed_values)
+
+def construct_trie_node_content_id(path: Nibbles, node_hash: Bytes32) -> Bytes32:
+    # `node_hash` must be a 32 byte value
+    assert len(node_hash) == 32
+    # `path` may not exceed 64 nibbles which is maximum possible trie depth
+    assert len(path) <= 64
+    # `path` must be valid `nibbles` values
+    assert set(path).issubset(NIBBLES_VALUES)
+
+    trimmed_path = path[:2 * MAX_PATH_BYTES]
+
+    if len(trimmed_path) % 2 == 0:  # path length is "even"
+        #
+        # path       = (0xa, 0xb, 0xc, 0x1, 0x2, 0x3)
+        # node_hash  = 0xdeadbeefdeadbeef....
+        # content_id = 0xabc123efdeadbeef....
+        #
+        # +============+======+======+======+======+======+=====+
+        # |   byte #   | #0   | #1   | #2   | #3   | #4   | ... |
+        # +============+======+======+======+======+======+=====+
+        # | path       | 0xab | 0xc1 | 0x23 |      |      |     |
+        # +------------+------+------+------+------+------+-----+
+        # | content_id |   ^^ |      |   ^^ |      |      |     |
+        # | content_id | 0xab | 0xc1 | 0x23 | 0xef | 0xde | ... |
+        # | content_id |      |      |      |   vv |   vv |     |
+        # +------------+------+------+------+------+------+-----+
+        # | node_hash  | 0xde | 0xad | 0xbe | 0xef | 0xde | ... |
+        # +------------+------+------+------+------+------+-----+
+        #
+        packed_path = tightly_pack_nibbles(trimmed_path)
+        node_hash_low_part = node_hash[len(packed_path):]
+        return packed_path + node_hash_low_part
+    else:  # path length is "odd"
+        #
+        # path       = (0xa, 0xb, 0xc, 0x1, 0x2)
+        # node_hash  = 0xdeadbeefdeadbeef....
+        # content_id = 0xabc12eefdeadbeef....
+        #
+        # +============+======+======+======+======+======+=====+
+        # |   byte #   | #0   | #1   | #2   | #3   | #4   | ... |
+        # +============+======+======+======+======+======+=====+
+        # | path       | 0xab | 0xc1 | 0x2  |      |      |     |
+        # +------------+------+------+------+------+------+-----+
+        # | content_id |   ^^ |      |   ^  |      |      |     |
+        # | content_id | 0xab | 0xc1 | 0x2e | 0xef | 0xde | ... |
+        # | content_id |      |      |    v |   vv |   vv |     |
+        # +------------+------+------+------+------+------+-----+
+        # | node_hash  | 0xde | 0xad | 0xbe | 0xef | 0xde | ... |
+        # +------------+------+------+------+------+------+-----+
+        #
+        packed_path_high_part = tightly_pack_nibbles(trimmed_path[:-1])
+
+        # Since the nibbles value in this case is odd length, then we must
+        # combine the last nibble with the lower 4 bits of the byte in that
+        # position from the node_hash value.
+        middle_high_part = trimmed_path[-1] << 4
+        middle_low_part = node_hash[len(packed_path_high_part)] & 0x0f
+        middle_byte = middle_high_part | middle_low_part
+
+        node_hash_low_part = node_hash[len(packed_path_high_part) + 1:]
+
+        return packed_path_high_part + bytes((middle_byte,)) + node_hash_low_part
 ```
 
+#### `rotate(address: Bytes20, location: Bytes32) -> Bytes32`
+
+This function is used to rotate the content-id values of contract storage trie
+nodes in the DHT space, in order to ensure that contract storage tries are
+evenly distributed accross the DHT key space.
 
 
 ```python
-# location = address in DHT
 U256_MAX = 2**256 - 1
+
 def rotate(address: Bytes20, location: Bytes32) -> Bytes32:
-  base_location = keccak256(address)
-  rotated_location = base_location + location
-  # rotated_location can exceed u256_max, so we mod it
-  return rotated_location % U256_MAX
+    """
+    Location is a 32-byte value representation a location in the DHT key space.
+    """
+    rotation_amount = keccak256(address)
+    rotated_location = rotation_amount + location
+
+    # The modulo here ensures that the resulting location is constrained
+    # appropriately to the 32-byte DHT key space.
+    return rotated_location % U256_MAX
 ```
 
 #### Account Trie Node *
 
 ```
-account_trie_node_key := Container(path: Nibbles, node_hash: Bytes32)
+account_trie_node_key  := Container(path: Nibbles, node_hash: Bytes32)
 selector               := 0x20
 
-content_for_offer       := Container(proof: MPTWitness)
-content_for_retrieval   := Container(node: WitnessNode)
-content_id             := combine_path_and_node_hash(path: Nibbles, node_hash: Bytes32)
+content_for_offer      := Container(proof: MPTWitness, block_hash: Bytes32)
+content_for_retrieval  := Container(node: WitnessNode)
+content_id             := construct_trie_node_content_id(path: Nibbles, node_hash: Bytes32)
 content_key            := selector + SSZ.serialize(account_trie_node_key)
 ```
 
@@ -160,27 +262,29 @@ content_key            := selector + SSZ.serialize(account_trie_node_key)
 
 
 ```
-storage_trie_node_key := Container(address: Address, path: Nibbles, node_hash: Bytes32)
+storage_trie_node_key  := Container(address: Address, path: Nibbles, node_hash: Bytes32)
 selector               := 0x21
 
-content_for_offer      :=  Container(account_proof: MPTWitness, storage_proof: MPTWitness)
+content_for_offer      :=  Container(account_proof: MPTWitness, storage_proof: MPTWitness, block_hash: Bytes32)
 content_for_retrieval  :=  Container(node: WitnessNode)
-content_id             :=  rotate(addresss: Address, combine_path_and_node_hash(path: Nibbles, node_hash: Bytes32))
+content_id             :=  rotate(storage_trie_node_key.address: Address, construct_trie_node_content_id(storage_trie_node_key.path, storage_trie_node_key.node_hash))
 content_key            :=  selector + SSZ.serialize(storage_trie_node_key)
 ```
 
 
 #### Contract Code *
 
+> NOTE: Because CREATE2 opcode allows for redeployment of new code at an existing address, we MUST randomly distribute contract code storage across the DHT keyspace to avoid hotspots developing in the network for any contract that has had many different code deployments.  Were we to use the path based *high-bits* approach for computing the content-id, it would be possible for a single location in the network to accumulate a large number of contract code objects that all live in roughly the same space.
 Problematic!
 
 ```
-contract_codee_key := 
+contract_code_key      := Container(address: Address, code_hash: Bytes32)
 selector               := 0x22
 
-content                := 
-content_id             := 
-content_key            := 
+content_for_offer      := Container(code: ByteList, account_proof: MPTWitness, block_hash: Bytes32)
+content_for_retrieval  := Container(code: ByteList)
+content_id             := sha256(contract_code_key.address + contract_code_key.code_hash)
+content_key            := selector + SSZ.serialize(contract_code_key)
 ```
 
 
