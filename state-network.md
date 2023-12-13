@@ -98,44 +98,6 @@ WitnessNode            := ByteList(1024)
 MPTWitness             := List(witness: WitnessNode, max_length=32)
 ```
 
-#### Account Trie Proof
-
-A leaf node from the main account trie and accompanying merkle proof against a recent `Header.state_root`
-
-```
-account_trie_proof_key := Container(address: Bytes20, state_root: Bytes32)
-selector               := 0x20
-
-content                := Container(witness: MPTWitness)
-content_id             := keccak(address)
-content_key            := selector + SSZ.serialize(account_trie_proof_key)
-```
-
-#### Contract Storage Trie Proof
-
-A leaf node from a contract storage trie and accompanying merkle proof against the `Account.storage_root`.
-
-```
-storage_trie_proof_key := Container(address: Bytes20, slot: uint256, state_root: Bytes32)
-selector               := 0x21
-
-content                := Container(witness: MPTWitness)
-content_id             := (keccak(address) + keccak(slot)) % 2**256
-content_key            := selector + SSZ.serialize(storage_trie_proof_key)
-```
-
-#### Contract Bytecode
-
-The bytecode for a specific contract as referenced by `Account.code_hash`
-
-```
-contract_bytecode_key := Container(address: Bytes20, code_hash: Bytes32)
-selector              := 0x22
-
-content               := ByteList(24756)  // Represents maximum possible size of contract bytecode
-content_id            := sha256(address + code_hash)
-content_key           := selector + SSZ.serialize(contract_bytecode_key)
-```
 
 ## Gossip
 
