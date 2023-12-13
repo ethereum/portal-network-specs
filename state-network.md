@@ -97,6 +97,10 @@ A node should track their own radius value and provide this value in all Ping or
 
 #### Proofs
 Merkle Patricia Trie (MPT) proofs consist of a list of witness nodes that correspond to each trie node that consists of various data elements depending on the type of node (e.g.blank, branch, extension, leaf).  When serialized, each witness node is represented as an RLP serialized list of the component elements with the largest possible node type being the branch node which when serialized is a list of up to sixteen hashes in `Bytes32` (representing the hashes of each of the 16 nodes in that branch and level of the tree) plus the 4 elements of the node's value (balance, nonce, codehash, storageroot) represented as `Bytes32`.  When combined with the RLP prefixes, this yields a possible maximum length of 667 bytes.  We specify 1024 as the maximum length due to constraints in the SSZ spec for list lengths being a power of 2 (for easier merkleization.)
+
+> TODO: Define proof such that there is one canonical representation of a witness that is streamable and minimal??
+> Specs should specify order of proof nodes, and disallow inclusion of superflous nodes.
+
 ```
 WitnessNode            := ByteList(1024)
 MPTWitness             := List(witness: WitnessNode, max_length=32)
