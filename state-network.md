@@ -3,6 +3,7 @@
 This document is the specification for the sub-protocol that supports on-demand availability of state data from the execution chain.
 
 > 🚧 THE SPEC IS IN A STATE OF FLUX AND SHOULD BE CONSIDERED UNSTABLE 🚧
+> 🚧 12/12/23 🚧 WIP: STATE_NETWORK_SPEC v2 🚧 NEW_STATENETWORK_BOOGIE 🚧
 
 ## Overview
 
