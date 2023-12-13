@@ -139,6 +139,18 @@ def rotate(address: Bytes20, location: Bytes32) -> Bytes32:
   return rotated_location % U256_MAX
 ```
 
+#### Account Trie Node *
+
+```
+account_trie_node_key := Container(path: Nibbles, node_hash: Bytes32)
+selector               := 0x20
+
+content_for_offer       := Container(proof: MPTWitness)
+content_for_retrieval   := Container(node: WitnessNode)
+content_id             := combine_path_and_node_hash(path: Nibbles, node_hash: Bytes32)
+content_key            := selector + SSZ.serialize(account_trie_node_key)
+```
+
 
 ## Gossip
 
