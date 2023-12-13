@@ -89,6 +89,10 @@ A node should track their own radius value and provide this value in all Ping or
 
 ### Data Types
 
+* Content in **Offer/Accept** differs from content in **Find/Found**
+* **OFFER** contains a proof
+* **FIND** *does not* contain a proof
+
 #### Component Data Elements
 
 #### Proofs
