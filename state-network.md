@@ -102,6 +102,15 @@ WitnessNode            := ByteList(1024)
 MPTWitness             := List(witness: WitnessNode, max_length=32)
 ```
 
+#### Paths (Nibbles)
+
+We define nibbles as a sequence of single hex values
+```
+nibble := {0,1,2,3,4,5,6,7,8,9,a,b,c,d,e,f} // 16 possible values
+NibblePair := Byte // 2 nibbles tightly packed into a single byte
+Nibbles := Vector(NibblePair, length=8) // fixed path length of 8 bytes
+```
+
 
 ## Gossip
 
