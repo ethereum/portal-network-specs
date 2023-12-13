@@ -165,6 +165,19 @@ content_key            :=  selector + SSZ.serialize(storage_trie_node_key)
 ```
 
 
+#### Contract Code *
+
+Problematic!
+
+```
+contract_codee_key := 
+selector               := 0x22
+
+content                := 
+content_id             := 
+content_key            := 
+```
+
 
 ## Gossip
 
