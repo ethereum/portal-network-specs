@@ -111,6 +111,34 @@ NibblePair := Byte // 2 nibbles tightly packed into a single byte
 Nibbles := Vector(NibblePair, length=8) // fixed path length of 8 bytes
 ```
 
+#### Functions
+
+
+The combine path and node has functions is designed to use bits from the path as the 'high bits' for computed content_id
+Using the remaining bits from the node hash as the 'low bits' for the 32 Byte computed content_id
+##### `combine_path_and_node_hash(path: Nibbles, node_hash: Bytes32) -> Bytes32`
+> TODO: Write a valid function
+> TODO: Nibbles MUST occupy *8* bytes
+> TODO: Define nibble function (pack_nibbles)
+> TODO: Test vectors
+> TODO: Explore attack vectors (mine a collision - same path and same node_hash bytes)
+```python
+def combine_path_and_node_hash(path: Nibbles, node_hash: Bytes32) -> Bytes32:
+        return pack_nibbles(path) + node_hash[8:]
+```
+
+
+
+```python
+# location = address in DHT
+U256_MAX = 2**256 - 1
+def rotate(address: Bytes20, location: Bytes32) -> Bytes32:
+  base_location = keccak256(address)
+  rotated_location = base_location + location
+  # rotated_location can exceed u256_max, so we mod it
+  return rotated_location % U256_MAX
+```
+
 
 ## Gossip
 
