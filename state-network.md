@@ -39,43 +39,7 @@ The network stores the full execution layer state which emcompases the following
 
 ### Distance Function
 
-The state network uses the following "ring geometry" distance function.
-
-```python
-MODULO = 2**256
-MID = 2**255
-
-def distance(node_id: uint256, content_id: uint256) -> uint256:
-    """
-    A distance function for determining proximity between a node and content.
-
-    Treats the keyspace as if it wraps around on both ends and
-    returns the minimum distance needed to traverse between two
-    different keys.
-
-    Examples:
-
-    >>> assert distance(10, 10) == 0
-    >>> assert distance(5, 2**256 - 1) == 6
-    >>> assert distance(2**256 - 1, 6) == 7
-    >>> assert distance(5, 1) == 4
-    >>> assert distance(1, 5) == 4
-    >>> assert distance(0, 2**255) == 2**255
-    >>> assert distance(0, 2**255 + 1) == 2**255 - 1
-    """
-    if node_id > content_id:
-        diff = node_id - content_id
-    else:
-        diff = content_id - node_id
-
-    if diff > MID:
-        return MODULO - diff
-    else:
-        return diff
-
-```
-
-This distance function is designed to preserve locality of leaf data within main account trie and the individual contract storage tries.  The term "locality" in this context means that two trie nodes which are adjacent to each other in the trie will also be adjacent to each other in the DHT.
+> TODO: COPY FROM HISTORY-NETWORK
 
 
 ### Content ID Derivation Function
@@ -126,53 +90,99 @@ A node should track their own radius value and provide this value in all Ping or
 
 ### Data Types
 
+* Content in **Offer/Accept** differs from content in **Find/Found**
+* **OFFER** contains a proof
+* **FIND** *does not* contain a proof
+
 #### Component Data Elements
 
 #### Proofs
 Merkle Patricia Trie (MPT) proofs consist of a list of witness nodes that correspond to each trie node that consists of various data elements depending on the type of node (e.g.blank, branch, extension, leaf).  When serialized, each witness node is represented as an RLP serialized list of the component elements with the largest possible node type being the branch node which when serialized is a list of up to sixteen hashes in `Bytes32` (representing the hashes of each of the 16 nodes in that branch and level of the tree) plus the 4 elements of the node's value (balance, nonce, codehash, storageroot) represented as `Bytes32`.  When combined with the RLP prefixes, this yields a possible maximum length of 667 bytes.  We specify 1024 as the maximum length due to constraints in the SSZ spec for list lengths being a power of 2 (for easier merkleization.)
+
+> TODO: Define proof such that there is one canonical representation of a witness that is streamable and minimal??
+> Specs should specify order of proof nodes, and disallow inclusion of superflous nodes.
+
 ```
 WitnessNode            := ByteList(1024)
 MPTWitness             := List(witness: WitnessNode, max_length=32)
 ```
 
-#### Account Trie Proof
+#### Paths (Nibbles)
 
-A leaf node from the main account trie and accompanying merkle proof against a recent `Header.state_root`
+We define nibbles as a sequence of single hex values
+```
+nibble := {0,1,2,3,4,5,6,7,8,9,a,b,c,d,e,f} // 16 possible values
+NibblePair := Byte // 2 nibbles tightly packed into a single byte
+Nibbles := Vector(NibblePair, length=8) // fixed path length of 8 bytes
+```
+
+#### Functions
+
+
+The combine path and node has functions is designed to use bits from the path as the 'high bits' for computed content_id
+Using the remaining bits from the node hash as the 'low bits' for the 32 Byte computed content_id
+##### `combine_path_and_node_hash(path: Nibbles, node_hash: Bytes32) -> Bytes32`
+> TODO: Write a valid function
+> TODO: Nibbles MUST occupy *8* bytes
+> TODO: Define nibble function (pack_nibbles)
+> TODO: Test vectors
+> TODO: Explore attack vectors (mine a collision - same path and same node_hash bytes)
+```python
+def combine_path_and_node_hash(path: Nibbles, node_hash: Bytes32) -> Bytes32:
+        return pack_nibbles(path) + node_hash[8:]
+```
+
+
+
+```python
+# location = address in DHT
+U256_MAX = 2**256 - 1
+def rotate(address: Bytes20, location: Bytes32) -> Bytes32:
+  base_location = keccak256(address)
+  rotated_location = base_location + location
+  # rotated_location can exceed u256_max, so we mod it
+  return rotated_location % U256_MAX
+```
+
+#### Account Trie Node *
 
 ```
-account_trie_proof_key := Container(address: Bytes20, state_root: Bytes32)
+account_trie_node_key := Container(path: Nibbles, node_hash: Bytes32)
 selector               := 0x20
 
-content                := Container(witness: MPTWitness)
-content_id             := keccak(address)
-content_key            := selector + SSZ.serialize(account_trie_proof_key)
+content_for_offer       := Container(proof: MPTWitness)
+content_for_retrieval   := Container(node: WitnessNode)
+content_id             := combine_path_and_node_hash(path: Nibbles, node_hash: Bytes32)
+content_key            := selector + SSZ.serialize(account_trie_node_key)
 ```
 
-#### Contract Storage Trie Proof
+#### Contract Trie Node *
 
-A leaf node from a contract storage trie and accompanying merkle proof against the `Account.storage_root`.
 
 ```
-storage_trie_proof_key := Container(address: Bytes20, slot: uint256, state_root: Bytes32)
+storage_trie_node_key := Container(address: Address, path: Nibbles, node_hash: Bytes32)
 selector               := 0x21
 
-content                := Container(witness: MPTWitness)
-content_id             := (keccak(address) + keccak(slot)) % 2**256
-content_key            := selector + SSZ.serialize(storage_trie_proof_key)
+content_for_offer      :=  Container(account_proof: MPTWitness, storage_proof: MPTWitness)
+content_for_retrieval  :=  Container(node: WitnessNode)
+content_id             :=  rotate(addresss: Address, combine_path_and_node_hash(path: Nibbles, node_hash: Bytes32))
+content_key            :=  selector + SSZ.serialize(storage_trie_node_key)
 ```
 
-#### Contract Bytecode
 
-The bytecode for a specific contract as referenced by `Account.code_hash`
+#### Contract Code *
+
+Problematic!
 
 ```
-contract_bytecode_key := Container(address: Bytes20, code_hash: Bytes32)
-selector              := 0x22
+contract_codee_key := 
+selector               := 0x22
 
-content               := ByteList(24756)  // Represents maximum possible size of contract bytecode
-content_id            := sha256(address + code_hash)
-content_key           := selector + SSZ.serialize(contract_bytecode_key)
+content                := 
+content_id             := 
+content_key            := 
 ```
+
 
 ## Gossip
 
@@ -247,13 +257,3 @@ Each time a new block is added to their view of the chain, a set of merkle proof
 
 The receiving DHT node will propagate the data to nearby nodes from their routing table.
 
-### Updating cold Leaf Proofs
-
-Anytime the state root changes for either the main account trie or a contract storage trie, every leaf proof under that root will need to be updated.  The primary gossip mechanism will ensure that leaf data that was added, modified, or removed will receive and updated proof.  However, we need a mechanism for updating the leaf proofs for "cold" data that has not been changed.
-
-Each time a new block is added to the chain, the DHT nodes storing leaf proof data will need to perform a walk of the trie starting at the state root. This walk of the trie will be directed towards the slice of the trie dictated by the set of leaves that the node is storing. As the trie is walked it should be compared to the previous proof from the previous state root. This walk concludes once all of the in-range leaves can be proven with the new state root.
-
-
-> TODO: reverse diffs and storing only the latest proof.
-
-> TODO: gossiping proof updates to neighbors to reduce duplicate work.
