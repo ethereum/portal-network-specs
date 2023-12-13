@@ -151,6 +151,20 @@ content_id             := combine_path_and_node_hash(path: Nibbles, node_hash: B
 content_key            := selector + SSZ.serialize(account_trie_node_key)
 ```
 
+#### Contract Trie Node *
+
+
+```
+storage_trie_node_key := Container(address: Address, path: Nibbles, node_hash: Bytes32)
+selector               := 0x21
+
+content_for_offer      :=  Container(account_proof: MPTWitness, storage_proof: MPTWitness)
+content_for_retrieval  :=  Container(node: WitnessNode)
+content_id             :=  rotate(addresss: Address, combine_path_and_node_hash(path: Nibbles, node_hash: Bytes32))
+content_key            :=  selector + SSZ.serialize(storage_trie_node_key)
+```
+
+
 
 ## Gossip
 
