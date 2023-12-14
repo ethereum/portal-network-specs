@@ -42,6 +42,32 @@ The state network uses the stock XOR distance metric defined in the portal wire 
 
 The derivation function for Content Id values are defined separately for each data type.
 
+#### Path Aware Content ID Derivation
+
+The state network is primarily concerned with storing state data which is
+cryptographically anchored into trie structure.  A naive approach to
+distribution of this data in the network would be to address trie nodes by
+their node-hash.  This approach is effective, however, it negatively impacts
+the efficiency of lookups.  The production patricia merkle trie for ethereum
+accounts tends to be at least 7 layers deep, which in a production portal
+network environment would mean nodes would have to perform seven (7) recursive
+lookups in the DHT to find a single piece of state.
+
+For this reason, the state network implements a custom scheme that uses the
+trie path for the high bits in the content-id and fills the remaining low bits
+from the node hash.  The result of this is as follows.
+
+- Content that is very *shallow* in the trie such as the state root node is
+  relatively randomly distributed around the DHT regardless of the path
+  component.
+- Content that is very deep in the trie such as leaf nodes, or deep
+  intermediate nodes are clustered in the DHT address space with the most bits
+  in common with the path to those nodes in the trie.
+
+This leads to a beneficial situation where leaves that are *close* to each
+other in the trie will also be likely to be close to each other in the DHT,
+which allows for more efficient network retrieval.
+
 ### Wire Protocol
 
 #### Protocol Identifier
