@@ -13,25 +13,21 @@ State data from the execution chain consists of all account data from the main s
 
 ### Data
 
-All of the execution layer state data is stored in two different formats.
-
-- Raw trie nodes
-- Leaf data with merkle proof
-
-#### Types
-
 The network stores the full execution layer state which emcompases the following:
 
-- Account leaf nodes with accompanying trie proof.
-- Contract storage leaf nodes with accompanying trie proof.
+- Account trie nodes
+- Contract storage trie nodes
 - Contract bytecode
+
+The network is implemented as an "archive" node meaning that it stores all
+tries for all historical blocks.
 
 
 #### Retrieval
 
-- Account trie leaf data by account address and state root.
-- Contract storage leaf data by account address, state root, and slot number.
-- Contract bytecode by address and code hash.
+- Account trie nodes by their node hash.
+- Contract storage trie nodes by their node hash.
+- Contract bytecode by code hash.
 
 ## Specification
 
@@ -39,12 +35,12 @@ The network stores the full execution layer state which emcompases the following
 
 ### Distance Function
 
-> TODO: COPY FROM HISTORY-NETWORK
+The state network uses the stock XOR distance metric defined in the portal wire protocol specification.
 
 
 ### Content ID Derivation Function
 
-The derivation function for Content ID values is defined separately for each data type.
+The derivation function for Content Id values are defined separately for each data type.
 
 ### Wire Protocol
 
@@ -90,13 +86,19 @@ A node should track their own radius value and provide this value in all Ping or
 
 ### Data Types
 
-* Content in **Offer/Accept** differs from content in **Find/Found**
-* **OFFER** contains a proof
-* **FIND** *does not* contain a proof
+#### OFFER/ACCEPT vs FINDCONTENT/FOUNDCONTENT payloads
+
+The data payloads for many content types in the history network differ between OFFER/ACCEPT and FINDCONTENT/FOUNDCONTENT.
+
+The OFFER/ACCEPT payloads need to be provable by their recipients.  These proofs are useful during OFFER/ACCEPT because they verify that the offered data is indeed part of the canonical chain.
+
+The FINDCONTENT/FOUNDCONTENT payloads do not contain proofs because a piece of state can exist under many different state roots.  All payloads can still be proved to be the correct requested data, however, it is the responsibility of the requesting party to anchor the returned data as canonical chain state data.
+
 
 #### Component Data Elements
 
-#### Proofs
+#### Merkle Patricia Trie (MPT) Proofs
+
 Merkle Patricia Trie (MPT) proofs consist of a list of witness nodes that correspond to each trie node that consists of various data elements depending on the type of node (e.g.blank, branch, extension, leaf).  When serialized, each witness node is represented as an RLP serialized list of the component elements with the largest possible node type being the branch node which when serialized is a list of up to sixteen hashes in `Bytes32` (representing the hashes of each of the 16 nodes in that branch and level of the tree) plus the 4 elements of the node's value (balance, nonce, codehash, storageroot) represented as `Bytes32`.  When combined with the RLP prefixes, this yields a possible maximum length of 667 bytes.  We specify 1024 as the maximum length due to constraints in the SSZ spec for list lengths being a power of 2 (for easier merkleization.)
 
 > TODO: Define proof such that there is one canonical representation of a witness that is streamable and minimal??
@@ -129,6 +131,13 @@ path occupies the *highest* bits of the content-id and the remaining bits are
 sourced from the `node_hash`.  The result of this is that trie nodes which are
 close to eacch other in the trie will be statistically likely to also be close
 to each other when compared using the XOR distance metric in the DHT.
+
+One thing to notice about this scheme is that for intermediate trie nodes, the
+`path` component will often be short, or even empty in the case of the state
+root.  However, for leaf nodes, the path component passed into this function
+MUST be the full 32 byte path in the trie where the account leaf lives.  This
+ensures that the content key and id for a leaf node of the trie doesn't change
+as the trie around it changes.
 
 ```
 # The maximum number of bytes in the resulting content-id that may be sourced
@@ -246,7 +255,8 @@ def rotate(address: Bytes20, location: Bytes32) -> Bytes32:
     return rotated_location % U256_MAX
 ```
 
-#### Account Trie Node *
+#### Account Trie Node
+
 
 ```
 account_trie_node_key  := Container(path: Nibbles, node_hash: Bytes32)
