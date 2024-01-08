@@ -322,8 +322,8 @@ EXAMPLE: Recursive Gossip Round 1
 ```
 
 At this stage, the minimal proof for `G` would be `[D, F, G, C]`.  The nodes
-which received the initial gossip message for `H` would constructe this proof
-by removing the un-necessary nodes, after which they would searcch the DHT for
+which received the initial gossip message for `H` would construct this proof
+by removing the un-necessary nodes, after which they would search the DHT for
 nodes that are interested in `F` and gossip this proof to them..
 
 The receipients of that gossip are then responsible for gossiping the parent
