@@ -291,7 +291,7 @@ nodes along the path leading to `H` are also modified.
 
 The *minimal* proof would contain the nodes `[D, F, H, I, C]`
 
-The bridge node would search the DHT for nodes that are *inderested* in storing
+The bridge node would search the DHT for nodes that are *interested* in storing
 the node `H` and gossip this proof to those nodes.
 
 The recipients of this gossip are then responsible for gossiping the parent
