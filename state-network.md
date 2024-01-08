@@ -256,8 +256,8 @@ state data across the nodes in the network.
 At each block we construct a proof against the new state root which contains
 all of the state changes which occured within that block.  
 
-This proof would *explicitely* contains a mixed set of leaf and intermediate
-nodes, as well as implicitely contains a set of intermediate nodes which can be
+This proof contains *explicitly* a mixed set of leaf and intermediate
+nodes, as well as implicitly a set of intermediate nodes which can be
 computed from the nodes that are part of the proof.
 
 ```
