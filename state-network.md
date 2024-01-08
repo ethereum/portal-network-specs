@@ -241,7 +241,7 @@ Any node in the trie that represents a value stored in the trie.  The nodes in t
 
 #### *"merkle proof"* or *"proof"*
 
-A collection of nodes from the trie sufficient to recompute the state root and proove that one or more nodes are part of the trie defined by that state root.
+A collection of nodes from the trie sufficient to recompute the state root and prove that one or more nodes are part of the trie defined by that state root.
 
 > A proof is considered to be "minimal" if it contains only the minimumm set of trie nodes needed to recompute the state root.
 
