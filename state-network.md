@@ -243,7 +243,7 @@ Any node in the trie that represents a value stored in the trie.  The nodes in t
 
 A collection of nodes from the trie sufficient to recompute the state root and prove that one or more nodes are part of the trie defined by that state root.
 
-> A proof is considered to be "minimal" if it contains only the minimumm set of trie nodes needed to recompute the state root.
+> A proof is considered to be "minimal" if it contains only the minimum set of trie nodes needed to recompute the state root.
 
 
 ### Overview
