@@ -326,7 +326,7 @@ which received the initial gossip message for `H` would construct this proof
 by removing the un-necessary nodes, after which they would search the DHT for
 nodes that are interested in `F` and gossip this proof to them..
 
-The receipients of that gossip are then responsible for gossiping the parent
+The recipients of that gossip are then responsible for gossiping the parent
 intermediate node `E`.  This process repeats until it terminates at the state
 root, with the final round of gossip only containing the `[A]` which is the
 state root node of the trie.
