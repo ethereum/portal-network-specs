@@ -189,11 +189,10 @@ content_id             := sha256(content_key)
 
 ## Gossip
 
-### Overview
+As each new block is added to the chain, the state from that block must be gossiped into the network.  
+The state network defines a specific gossip algorithm which is referred to as "Recursive Gossip".  This 
+section of the specification defines how this gossip mechanism works.
 
-A bridge node composes proofs for altered (i.e. created/modified/deleted) state data based on the latest block.
-These proofs are tied to the latest block by the state root.
-The bridge node gossips each proof to some (bounded-size) subset of its peers who are closest to the data based on the distance metric.
 
 ### Terminology
 
@@ -226,11 +225,11 @@ We define the following terms when referring to state data.
 
 #### *"state root"*
 
-The node labeled `X` in the diagram.
+The node labeled `X` in the diagram found at level 0 or the "root" of the trie.
 
 #### *"trie node"*
 
-Any of the individual nodes in the trie.
+Any of the individual nodes in the trie represented by either `X` for the state root node, or a `1` or `0` for trie nodes.
 
 #### *"intermediate node"*
 
@@ -240,9 +239,98 @@ Any of the nodes in the trie which are computed from other nodes in the trie.  T
 
 Any node in the trie that represents a value stored in the trie.  The nodes in the diagram at level 4 are leaf nodes.
 
-#### *"leaf proof"*
+#### *"merkle proof"* or *"proof"*
 
-The merkle proof which contains a leaf node and the intermediate trie nodes necessary to compute the state root of the trie.
+A collection of nodes from the trie sufficient to recompute the state root and prove that one or more nodes are part of the trie defined by that state root.
+
+> A proof is considered to be "minimal" if it contains only the minimum set of trie nodes needed to recompute the state root.
+
+
+### Overview
+
+The goal of the "recursive gossip" mechanism is to reduce the burden of
+responsibility placed on bridge nodes for injecting new state data into the
+network while simultaniously spreading the responsibility for gossiping new
+state data across the nodes in the network.
+
+At each block we construct a proof against the new state root which contains
+all of the state changes which occured within that block.  
+
+This proof contains *explicitly* a mixed set of leaf and intermediate
+nodes, as well as implicitly a set of intermediate nodes which can be
+computed from the nodes that are part of the proof.
+
+```
+EXAMPLE: Recursive Gossip Inception
+
+0:                           A*
+                            / \
+                          /     \
+                        /         \
+                      /             \
+                    /                 \
+                  /                     \
+                /                         \
+1:             B*                          C
+             /   \
+           /       \
+         /           \
+2:      D             E*
+                     / \
+                    /   \
+3:                 F     G*
+                        / \
+4:                     H*  I
+
+- "*" denotes trie node modified
+```
+
+In the example proof diagramed here we can see a *leaf* node `H` which
+represents the only modified leaf state in this proof.  Note that all of the
+nodes along the path leading to `H` are also modified.
+
+The *minimal* proof would contain the nodes `[D, F, H, I, C]`
+
+The bridge node would search the DHT for nodes that are *interested* in storing
+the node `H` and gossip this proof to those nodes.
+
+The recipients of this gossip are then responsible for gossiping the parent
+intermediate node `G`.  To do so, they would strip off the `H` and `I` nodes
+from this proof resulting in the following:
+
+```
+EXAMPLE: Recursive Gossip Round 1
+
+0:                           A*
+                            / \
+                          /     \
+                        /         \
+                      /             \
+                    /                 \
+                  /                     \
+                /                         \
+1:             B*                          C
+             /   \
+           /       \
+         /           \
+2:      D             E*
+                     / \
+                    /   \
+3:                 F     G*
+
+4:
+```
+
+At this stage, the minimal proof for `G` would be `[D, F, G, C]`.  The nodes
+which received the initial gossip message for `H` would construct this proof
+by removing the un-necessary nodes, after which they would search the DHT for
+nodes that are interested in `F` and gossip this proof to them..
+
+The recipients of that gossip are then responsible for gossiping the parent
+intermediate node `E`.  This process repeats until it terminates at the state
+root, with the final round of gossip only containing the `[A]` which is the
+state root node of the trie.
+
 
 ### Gossip 
 
