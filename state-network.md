@@ -106,7 +106,7 @@ Merkle Patricia Trie (MPT) proofs consist of a list of witness nodes that corres
 
 ```
 WitnessNode            := ByteList(1024)
-MPTWitness             := List(witness: WitnessNode, max_length=32)
+MPTWitness             := List(witness: WitnessNode, max_length=1024)
 ```
 
 #### Paths (Nibbles)
@@ -116,39 +116,22 @@ A naive approach to storage of trie nodes would be to simply use the `node_hash`
 We define path as a sequences of "nibbles" which represent the path through the MPT to reach the trie node.
 
 ```
-nibble := {0, 1, 2, 3, 4, 5, 6, 7, 8, 9, a, b, c, d, e, f} // 16 possible values
-NibblePair := Byte // 2 nibbles tightly packed into a single byte
-Nibbles := List(NibblePair, max_length=32) // fixed path length of 8 bytes
+nibble     := {0, 1, 2, 3, 4, 5, 6, 7, 8, 9, a, b, c, d, e, f}
+NibblePair := Byte  # 2 nibbles tightly packed into a single byte
+Nibbles    := Container(is_odd_length=bool, packed_nibbles=List(NibblePair, max_length=32))
 ```
 
-
-#### Helper Functions
-
-We define these helper functions.
-
-##### `encode_path(path: Nibbles) -> ???`
-
-> TODO: what is the most efficient way to encode nibbles and place them in an SSZ container...
-
-- for state roots, the path is the empty list.
-- for intermediate nodes we expect between 1-9 nibbles values, aka roughly 3-6 bytes when tightly packed and using terminator byte
-- for leaf nodes we can use the 20-byte address pre-image to compress the actual 32-byte path in the trie.
-
-In an SSZ context we end up with 4-byte length elements for anything variable length which suggests we should potentially do something like:
-
-```
-AddressPath                 := Bytes20
-max_possible_nibbles_depth  := ???  # What is the maximum depth we should account for....
-IntermediatePath            := Vector(Byte, length=max_possible_nibbles_depth)
-EncodedPath                 := Union(AddressPath, IntermediatePath)
-```
+The `packed_nibbles` is a sequence of bytes with each byte containing two
+nibbles.  When encoding an odd length sequence of nibbles the high bits of the
+final byte should be left empty and the `is_odd_length` boolean flag should be
+set to `True`.
 
 
 #### Account Trie Node
 
 
 ```
-account_trie_node_key  := Container(encoded_path: EncodedPath, node_hash: Bytes32)
+account_trie_node_key  := Container(path: Nibbles, node_hash: Bytes32)
 selector               := 0x20
 
 content_for_offer      := Container(proof: MPTWitness, block_hash: Bytes32)
