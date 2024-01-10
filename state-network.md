@@ -97,18 +97,6 @@ The FINDCONTENT/FOUNDCONTENT payloads do not contain proofs because a piece of s
 
 #### Component Data Elements
 
-#### Merkle Patricia Trie (MPT) Proofs
-
-Merkle Patricia Trie (MPT) proofs consist of a list of witness nodes that correspond to each trie node that consists of various data elements depending on the type of node (e.g.blank, branch, extension, leaf).  When serialized, each witness node is represented as an RLP serialized list of the component elements with the largest possible node type being the branch node which when serialized is a list of up to sixteen hashes in `Bytes32` (representing the hashes of each of the 16 nodes in that branch and level of the tree) plus the 4 elements of the node's value (balance, nonce, codehash, storageroot) represented as `Bytes32`.  When combined with the RLP prefixes, this yields a possible maximum length of 667 bytes.  We specify 1024 as the maximum length due to constraints in the SSZ spec for list lengths being a power of 2 (for easier merkleization.)
-
-> TODO: Define proof such that there is one canonical representation of a witness that is streamable and minimal??
-> Specs should specify order of proof nodes, and disallow inclusion of superflous nodes.
-
-```
-WitnessNode            := ByteList(1024)
-MPTWitness             := List(witness: WitnessNode, max_length=1024)
-```
-
 #### Paths (Nibbles)
 
 A naive approach to storage of trie nodes would be to simply use the `node_hash` value of the trie node for storage.  This scheme however results in stored data not being tied in any direct way to it's location in the trie.  In a situation where a participant in the DHT wished to re-gossip data that they have stored, they would need to reconstruct a valid trie proof for that data in order to construct the appropriate OFFER/ACCEPT payload.  We include the `path` metadata in state network content keys so that it is possible to reconstruct this proof.
@@ -121,10 +109,33 @@ NibblePair := Byte  # 2 nibbles tightly packed into a single byte
 Nibbles    := Container(is_odd_length=bool, packed_nibbles=List(NibblePair, max_length=32))
 ```
 
-The `packed_nibbles` is a sequence of bytes with each byte containing two
+`Nibbles.packed_nibbles` is a sequence of bytes with each byte containing two
 nibbles.  When encoding an odd length sequence of nibbles the high bits of the
-final byte should be left empty and the `is_odd_length` boolean flag should be
+final byte should be left empty and `Nibbles.is_odd_length` boolean flag should be
 set to `True`.
+
+
+#### Merkle Patricia Trie (MPT) Proofs
+
+Merkle Patricia Trie (MPT) proofs consist of a list of witness nodes that correspond to each trie node that consists of various data elements depending on the type of node (e.g.blank, branch, extension, leaf).  When serialized, each witness node is represented as an RLP serialized list of the component elements with the largest possible node type being the branch node which when serialized is a list of up to sixteen hashes in `Bytes32` (representing the hashes of each of the 16 nodes in that branch and level of the tree) plus the 4 elements of the node's value (balance, nonce, codehash, storageroot) represented as `Bytes32`.  When combined with the RLP prefixes, this yields a possible maximum length of 667 bytes.  We specify 1024 as the maximum length due to constraints in the SSZ spec for list lengths being a power of 2 (for easier merkleization.)
+
+> TODO: Define proof such that there is one canonical representation of a witness that is streamable and minimal??
+> Specs should specify order of proof nodes, and disallow inclusion of superflous nodes.
+
+```
+WitnessNode            := ByteList(1024)
+Witness                := List(WitnessNode, max_length=1024)
+StateWitness           := Container(key: Nibbles, proof: Witness)
+StorageWitness         := Container(key: Nibbles, proof: Witness, state_proof: StateWitness)
+```
+
+The `StateWitness.key` denotes the path to the trie node that is proven by the `StateWitness.proof`.  The same applies to `StorageWitness.key` and `StorageWitness.proof`.
+
+The `MTPWitness` is subject to the following validity requirements.
+
+- The nodes in a `Witness` MUST be lexically ordered by their path in the trie.
+- A `Witness` may not contain any superfluous nodes that are not needed for proving.
+- A `Witness` may not contain any superfluous nodes that could be computed from other nodes that are part of the proof.
 
 
 #### Account Trie Node
