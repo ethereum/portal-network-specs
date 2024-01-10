@@ -97,6 +97,24 @@ The FINDCONTENT/FOUNDCONTENT payloads do not contain proofs because a piece of s
 
 #### Component Data Elements
 
+#### Paths (Nibbles)
+
+A naive approach to storage of trie nodes would be to simply use the `node_hash` value of the trie node for storage.  This scheme however results in stored data not being tied in any direct way to it's location in the trie.  In a situation where a participant in the DHT wished to re-gossip data that they have stored, they would need to reconstruct a valid trie proof for that data in order to construct the appropriate OFFER/ACCEPT payload.  We include the `path` metadata in state network content keys so that it is possible to reconstruct this proof.
+
+We define path as a sequences of "nibbles" which represent the path through the MPT to reach the trie node.
+
+```
+nibble     := {0, 1, 2, 3, 4, 5, 6, 7, 8, 9, a, b, c, d, e, f}
+NibblePair := Byte  # 2 nibbles tightly packed into a single byte
+Nibbles    := Container(is_odd_length=bool, packed_nibbles=List(NibblePair, max_length=32))
+```
+
+`Nibbles.packed_nibbles` is a sequence of bytes with each byte containing two
+nibbles.  When encoding an odd length sequence of nibbles the high bits of the
+final byte should be left empty and `Nibbles.is_odd_length` boolean flag should be
+set to `True`.
+
+
 #### Merkle Patricia Trie (MPT) Proofs
 
 Merkle Patricia Trie (MPT) proofs consist of a list of witness nodes that correspond to each trie node that consists of various data elements depending on the type of node (e.g.blank, branch, extension, leaf).  When serialized, each witness node is represented as an RLP serialized list of the component elements with the largest possible node type being the branch node which when serialized is a list of up to sixteen hashes in `Bytes32` (representing the hashes of each of the 16 nodes in that branch and level of the tree) plus the 4 elements of the node's value (balance, nonce, codehash, storageroot) represented as `Bytes32`.  When combined with the RLP prefixes, this yields a possible maximum length of 667 bytes.  We specify 1024 as the maximum length due to constraints in the SSZ spec for list lengths being a power of 2 (for easier merkleization.)
@@ -106,49 +124,25 @@ Merkle Patricia Trie (MPT) proofs consist of a list of witness nodes that corres
 
 ```
 WitnessNode            := ByteList(1024)
-MPTWitness             := List(witness: WitnessNode, max_length=32)
+Witness                := List(WitnessNode, max_length=1024)
+StateWitness           := Container(key: Nibbles, proof: Witness)
+StorageWitness         := Container(key: Nibbles, proof: Witness, state_proof: StateWitness)
 ```
 
-#### Paths (Nibbles)
+The `StateWitness.key` denotes the path to the trie node that is proven by the `StateWitness.proof`.  The same applies to `StorageWitness.key` and `StorageWitness.proof`.
 
-A naive approach to storage of trie nodes would be to simply use the `node_hash` value of the trie node for storage.  This scheme however results in stored data not being tied in any direct way to it's location in the trie.  In a situation where a participant in the DHT wished to re-gossip data that they have stored, they would need to reconstruct a valid trie proof for that data in order to construct the appropriate OFFER/ACCEPT payload.  We include the `path` metadata in state network content keys so that it is possible to reconstruct this proof.
+The `MTPWitness` is subject to the following validity requirements.
 
-We define path as a sequences of "nibbles" which represent the path through the MPT to reach the trie node.
-
-```
-nibble := {0, 1, 2, 3, 4, 5, 6, 7, 8, 9, a, b, c, d, e, f} // 16 possible values
-NibblePair := Byte // 2 nibbles tightly packed into a single byte
-Nibbles := List(NibblePair, max_length=32) // fixed path length of 8 bytes
-```
-
-
-#### Helper Functions
-
-We define these helper functions.
-
-##### `encode_path(path: Nibbles) -> ???`
-
-> TODO: what is the most efficient way to encode nibbles and place them in an SSZ container...
-
-- for state roots, the path is the empty list.
-- for intermediate nodes we expect between 1-9 nibbles values, aka roughly 3-6 bytes when tightly packed and using terminator byte
-- for leaf nodes we can use the 20-byte address pre-image to compress the actual 32-byte path in the trie.
-
-In an SSZ context we end up with 4-byte length elements for anything variable length which suggests we should potentially do something like:
-
-```
-AddressPath                 := Bytes20
-max_possible_nibbles_depth  := ???  # What is the maximum depth we should account for....
-IntermediatePath            := Vector(Byte, length=max_possible_nibbles_depth)
-EncodedPath                 := Union(AddressPath, IntermediatePath)
-```
+- The nodes in a `Witness` MUST be lexically ordered by their path in the trie.
+- A `Witness` may not contain any superfluous nodes that are not needed for proving.
+- A `Witness` may not contain any superfluous nodes that could be computed from other nodes that are part of the proof.
 
 
 #### Account Trie Node
 
 
 ```
-account_trie_node_key  := Container(encoded_path: EncodedPath, node_hash: Bytes32)
+account_trie_node_key  := Container(path: Nibbles, node_hash: Bytes32)
 selector               := 0x20
 
 content_for_offer      := Container(proof: MPTWitness, block_hash: Bytes32)
