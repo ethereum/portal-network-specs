@@ -2,9 +2,6 @@
 
 This document is the specification for the sub-protocol that supports on-demand availability of state data from the execution chain.
 
-> 🚧 THE SPEC IS IN A STATE OF FLUX AND SHOULD BE CONSIDERED UNSTABLE 🚧
-> 🚧 12/12/23 🚧 WIP: STATE_NETWORK_SPEC v2 🚧 NEW_STATENETWORK_BOOGIE 🚧
-
 ## Overview
 
 The execution state network is a [Kademlia](https://pdos.csail.mit.edu/~petar/papers/maymounkov-kademlia-lncs.pdf) DHT that uses the [Portal Wire Protocol](./portal-wire-protocol.md) to establish an overlay network on top of the [Discovery v5](https://github.com/ethereum/devp2p/blob/master/discv5/discv5-wire.md) protocol.
@@ -95,13 +92,13 @@ The OFFER/ACCEPT payloads need to be provable by their recipients.  These proofs
 The FINDCONTENT/FOUNDCONTENT payloads do not contain proofs because a piece of state can exist under many different state roots.  All payloads can still be proved to be the correct requested data, however, it is the responsibility of the requesting party to anchor the returned data as canonical chain state data.
 
 
-#### Component Data Elements
+#### Helper Data Types
 
-#### Paths (Nibbles)
+##### Paths (Nibbles)
 
 A naive approach to storage of trie nodes would be to simply use the `node_hash` value of the trie node for storage.  This scheme however results in stored data not being tied in any direct way to it's location in the trie.  In a situation where a participant in the DHT wished to re-gossip data that they have stored, they would need to reconstruct a valid trie proof for that data in order to construct the appropriate OFFER/ACCEPT payload.  We include the `path` metadata in state network content keys so that it is possible to reconstruct this proof.
 
-We define path as a sequences of "nibbles" which represent the path through the MPT to reach the trie node.
+We define path as a sequences of "nibbles" which represent the path through the merkle patritia trie (MPT) to reach the trie node.
 
 ```
 nibble     := {0, 1, 2, 3, 4, 5, 6, 7, 8, 9, a, b, c, d, e, f}
@@ -115,12 +112,9 @@ final byte should be left empty and `Nibbles.is_odd_length` boolean flag should 
 set to `True`.
 
 
-#### Merkle Patricia Trie (MPT) Proofs
+##### Merkle Patricia Trie (MPT) Proofs
 
 Merkle Patricia Trie (MPT) proofs consist of a list of witness nodes that correspond to each trie node that consists of various data elements depending on the type of node (e.g.blank, branch, extension, leaf).  When serialized, each witness node is represented as an RLP serialized list of the component elements with the largest possible node type being the branch node which when serialized is a list of up to sixteen hashes in `Bytes32` (representing the hashes of each of the 16 nodes in that branch and level of the tree) plus the 4 elements of the node's value (balance, nonce, codehash, storageroot) represented as `Bytes32`.  When combined with the RLP prefixes, this yields a possible maximum length of 667 bytes.  We specify 1024 as the maximum length due to constraints in the SSZ spec for list lengths being a power of 2 (for easier merkleization.)
-
-> TODO: Define proof such that there is one canonical representation of a witness that is streamable and minimal??
-> Specs should specify order of proof nodes, and disallow inclusion of superflous nodes.
 
 ```
 WitnessNode            := ByteList(1024)
@@ -135,9 +129,35 @@ The `StorageWitness.state_proof` MUST be for a leaf node in the account trie.  T
 
 All `Witness` objects are subject to the following validity requirements.
 
-- The nodes in a `Witness` MUST be lexically ordered by their path in the trie.
-- A `Witness` may not contain any superfluous nodes that are not needed for proving.
-- A `Witness` may not contain any superfluous nodes that could be computed from other nodes that are part of the proof.
+- A: The nodes in a `Witness` MUST be lexically ordered by their path in the trie.
+- B: The `Witness` MAY NOT contain any superfluous nodes that are not needed for proving.
+- C: The `Witness` MAY NOT contain any superfluous nodes that could be computed from other nodes that are part of the proof.
+
+###### A: Lexical Ordering
+
+The sequence of nodes in the witness must be lexically ordered by their nibbles
+path in the trie.  This results in the state root node always occuring first in
+the list of trie nodes.
+
+> This validity condition is to ensure that verifcation of the proof can be done
+in a single pass.
+
+###### B: No Extraneous Nodes
+
+A witness MAY NOT contain any nodes that are not part of the set needed to for proving.  
+
+> This validity condition is to protect against malicious or erroneous bloating of proof payloads.
+
+##### C: No Redundant Nodes
+
+A witness MAY NOT contain any nodes that can be computed from other nodes in
+the proof.  For example, the inclusion of a parent node along with the
+inclusion of all of that node's children since the parent node can be
+reconstructed from the children.
+
+> This validity condition is to protect against malicious or erroneous bloating
+of proof payloads and to ensure that verification of proofs can be done in a
+single pass.
 
 
 #### Account Trie Node
@@ -153,7 +173,7 @@ content_key            := selector + SSZ.serialize(account_trie_node_key)
 content_id             := sha256(content_key)
 ```
 
-#### Contract Trie Node *
+#### Contract Trie Node
 
 
 ```
@@ -167,7 +187,7 @@ content_id             :=  sha256(content_key)
 ```
 
 
-#### Contract Code *
+#### Contract Code
 
 > NOTE: Because CREATE2 opcode allows for redeployment of new code at an existing address, we MUST randomly distribute contract code storage across the DHT keyspace to avoid hotspots developing in the network for any contract that has had many different code deployments.  Were we to use the path based *high-bits* approach for computing the content-id, it would be possible for a single location in the network to accumulate a large number of contract code objects that all live in roughly the same space.
 Problematic!
