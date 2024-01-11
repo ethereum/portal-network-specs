@@ -330,6 +330,8 @@ state root node of the trie.
 
 ### Gossip 
 
+> TODO: this section still needs to be updated.
+
 Each time a new block is added to their view of the chain, a set of merkle proofs which are all anchored to `Header.state_root` is generated which contains:
 
 - Account trie Data:
