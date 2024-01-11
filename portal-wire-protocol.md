@@ -16,7 +16,8 @@ Unsupported messages **SHOULD** receive a `TALKRESP` message with an empty paylo
 
 All protocol identifiers consist of two bytes. The first byte is "`P`" (`0x50`), to indicate "the Portal network", the second byte is a specific network identifier.
 
-Currently defined protocol identifiers:
+### Mainnet identifiers
+Currently defined mainnet protocol identifiers:
 - Inclusive range of `0x5000` - `0x5009`: Reserved for future networks or network upgrades
 - `0x500A`: Execution State Network
 - `0x500B`: Execution History Network
@@ -24,6 +25,14 @@ Currently defined protocol identifiers:
 - `0x500D`: Execution Canonical Transaction Index Network
 - `0x500E`: Execution Verkle State Network
 - `0x500F`: Execution Transaction Gossip Network
+### Testnet identifiers
+Currently defined testnet protocol identifiers:
+- `0x504A`: Execution State Network
+- `0x504B`: Execution History Network
+- `0x504C`: Beacon Chain Light Client Network
+- `0x504D`: Execution Canonical Transaction Index Network
+- `0x504E`: Execution Verkle State Network
+- `0x504F`: Execution Transaction Gossip Network
 
 ## Content Keys and Content IDs
 
