@@ -131,7 +131,9 @@ StorageWitness         := Container(key: Nibbles, proof: Witness, state_proof: S
 
 The `StateWitness.key` denotes the path to the trie node that is proven by the `StateWitness.proof`.  The same applies to `StorageWitness.key` and `StorageWitness.proof`.
 
-The `MTPWitness` is subject to the following validity requirements.
+The `StorageWitness.state_proof` MUST be for a leaf node in the account trie.  The `StorageWitness.proof` must be anchored to the contract state root denoted by the account from the `StorageWitness.state_proof`.
+
+All `Witness` objects are subject to the following validity requirements.
 
 - The nodes in a `Witness` MUST be lexically ordered by their path in the trie.
 - A `Witness` may not contain any superfluous nodes that are not needed for proving.
@@ -145,7 +147,7 @@ The `MTPWitness` is subject to the following validity requirements.
 account_trie_node_key  := Container(path: Nibbles, node_hash: Bytes32)
 selector               := 0x20
 
-content_for_offer      := Container(proof: MPTWitness, block_hash: Bytes32)
+content_for_offer      := Container(proof: StateWitness, block_hash: Bytes32)
 content_for_retrieval  := Container(node: WitnessNode)
 content_key            := selector + SSZ.serialize(account_trie_node_key)
 content_id             := sha256(content_key)
@@ -158,7 +160,7 @@ content_id             := sha256(content_key)
 storage_trie_node_key  := Container(address: Address, path: Nibbles, node_hash: Bytes32)
 selector               := 0x21
 
-content_for_offer      :=  Container(account_proof: MPTWitness, storage_proof: MPTWitness, block_hash: Bytes32)
+content_for_offer      :=  Container(proof: StorageWitness, block_hash: Bytes32)
 content_for_retrieval  :=  Container(node: WitnessNode)
 content_key            :=  selector + SSZ.serialize(storage_trie_node_key)
 content_id             :=  sha256(content_key)
@@ -174,7 +176,7 @@ Problematic!
 contract_code_key      := Container(address: Address, code_hash: Bytes32)
 selector               := 0x22
 
-content_for_offer      := Container(code: ByteList, account_proof: MPTWitness, block_hash: Bytes32)
+content_for_offer      := Container(code: ByteList, account_proof: StateWitness, block_hash: Bytes32)
 content_for_retrieval  := Container(code: ByteList)
 content_key            := selector + SSZ.serialize(contract_code_key)
 content_id             := sha256(content_key)
@@ -327,6 +329,8 @@ state root node of the trie.
 
 
 ### Gossip 
+
+> TODO: this section still needs to be updated.
 
 Each time a new block is added to their view of the chain, a set of merkle proofs which are all anchored to `Header.state_root` is generated which contains:
 
