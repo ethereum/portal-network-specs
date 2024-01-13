@@ -130,8 +130,8 @@ The `StorageWitness.state_proof` MUST be for a leaf node in the account trie.  T
 All `Witness` objects are subject to the following validity requirements.
 
 - A: The nodes in a `Witness` MUST be lexically ordered by their path in the trie.
-- B: The `Witness` MAY NOT contain any superfluous nodes that are not needed for proving.
-- C: The `Witness` MAY NOT contain any superfluous nodes that could be computed from other nodes that are part of the proof.
+- B: The `Witness` MUST NOT contain any superfluous nodes that are not needed for proving.
+- C: The `Witness` MUST NOT contain any superfluous nodes that could be computed from other nodes that are part of the proof.
 
 ###### A: Lexical Ordering
 
@@ -144,13 +144,13 @@ in a single pass.
 
 ###### B: No Extraneous Nodes
 
-A witness MAY NOT contain any nodes that are not part of the set needed to for proving.  
+A witness MUST NOT contain any nodes that are not part of the set needed to for proving.  
 
 > This validity condition is to protect against malicious or erroneous bloating of proof payloads.
 
 ##### C: No Redundant Nodes
 
-A witness MAY NOT contain any nodes that can be computed from other nodes in
+A witness MUST NOT contain any nodes that can be computed from other nodes in
 the proof.  For example, the inclusion of a parent node along with the
 inclusion of all of that node's children since the parent node can be
 reconstructed from the children.
