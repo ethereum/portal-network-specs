@@ -162,38 +162,68 @@ single pass.
 
 #### Account Trie Node
 
-This data type represents a node from the main state trie.
-
+This data types represent a node from the main state trie.
 
 ```
 account_trie_node_key  := Container(path: Nibbles, node_hash: Bytes32)
 selector               := 0x20
 
-content_for_offer      := Container(proof: StateWitness, block_hash: Bytes32)
-content_for_retrieval  := Container(node: WitnessNode)
 content_key            := selector + SSZ.serialize(account_trie_node_key)
 content_id             := sha256(content_key)
 ```
 
+##### Account Trie Node: OFFER/ACCEPT
+
+This type is used when content offered via OFFER/ACCEPT.
+
+```
+content_for_offer      := Container(proof: StateWitness, block_hash: Bytes32)
+```
+
+
+##### Account Trie Node: FINDCONTENT/FOUNDCONTENT
+
+This type is used when content retrieved from another node via FINDCONTENT/FOUNDCONTENT.
+
+```
+content_for_retrieval := Container(node: WitnessNode)
+```
+
+
 #### Contract Trie Node
 
-This data type represents a node from an individual contract storage trie.
-
+This data types represent a node from an individual contract storage trie.
 
 ```
 storage_trie_node_key  := Container(address: Address, path: Nibbles, node_hash: Bytes32)
 selector               := 0x21
 
-content_for_offer      :=  Container(proof: StorageWitness, block_hash: Bytes32)
-content_for_retrieval  :=  Container(node: WitnessNode)
-content_key            :=  selector + SSZ.serialize(storage_trie_node_key)
-content_id             :=  sha256(content_key)
+content_key            := selector + SSZ.serialize(storage_trie_node_key)
+content_id             := sha256(content_key)
+```
+
+
+##### Contract Trie Node: OFFER/ACCEPT
+
+This type is used when content offered via OFFER/ACCEPT.
+
+```
+content_for_offer      := Container(proof: StorageWitness, block_hash: Bytes32)
+```
+
+
+##### Contract Trie Node: FINDCONTENT/FOUNDCONTENT
+
+This type is used when content retrieved from another node via FINDCONTENT/FOUNDCONTENT.
+
+```
+content_for_retrieval  := Container(node: WitnessNode)
 ```
 
 
 #### Contract Code
 
-This data type represents the bytecode for a contract.
+This data types represent the bytecode for a contract.
 
 > NOTE: Because CREATE2 opcode allows for redeployment of new code at an existing address, we MUST randomly distribute contract code storage across the DHT keyspace to avoid hotspots developing in the network for any contract that has had many different code deployments.  Were we to use the path based *high-bits* approach for computing the content-id, it would be possible for a single location in the network to accumulate a large number of contract code objects that all live in roughly the same space.
 Problematic!
@@ -202,10 +232,26 @@ Problematic!
 contract_code_key      := Container(address: Address, code_hash: Bytes32)
 selector               := 0x22
 
-content_for_offer      := Container(code: ByteList, account_proof: StateWitness, block_hash: Bytes32)
-content_for_retrieval  := Container(code: ByteList)
 content_key            := selector + SSZ.serialize(contract_code_key)
 content_id             := sha256(content_key)
+```
+
+
+##### Contract Code: OFFER/ACCEPT
+
+This types is used when content offered via OFFER/ACCEPT.
+
+```
+content_for_offer      := Container(code: ByteList, account_proof: StateWitness, block_hash: Bytes32)
+```
+
+
+##### Contract Code: FINDCONTENT/FOUNDCONTENT
+
+This type is used when content retrieved from another node via FINDCONTENT/FOUNDCONTENT.
+
+```
+content_for_retrieval  := Container(code: ByteList)
 ```
 
 
