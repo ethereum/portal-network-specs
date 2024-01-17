@@ -369,6 +369,7 @@ contains:
 - All contract bytecode for newly created contracts
 
 A bridge should compute the content-id values for all of this new state data
-and sort the data by proximity to its own node-id.  Beginning with the content
-that is *closest* to its own node-id it should proceed to GOSSIP each
-individual piece of content to nodes interested in that content.
+that should be part of the "inception" round of recursive gossip.  These pieces
+of content should be sorted by proximity to its own node-id.  Beginning with
+the content that is *closest* to its own node-id it should proceed to GOSSIP
+each individual piece of content to nodes interested in that content.
