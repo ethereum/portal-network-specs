@@ -160,97 +160,98 @@ of proof payloads and to ensure that verification of proofs can be done in a
 single pass.
 
 
-#### Account Trie Node: OFFER/ACCEPT
+#### Account Trie Node
 
-This data type represents a node from the main state trie when offered via OFFER/ACCEPT.
-
+This data types represent a node from the main state trie.
 
 ```
 account_trie_node_key  := Container(path: Nibbles, node_hash: Bytes32)
 selector               := 0x20
 
-content                := Container(proof: StateWitness, block_hash: Bytes32)
 content_key            := selector + SSZ.serialize(account_trie_node_key)
 content_id             := sha256(content_key)
 ```
 
-#### Account Trie Node: FINDCONTENT/FOUNDCONTENT
+##### Account Trie Node: OFFER/ACCEPT
 
-This data type represents a node from the main state trie when retrieved from another node via FINDCONTENT/FOUNDCONTENT.
-
+This type is used when content offered via OFFER/ACCEPT.
 
 ```
-account_trie_node_key  := Container(path: Nibbles, node_hash: Bytes32)
+content_for_offer      := Container(proof: StateWitness, block_hash: Bytes32)
+```
+
+
+##### Account Trie Node: FINDCONTENT/FOUNDCONTENT
+
+This type is used when content retrieved from another node via FINDCONTENT/FOUNDCONTENT.
+
+```
+content_for_retrieval := Container(node: WitnessNode)
+```
+
+
+#### Contract Trie Node
+
+This data types represent a node from an individual contract storage trie.
+
+```
+storage_trie_node_key  := Container(address: Address, path: Nibbles, node_hash: Bytes32)
 selector               := 0x21
 
-content                := Container(node: WitnessNode)
-content_key            := selector + SSZ.serialize(account_trie_node_key)
+content_key            := selector + SSZ.serialize(storage_trie_node_key)
 content_id             := sha256(content_key)
 ```
 
-#### Contract Trie Node: OFFER/ACCEPT
 
-This data type represents a node from an individual contract storage trie when offered via OFFER/ACCEPT.
+##### Contract Trie Node: OFFER/ACCEPT
 
+This type is used when content offered via OFFER/ACCEPT.
 
 ```
-storage_trie_node_key  := Container(address: Address, path: Nibbles, node_hash: Bytes32)
+content_for_offer      := Container(proof: StorageWitness, block_hash: Bytes32)
+```
+
+
+##### Contract Trie Node: FINDCONTENT/FOUNDCONTENT
+
+This type is used when content retrieved from another node via FINDCONTENT/FOUNDCONTENT.
+
+```
+content_for_retrieval  := Container(node: WitnessNode)
+```
+
+
+#### Contract Code
+
+This data types represent the bytecode for a contract.
+
+> NOTE: Because CREATE2 opcode allows for redeployment of new code at an existing address, we MUST randomly distribute contract code storage across the DHT keyspace to avoid hotspots developing in the network for any contract that has had many different code deployments.  Were we to use the path based *high-bits* approach for computing the content-id, it would be possible for a single location in the network to accumulate a large number of contract code objects that all live in roughly the same space.
+Problematic!
+
+```
+contract_code_key      := Container(address: Address, code_hash: Bytes32)
 selector               := 0x22
 
-content                :=  Container(proof: StorageWitness, block_hash: Bytes32)
-content_key            :=  selector + SSZ.serialize(storage_trie_node_key)
-content_id             :=  sha256(content_key)
-```
-
-
-#### Contract Trie Node: FINDCONTENT/FOUNDCONTENT
-
-This data type represents a node from an individual contract storage trie when retrieved from another node via FINDCONTENT/FOUNDCONTENT.
-
-
-```
-storage_trie_node_key  := Container(address: Address, path: Nibbles, node_hash: Bytes32)
-selector               := 0x23
-
-content                :=  Container(node: WitnessNode)
-content_key            :=  selector + SSZ.serialize(storage_trie_node_key)
-content_id             :=  sha256(content_key)
-```
-
-
-#### Contract Code: OFFER/ACCEPT
-
-This data type represents the bytecode for a contract when offered via OFFER/ACCEPT.
-
-> NOTE: Because CREATE2 opcode allows for redeployment of new code at an existing address, we MUST randomly distribute contract code storage across the DHT keyspace to avoid hotspots developing in the network for any contract that has had many different code deployments.  Were we to use the path based *high-bits* approach for computing the content-id, it would be possible for a single location in the network to accumulate a large number of contract code objects that all live in roughly the same space.
-Problematic!
-
-```
-contract_code_key      := Container(address: Address, code_hash: Bytes32)
-selector               := 0x24
-
-content_for_offer      := Container(code: ByteList, account_proof: StateWitness, block_hash: Bytes32)
-content_for_retrieval  := Container(code: ByteList)
 content_key            := selector + SSZ.serialize(contract_code_key)
 content_id             := sha256(content_key)
 ```
 
 
-#### Contract Code: FINDCONTENT/FOUNDCONTENT
+##### Contract Code: OFFER/ACCEPT
 
-This data type represents the bytecode for a contract when retrieved from another node via FINDCONTENT/FOUNDCONTENT.
-
-> NOTE: Because CREATE2 opcode allows for redeployment of new code at an existing address, we MUST randomly distribute contract code storage across the DHT keyspace to avoid hotspots developing in the network for any contract that has had many different code deployments.  Were we to use the path based *high-bits* approach for computing the content-id, it would be possible for a single location in the network to accumulate a large number of contract code objects that all live in roughly the same space.
-Problematic!
+This types is used when content offered via OFFER/ACCEPT.
 
 ```
-contract_code_key      := Container(address: Address, code_hash: Bytes32)
-selector               := 0x25
-
 content_for_offer      := Container(code: ByteList, account_proof: StateWitness, block_hash: Bytes32)
+```
+
+
+##### Contract Code: FINDCONTENT/FOUNDCONTENT
+
+This type is used when content retrieved from another node via FINDCONTENT/FOUNDCONTENT.
+
+```
 content_for_retrieval  := Container(code: ByteList)
-content_key            := selector + SSZ.serialize(contract_code_key)
-content_id             := sha256(content_key)
 ```
 
 
