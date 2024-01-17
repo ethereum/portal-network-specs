@@ -160,47 +160,92 @@ of proof payloads and to ensure that verification of proofs can be done in a
 single pass.
 
 
-#### Account Trie Node
+#### Account Trie Node for Offer
 
-This data type represents a node from the main state trie.
+This data type represents a node from the main state trie when offered via gossip.
 
 
 ```
 account_trie_node_key  := Container(path: Nibbles, node_hash: Bytes32)
 selector               := 0x20
 
-content_for_offer      := Container(proof: StateWitness, block_hash: Bytes32)
-content_for_retrieval  := Container(node: WitnessNode)
+content                := Container(proof: StateWitness, block_hash: Bytes32)
 content_key            := selector + SSZ.serialize(account_trie_node_key)
 content_id             := sha256(content_key)
 ```
 
-#### Contract Trie Node
+#### Account Trie Node for Retrival
 
-This data type represents a node from an individual contract storage trie.
+This data type represents a node from the main state trie when retrieved from another node by explicit request.
+
+
+```
+account_trie_node_key  := Container(path: Nibbles, node_hash: Bytes32)
+selector               := 0x21
+
+content                := Container(node: WitnessNode)
+content_key            := selector + SSZ.serialize(account_trie_node_key)
+content_id             := sha256(content_key)
+```
+
+#### Contract Trie Node for Offer
+
+This data type represents a node from an individual contract storage trie when offered via gossip.
 
 
 ```
 storage_trie_node_key  := Container(address: Address, path: Nibbles, node_hash: Bytes32)
-selector               := 0x21
+selector               := 0x22
 
-content_for_offer      :=  Container(proof: StorageWitness, block_hash: Bytes32)
-content_for_retrieval  :=  Container(node: WitnessNode)
+content                :=  Container(proof: StorageWitness, block_hash: Bytes32)
 content_key            :=  selector + SSZ.serialize(storage_trie_node_key)
 content_id             :=  sha256(content_key)
 ```
 
 
-#### Contract Code
+#### Contract Trie Node for Retrival
 
-This data type represents the bytecode for a contract.
+This data type represents a node from an individual contract storage trie when retrieved from another node by explicit request.
+
+
+```
+storage_trie_node_key  := Container(address: Address, path: Nibbles, node_hash: Bytes32)
+selector               := 0x23
+
+content                :=  Container(node: WitnessNode)
+content_key            :=  selector + SSZ.serialize(storage_trie_node_key)
+content_id             :=  sha256(content_key)
+```
+
+
+#### Contract Code for Offer
+
+This data type represents the bytecode for a contract when offered via gossip.
 
 > NOTE: Because CREATE2 opcode allows for redeployment of new code at an existing address, we MUST randomly distribute contract code storage across the DHT keyspace to avoid hotspots developing in the network for any contract that has had many different code deployments.  Were we to use the path based *high-bits* approach for computing the content-id, it would be possible for a single location in the network to accumulate a large number of contract code objects that all live in roughly the same space.
 Problematic!
 
 ```
 contract_code_key      := Container(address: Address, code_hash: Bytes32)
-selector               := 0x22
+selector               := 0x24
+
+content_for_offer      := Container(code: ByteList, account_proof: StateWitness, block_hash: Bytes32)
+content_for_retrieval  := Container(code: ByteList)
+content_key            := selector + SSZ.serialize(contract_code_key)
+content_id             := sha256(content_key)
+```
+
+
+#### Contract Code for Retrival
+
+This data type represents the bytecode for a contract when retrieved from another node by explicit request.
+
+> NOTE: Because CREATE2 opcode allows for redeployment of new code at an existing address, we MUST randomly distribute contract code storage across the DHT keyspace to avoid hotspots developing in the network for any contract that has had many different code deployments.  Were we to use the path based *high-bits* approach for computing the content-id, it would be possible for a single location in the network to accumulate a large number of contract code objects that all live in roughly the same space.
+Problematic!
+
+```
+contract_code_key      := Container(address: Address, code_hash: Bytes32)
+selector               := 0x25
 
 content_for_offer      := Container(code: ByteList, account_proof: StateWitness, block_hash: Bytes32)
 content_for_retrieval  := Container(code: ByteList)
