@@ -114,28 +114,28 @@ set to `True`.
 
 ##### Merkle Patricia Trie (MPT) Proofs
 
-Merkle Patricia Trie (MPT) proofs consist of a list of witness nodes that correspond to each trie node that consists of various data elements depending on the type of node (e.g.blank, branch, extension, leaf).  When serialized, each witness node is represented as an RLP serialized list of the component elements with the largest possible node type being the branch node which when serialized is a list of up to sixteen hashes in `Bytes32` (representing the hashes of each of the 16 nodes in that branch and level of the tree) plus the 4 elements of the node's value (balance, nonce, codehash, storageroot) represented as `Bytes32`.  When combined with the RLP prefixes, this yields a possible maximum length of 667 bytes.  We specify 1024 as the maximum length due to constraints in the SSZ spec for list lengths being a power of 2 (for easier merkleization.)
+Merkle Patricia Trie (MPT) proofs consist of a list of `WitnessNode` objects that correspond to individual trie nodes from the MPT. Each node can be one of the different node types from the MPT (e.g.blank, branch, extension, leaf).  When serialized, each `WitnessNode` is represented as an RLP serialized list of the component elements. The largest possible node type is the branch node which when serialized is a list of up to sixteen hashes in `Bytes32` (representing the hashes of each of the 16 nodes in that branch and level of the tree) plus the 4 elements of the node's value (balance, nonce, codehash, storageroot) represented as `Bytes32`.  When combined with the RLP prefixes, this yields a possible maximum length of 667 bytes.  We specify 1024 as the maximum length due to constraints in the SSZ spec for list lengths being a power of 2 (for easier merkleization.)
 
 ```
 WitnessNode            := ByteList(1024)
 Witness                := List(WitnessNode, max_length=1024)
 StateWitness           := Container(key: Nibbles, proof: Witness)
-StorageWitness         := Container(key: Nibbles, proof: Witness, state_proof: StateWitness)
+StorageWitness         := Container(key: Nibbles, proof: Witness, state_witness: StateWitness)
 ```
 
-The `StateWitness.key` denotes the path to the trie node that is proven by the `StateWitness.proof`.  The same applies to `StorageWitness.key` and `StorageWitness.proof`.
+The `StateWitness.key` denotes the path to the trie node that is proven by the `StateWitness.proof`.  The same applies to `StorageWitness.key/StorageWitness.proof`.
 
-The `StorageWitness.state_proof` MUST be for a leaf node in the account trie.  The `StorageWitness.proof` must be anchored to the contract state root denoted by the account from the `StorageWitness.state_proof`.
+The `StorageWitness.state_witness` MUST be for a leaf node in the account trie.  The `StorageWitness.proof` MUST be anchored to the contract state root denoted by the account from the `StorageWitness.state_witness`.
 
 All `Witness` objects are subject to the following validity requirements.
 
-- A: The nodes in a `Witness` MUST be lexically ordered by their path in the trie.
-- B: The `Witness` MUST NOT contain any superfluous nodes that are not needed for proving.
-- C: The `Witness` MUST NOT contain any superfluous nodes that could be computed from other nodes that are part of the proof.
+- A: Lexical Ordering
+- B: No Extraneous Nodes
+- C: No Redundant Nodes
 
 ###### A: Lexical Ordering
 
-The sequence of nodes in the witness must be lexically ordered by their nibbles
+The sequence of nodes in the witness MUST be lexically ordered by their nibbles
 path in the trie.  This results in the state root node always occuring first in
 the list of trie nodes.
 
@@ -148,7 +148,7 @@ A witness MUST NOT contain any nodes that are not part of the set needed to for 
 
 > This validity condition is to protect against malicious or erroneous bloating of proof payloads.
 
-##### C: No Redundant Nodes
+###### C: No Redundant Nodes
 
 A witness MUST NOT contain any nodes that can be computed from other nodes in
 the proof.  For example, the inclusion of a parent node along with the
@@ -161,6 +161,8 @@ single pass.
 
 
 #### Account Trie Node
+
+This data type represents a node from the main state trie.
 
 
 ```
@@ -175,6 +177,8 @@ content_id             := sha256(content_key)
 
 #### Contract Trie Node
 
+This data type represents a node from an individual contract storage trie.
+
 
 ```
 storage_trie_node_key  := Container(address: Address, path: Nibbles, node_hash: Bytes32)
@@ -188,6 +192,8 @@ content_id             :=  sha256(content_key)
 
 
 #### Contract Code
+
+This data type represents the bytecode for a contract.
 
 > NOTE: Because CREATE2 opcode allows for redeployment of new code at an existing address, we MUST randomly distribute contract code storage across the DHT keyspace to avoid hotspots developing in the network for any contract that has had many different code deployments.  Were we to use the path based *high-bits* approach for computing the content-id, it would be possible for a single location in the network to accumulate a large number of contract code objects that all live in roughly the same space.
 Problematic!
@@ -348,21 +354,21 @@ root, with the final round of gossip only containing the `[A]` which is the
 state root node of the trie.
 
 
-### Gossip 
+### Bridge Node Responsibilities
 
-> TODO: this section still needs to be updated.
-
-Each time a new block is added to their view of the chain, a set of merkle proofs which are all anchored to `Header.state_root` is generated which contains:
+Each time a new block is added to their view of the chain, a set of merkle
+proofs which are all anchored to `Header.state_root` is generated which
+contains:
 
 - Account trie Data:
+    - All of the new and modified account nodes from the state trie.
     - All of the intermediate and leaf trie nodes from the account trie necessary to prove new and modified accounts.
 - Contract Storage trie data:
+    - All of the new and modified storage slots from each modified contract storage trie.
     - All of the intermediate and leaf trie nodes from each contract storage trie necessary to prove new and modified storage slots.
 - All contract bytecode for newly created contracts
 
-> TODO: Figure out language for defining which trie nodes from this proof the bridge node must initialize gossip.
-
-> TODO: Determine mechanism for contract code.
-
-The receiving DHT node will propagate the data to nearby nodes from their routing table.
-
+A bridge should compute the content-id values for all of this new state data
+and sort the data by proximity to its own node-id.  Beginning with the content
+that is *closest* to its own node-id it should proceed to GOSSIP each
+individual piece of content to nodes interested in that content.
