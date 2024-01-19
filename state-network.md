@@ -37,7 +37,7 @@ The state network uses the stock XOR distance metric defined in the portal wire 
 
 ### Content ID Derivation Function
 
-The history network uses the SHA256 Content ID derivation function from the portal wire protocol specification.
+The state network uses the SHA256 Content ID derivation function from the portal wire protocol specification.
 
 ### Wire Protocol
 
@@ -169,7 +169,6 @@ account_trie_node_key  := Container(path: Nibbles, node_hash: Bytes32)
 selector               := 0x20
 
 content_key            := selector + SSZ.serialize(account_trie_node_key)
-content_id             := sha256(content_key)
 ```
 
 ##### Account Trie Node: OFFER/ACCEPT
@@ -199,7 +198,6 @@ storage_trie_node_key  := Container(address: Address, path: Nibbles, node_hash: 
 selector               := 0x21
 
 content_key            := selector + SSZ.serialize(storage_trie_node_key)
-content_id             := sha256(content_key)
 ```
 
 
@@ -233,7 +231,6 @@ contract_code_key      := Container(address: Address, code_hash: Bytes32)
 selector               := 0x22
 
 content_key            := selector + SSZ.serialize(contract_code_key)
-content_id             := sha256(content_key)
 ```
 
 
