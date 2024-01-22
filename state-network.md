@@ -106,11 +106,16 @@ NibblePair := Byte  # 2 nibbles tightly packed into a single byte
 Nibbles    := Container(is_odd_length=bool, packed_nibbles=List(NibblePair, max_length=32))
 ```
 
-`Nibbles.packed_nibbles` is a sequence of bytes with each byte containing two
-nibbles.  When encoding an odd length sequence of nibbles the high bits of the
-final byte should be left empty and `Nibbles.is_odd_length` boolean flag should be
-set to `True`.
+`NibblePair` is packed so that nibble that goes first in the path uses high bits, while later nibble uses lower bits.
 
+`Nibbles.packed_nibbles` is a sequence of bytes with each byte containing two nibbles.  When encoding an odd length sequence of nibbles, `Nibbles.is_odd_length` boolean flag MUST be set to `True`, the high bits of the first byte MUST be left empty, first nibble MUST use low bits of the first byte, and remaning nibbles are tightly packed in remaining bytes.
+
+Examples:
+
+```
+[1, 2, a, b] -> Nibbles(is_odd_length=false, packed_nibbles=[0x12, 0xab])
+[1, 2, a, b, c] -> Nibbles(is_odd_length=true, packed_nibbles=[0x01, 0x2a, 0xbc])
+```
 
 ##### Merkle Patricia Trie (MPT) Proofs
 
