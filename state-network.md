@@ -136,13 +136,12 @@ All `Witness` objects are subject to the following validity requirements.
 
 - A: Lexical Ordering
 - B: No Extraneous Nodes
-- C: No Redundant Nodes
 
 ###### A: Lexical Ordering
 
 The sequence of nodes in the witness MUST be lexically ordered by their nibbles
-path in the trie.  This results in the state root node always occuring first in
-the list of trie nodes.
+path in the trie.  This results in the state root node always occuring first and
+node being proven last in the list of trie nodes.
 
 > This validity condition is to ensure that verifcation of the proof can be done
 in a single pass.
@@ -152,17 +151,6 @@ in a single pass.
 A witness MUST NOT contain any nodes that are not part of the set needed to for proving.  
 
 > This validity condition is to protect against malicious or erroneous bloating of proof payloads.
-
-###### C: No Redundant Nodes
-
-A witness MUST NOT contain any nodes that can be computed from other nodes in
-the proof.  For example, the inclusion of a parent node along with the
-inclusion of all of that node's children since the parent node can be
-reconstructed from the children.
-
-> This validity condition is to protect against malicious or erroneous bloating
-of proof payloads and to ensure that verification of proofs can be done in a
-single pass.
 
 
 #### Account Trie Node
@@ -259,165 +247,72 @@ content_for_retrieval  := Container(code: ByteList)
 
 ## Gossip
 
-As each new block is added to the chain, the state from that block must be gossiped into the network.  
-The state network defines a specific gossip algorithm which is referred to as "Recursive Gossip".  This 
-section of the specification defines how this gossip mechanism works.
-
+As each new block is added to the chain, the state from that block must be gossiped into the network.
+The state network defines a specific gossip algorithm which is referred to as "Recursive Gossip".
+This section of the specification defines how this gossip mechanism works.
 
 ### Terminology
 
-We define the following terms when referring to state data.
+The Merkle Patricia Trie (MPT) has three types of nodes: *"branch"*, *"extension"* and *"leaf"*.
+The MPT also specifies the `nil` node, but it will never be sent or stored over network, so we will
+ignore it for this spec.
 
-> The diagrams below use a binary trie for visual simplicity. The same
-> definitions naturally extend to the hexary patricia trie.
+Similarly to other tree structure, the `leaf` node is the lowest node on a certain path and it's
+where value is stored in the tree (strictly speaking, MPT allows value to be stored in `branch`
+nodes as well, but Ethreum storage doesn't use this functionality). The `branch` and `extension`
+nodes can be called `intermediate` nodes because there will always be a node that can only be
+reached by passing through them.
 
+A *"merkle proof"* or *"proof"* is a collection of nodes from the trie sufficient to recompute the
+state root and prove that *"target"* node is part of the trie defined by that state root. A proof is:
 
-```
-0:                           X
-                            / \
-                          /     \
-                        /         \
-                      /             \
-                    /                 \
-                  /                     \
-                /                         \
-1:             0                           1
-             /   \                       /   \
-           /       \                   /       \
-         /           \               /           \
-2:      0             1             0             1
-       / \           / \           / \           / \
-      /   \         /   \         /   \         /   \
-3:   0     1       0     1       0     1       0     1
-    / \   / \     / \   / \     / \   / \     / \   / \
-4: 0   1 0   1   0   1 0   1   0   1 0   1   0   1 0   1
-```
-
-#### *"state root"*
-
-The node labeled `X` in the diagram found at level 0 or the "root" of the trie.
-
-#### *"trie node"*
-
-Any of the individual nodes in the trie represented by either `X` for the state root node, or a `1` or `0` for trie nodes.
-
-#### *"intermediate node"*
-
-Any of the nodes in the trie which are computed from other nodes in the trie.  The nodes in the diagram at levels 0, 1, 2, and 3 are all intermediate.
-
-#### *"leaf node"*
-
-Any node in the trie that represents a value stored in the trie.  The nodes in the diagram at level 4 are leaf nodes.
-
-#### *"merkle proof"* or *"proof"*
-
-A collection of nodes from the trie sufficient to recompute the state root and prove that one or more nodes are part of the trie defined by that state root.
-
-> A proof is considered to be "minimal" if it contains only the minimum set of trie nodes needed to recompute the state root.
-
+- *"ordered"*
+    - the order of the nodes in the proof have to represent the path from root node to the target node
+        - first node must be the root node, followed by zero or more intermediate nodes, ending
+        with a target node
+        - it should be provable that any non-first node is part of the preceding node
+    - if root node is the target node, then the proof will only contain the root node
+    - the target node can be of any type (branch, extension or leaf)
+- *"minimal"*
+    - it contains only the nodes from on a path from the root node to the target node
 
 ### Overview
 
-The goal of the "recursive gossip" mechanism is to reduce the burden of
-responsibility placed on bridge nodes for injecting new state data into the
-network while simultaniously spreading the responsibility for gossiping new
-state data across the nodes in the network.
+We will give the overview of the process for the account trie. The same process should be applied
+for the storage trie as well.
 
-At each block we construct a proof against the new state root which contains
-all of the state changes which occured within that block.  
+The goal of the "recursive gossip" mechanism is to reduce the burden of responsibility placed on
+bridge nodes for injecting new state data into the network while simultaniously spreading the
+responsibility for gossiping new state data across the nodes in the network.
 
-This proof contains *explicitly* a mixed set of leaf and intermediate
-nodes, as well as implicitly a set of intermediate nodes which can be
-computed from the nodes that are part of the proof.
+At each block we construct a proof for each new or modified value in the trie, which is stored in
+the leaf nodes. The bridge node would search the DHT for nodes that are *interested* in storing
+each leaf node and gossip the proof to those nodes.
 
-```
-EXAMPLE: Recursive Gossip Inception
+> For example, let this be the proof: `[A, B, C, D, E, F]`, then `A` is the root note and `F` is
+> the target node. This proof should be gossiped to nodes that are interested in storing node `F`.
 
-0:                           A*
-                            / \
-                          /     \
-                        /         \
-                      /             \
-                    /                 \
-                  /                     \
-                /                         \
-1:             B*                          C
-             /   \
-           /       \
-         /           \
-2:      D             E*
-                     / \
-                    /   \
-3:                 F     G*
-                        / \
-4:                     H*  I
+The recipients of this gossip are then responsible for gossiping the penultimate node of the proof
+(parent of the target node, `E` in our example). To do so, they would strip the last (target) node
+from the proof, search the DHT for nodes that are interested in `E` and gossip this proof to them.
 
-- "*" denotes trie node modified
-```
-
-In the example proof diagramed here we can see a *leaf* node `H` which
-represents the only modified leaf state in this proof.  Note that all of the
-nodes along the path leading to `H` are also modified.
-
-The *minimal* proof would contain the nodes `[D, F, H, I, C]`
-
-The bridge node would search the DHT for nodes that are *interested* in storing
-the node `H` and gossip this proof to those nodes.
-
-The recipients of this gossip are then responsible for gossiping the parent
-intermediate node `G`.  To do so, they would strip off the `H` and `I` nodes
-from this proof resulting in the following:
-
-```
-EXAMPLE: Recursive Gossip Round 1
-
-0:                           A*
-                            / \
-                          /     \
-                        /         \
-                      /             \
-                    /                 \
-                  /                     \
-                /                         \
-1:             B*                          C
-             /   \
-           /       \
-         /           \
-2:      D             E*
-                     / \
-                    /   \
-3:                 F     G*
-
-4:
-```
-
-At this stage, the minimal proof for `G` would be `[D, F, G, C]`.  The nodes
-which received the initial gossip message for `H` would construct this proof
-by removing the un-necessary nodes, after which they would search the DHT for
-nodes that are interested in `F` and gossip this proof to them..
-
-The recipients of that gossip are then responsible for gossiping the parent
-intermediate node `E`.  This process repeats until it terminates at the state
-root, with the final round of gossip only containing the `[A]` which is the
-state root node of the trie.
-
+This process repeats until it terminates at the state root, with the final round of gossip only
+containing the `[A]` which is the state root node of the trie.
 
 ### Bridge Node Responsibilities
 
-Each time a new block is added to their view of the chain, a set of merkle
-proofs which are all anchored to `Header.state_root` is generated which
-contains:
+The bridge is responsible for creating and gossiping all following data and their proofs:
 
-- Account trie Data:
-    - All of the new and modified account nodes from the state trie.
-    - All of the intermediate and leaf trie nodes from the account trie necessary to prove new and modified accounts.
-- Contract Storage trie data:
-    - All of the new and modified storage slots from each modified contract storage trie.
-    - All of the intermediate and leaf trie nodes from each contract storage trie necessary to prove new and modified storage slots.
-- All contract bytecode for newly created contracts
+- account trie data:
+    - all of the new and modified account nodes from the state trie
+- contract storage trie data:
+    - all of the new and modified storage slots from each modified contract storage trie
+    - proof has to include the proof for the account trie that corresponds to the same contract
+    - recursive gossip stops at the root of the storage trie
+- all contract bytecode for newly created contracts
+    - proof has to include the proof for the account trie that corresponds to the same contract
 
-A bridge should compute the content-id values for all of this new state data
-that should be part of the "inception" round of recursive gossip.  These pieces
-of content should be sorted by proximity to its own node-id.  Beginning with
-the content that is *closest* to its own node-id it should proceed to GOSSIP
-each individual piece of content to nodes interested in that content.
+A bridge should compute the content-id values for all proofs that are part of the initial round of
+recursive gossip. These proofs should be sorted by proximity to its own node-id. Beginning with
+the content that is *closest* to its own node-id it should proceed to GOSSIP each individual proof
+to nodes interested in that content.
