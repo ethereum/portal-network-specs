@@ -8,8 +8,6 @@ The chain history network is a [Kademlia](https://pdos.csail.mit.edu/~petar/pape
 
 Execution chain history data consists of historical block headers, block bodies (transactions and ommer) and block receipts.
 
-In addition, the chain history network provides individual epoch accumulators for the full range of pre-merge blocks mined before the transition to proof of stake.
-
 ### Data
 
 #### Types
@@ -19,7 +17,6 @@ In addition, the chain history network provides individual epoch accumulators fo
     * Transactions
     * Ommers
 * Receipts
-* Header epoch accumulators (pre-merge only)
 
 #### Retrieval
 
@@ -28,7 +25,6 @@ The network supports the following mechanisms for data retrieval:
 * Block header by block header hash
 * Block body by block header hash
 * Block receipts by block header hash
-* Header epoch accumulator by epoch accumulator hash
 
 > The presence of the pre-merge header accumulators provides an indirect way to lookup blocks by their number, but is restricted to pre-merge blocks.  Retrieval of blocks by their number for post-merge blocks is not intrinsically supported within this network.
 
@@ -252,18 +248,6 @@ Note the type-specific encoding might be different in future receipt types, but 
 for all current receipt types.
 
 
-#### Epoch Accumulator
-
-```
-epoch_accumulator_key = Container(epoch_hash: Bytes32)
-selector              = 0x03
-epoch_hash            = hash_tree_root(epoch_accumulator)
-
-content               = SSZ.serialize(epoch_accumulator)
-content_key           = selector + SSZ.serialize(epoch_accumulator_key)
-```
-
-
 ### Algorithms
 
 #### The "Header Accumulator"
@@ -315,6 +299,8 @@ def update_accumulator(accumulator: MasterAccumulator, new_block_header: BlockHe
 ```
 
 The network provides no mechanism for acquiring the *master* version of this accumulator.  Clients are encouraged to solve this however they choose, with the suggestion that they include a frozen copy of the accumulator at the point of the merge within their client code, and provide a mechanism for users to override this value if they so choose.
+
+The network provides no mechanism for acquiring the *epoch* versions of this accumulator. Bridges are encouraged to store a local copy of the [Accumulators Repository]() in order to build proofs for pre-merge blocks. It is possible that epoch accumulators will be introduced as a network type to facilitate `block_hash` by `block_number` lookups (for pre-merge blocks). If you find this use-case valuable, or any other use case for storing epoch accumulators in the network, please open an issue.
 
 #### AccumulatorProof
 
