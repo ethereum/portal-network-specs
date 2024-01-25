@@ -311,6 +311,7 @@ The bridge is responsible for creating and gossiping all following data and thei
     - recursive gossip stops at the root of the storage trie
 - all contract bytecode for newly created contracts
     - proof has to include the proof for the account trie that corresponds to the same contract
+    - recursive gossip doesn't happen in this case
 
 A bridge should compute the content-id values for all proofs that are part of the initial round of
 recursive gossip. These proofs should be sorted by proximity to its own node-id. Beginning with
