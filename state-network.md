@@ -247,9 +247,9 @@ content_for_retrieval  := Container(code: ByteList)
 
 ## Gossip
 
-As each new block is added to the chain, the state from that block must be gossiped into the network.
-The state network defines a specific gossip algorithm which is referred to as "Recursive Gossip".
-This section of the specification defines how this gossip mechanism works.
+As each new block is added to the chain, the updated state from that block must be gossiped into
+the network. The state network defines a specific gossip algorithm which is referred to as
+"Recursive Gossip". This section of the specification defines how this gossip mechanism works.
 
 ### Terminology
 
@@ -294,7 +294,11 @@ each leaf node and gossip the proof to those nodes.
 
 The recipients of this gossip are then responsible for gossiping the penultimate node of the proof
 (parent of the target node, `E` in our example). To do so, they would strip the last (target) node
-from the proof, search the DHT for nodes that are interested in `E` and gossip this proof to them.
+from the proof, create content-key with `E` being the target node, search the DHT for nodes that
+are interested in newly created content-key and gossip the content with proof to them.
+
+> It should be highlighted that creation of the content-key also requires updating the `path` field
+by removing one or more (in case of an extension node) nibbles from the end.
 
 This process repeats until it terminates at the state root, with the final round of gossip only
 containing the `[A]` which is the state root node of the trie.
