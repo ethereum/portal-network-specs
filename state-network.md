@@ -119,36 +119,37 @@ Examples:
 
 ##### Merkle Patricia Trie (MPT) Proofs
 
-Merkle Patricia Trie (MPT) proofs consist of a list of `WitnessNode` objects that correspond to individual trie nodes from the MPT. Each node can be one of the different node types from the MPT (e.g.blank, branch, extension, leaf).  When serialized, each `WitnessNode` is represented as an RLP serialized list of the component elements. The largest possible node type is the branch node which when serialized is a list of up to sixteen hashes in `Bytes32` (representing the hashes of each of the 16 nodes in that branch and level of the tree) plus the 4 elements of the node's value (balance, nonce, codehash, storageroot) represented as `Bytes32`.  When combined with the RLP prefixes, this yields a possible maximum length of 667 bytes.  We specify 1024 as the maximum length due to constraints in the SSZ spec for list lengths being a power of 2 (for easier merkleization.)
+Merkle Patricia Trie (MPT) proofs consist of a list of `TrieNode` objects that correspond to
+individual trie nodes from the MPT. Each node can be one of the different node types from the MPT
+(e.g. blank, branch, extension, leaf).  When serialized, each `TrieNode` is represented as an RLP
+serialized list of the component elements. The largest possible node type is the branch node, which
+should be up to 532 bytes (16 child nodes of `Bytes32` with extra encoding info), but we specify
+1024 bytes to be on the safe side.
 
 ```
-WitnessNode            := ByteList(1024)
-Witness                := List(WitnessNode, max_length=1024)
-StateWitness           := Container(key: Nibbles, proof: Witness)
-StorageWitness         := Container(key: Nibbles, proof: Witness, state_witness: StateWitness)
+TrieNode   := ByteList(1024)
+TrieProof  := List(TrieNode, max_length=65)
 ```
 
-The `StateWitness.key` denotes the path to the trie node that is proven by the `StateWitness.proof`.  The same applies to `StorageWitness.key/StorageWitness.proof`.
+The `TrieProof` type is used for both Account Trie and Contract Storage trie.
 
-The `StorageWitness.state_witness` MUST be for a leaf node in the account trie.  The `StorageWitness.proof` MUST be anchored to the contract state root denoted by the account from the `StorageWitness.state_witness`.
-
-All `Witness` objects are subject to the following validity requirements.
+All `TrieProof` objects are subject to the following validity requirements.
 
 - A: Lexical Ordering
 - B: No Extraneous Nodes
 
 ###### A: Lexical Ordering
 
-The sequence of nodes in the witness MUST be lexically ordered by their nibbles
-path in the trie.  This results in the state root node always occuring first and
-node being proven last in the list of trie nodes.
+The sequence of nodes in the proof MUST represent the unbroken path in a trie, starting from the
+root node and each node being the child of its predecesor. This results in the state root node
+always occuring first and node being proven last in the list of trie nodes.
 
 > This validity condition is to ensure that verifcation of the proof can be done
 in a single pass.
 
 ###### B: No Extraneous Nodes
 
-A witness MUST NOT contain any nodes that are not part of the set needed to for proving.  
+A proof MUST NOT contain any nodes that are not part of the set needed for proving.
 
 > This validity condition is to protect against malicious or erroneous bloating of proof payloads.
 
@@ -164,21 +165,27 @@ selector               := 0x20
 content_key            := selector + SSZ.serialize(account_trie_node_key)
 ```
 
+If node is an extension or leaf node (not branch node), than the `path` field MUST NOT include the
+same nibbles that are stored inside that node.
+
 ##### Account Trie Node: OFFER/ACCEPT
 
 This type MUST be used when content offered via OFFER/ACCEPT.
 
 ```
-content_for_offer      := Container(proof: StateWitness, block_hash: Bytes32)
+content_for_offer      := Container(proof: TrieProof, block_hash: Bytes32)
 ```
 
+The `proof` field MUST contain the proof for the trie node whose position in the trie and hash are
+specified in the `content-key`. The proof MUST be anchored to the block specified by the
+`block_hash` field.
 
 ##### Account Trie Node: FINDCONTENT/FOUNDCONTENT
 
 This type MUST be used when content retrieved from another node via FINDCONTENT/FOUNDCONTENT.
 
 ```
-content_for_retrieval := Container(node: WitnessNode)
+content_for_retrieval := Container(node: TrieNode)
 ```
 
 
@@ -193,22 +200,29 @@ selector               := 0x21
 content_key            := selector + SSZ.serialize(storage_trie_node_key)
 ```
 
+If node is an extension or leaf node (not branch node), than the `path` field MUST NOT include the
+same nibbles that are stored inside that node.
 
 ##### Contract Trie Node: OFFER/ACCEPT
 
 This type MUST be used when content offered via OFFER/ACCEPT.
 
 ```
-content_for_offer      := Container(proof: StorageWitness, block_hash: Bytes32)
+content_for_offer      := Container(storage_proof: TrieProof, account_proof: TrieProof, block_hash: Bytes32)
 ```
 
+The `account_proof` field MUST contain the proof for the account state specified by the `address`
+field in the key and it MUST be anchored to the block specified by the `block_hash` field.
+
+The `storage_proof` field MUST contain the proof for the trie node whose position in the trie and
+hash are specified in the key and it MUST be anchored to the trie specified by the account state.
 
 ##### Contract Trie Node: FINDCONTENT/FOUNDCONTENT
 
 This type MUST be used when content retrieved from another node via FINDCONTENT/FOUNDCONTENT.
 
 ```
-content_for_retrieval  := Container(node: WitnessNode)
+content_for_retrieval  := Container(node: TrieNode)
 ```
 
 
@@ -226,22 +240,23 @@ selector               := 0x22
 content_key            := selector + SSZ.serialize(contract_code_key)
 ```
 
-
 ##### Contract Code: OFFER/ACCEPT
 
 This types MUST be used when content offered via OFFER/ACCEPT.
 
 ```
-content_for_offer      := Container(code: ByteList, account_proof: StateWitness, block_hash: Bytes32)
+content_for_offer      := Container(code: ByteList(32768), account_proof: TrieProof, block_hash: Bytes32)
 ```
 
+The `account_proof` field MUST contain the proof for the account state specified by the `address`
+field in the key and it MUST be anchored to the block specified by the `block_hash` field.
 
 ##### Contract Code: FINDCONTENT/FOUNDCONTENT
 
 This type MUST be used when content retrieved from another node via FINDCONTENT/FOUNDCONTENT.
 
 ```
-content_for_retrieval  := Container(code: ByteList)
+content_for_retrieval  := Container(code: ByteList(32768))
 ```
 
 
