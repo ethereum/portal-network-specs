@@ -102,19 +102,27 @@ We define path as a sequences of "nibbles" which represent the path through the 
 
 ```
 nibble     := {0, 1, 2, 3, 4, 5, 6, 7, 8, 9, a, b, c, d, e, f}
-NibblePair := Byte  # 2 nibbles tightly packed into a single byte
-Nibbles    := Container(is_odd_length=bool, packed_nibbles=List(NibblePair, max_length=32))
+Nibbles    := ByteList(33)
 ```
 
-`NibblePair` is packed so that nibble that goes first in the path uses high bits, while later nibble uses lower bits.
+Because each nibble can be expressed using 4 bits, we pack two nibbles in one byte. Leading nibble will occupy higher bits and following nibble will occupy lower bits.
 
-`Nibbles.packed_nibbles` is a sequence of bytes with each byte containing two nibbles.  When encoding an odd length sequence of nibbles, `Nibbles.is_odd_length` boolean flag MUST be set to `True`, the high bits of the first byte MUST be left empty, first nibble MUST use low bits of the first byte, and remaning nibbles are tightly packed in remaining bytes.
+This encoding can introduce ambiguity (e.g. it's not possible to distinguish between single nibble `[1]` and nibbles `[0, 1]`, because both are expressed as `0x01`). To prevent this, we are going to use highest 4 bits of the first byte to specify whether length is even or odd:
+
+- bits `0000` - Number of nibbles is even. The 4 lowest bits of the first byte MUST be set to `0` (resulting that the value of the first byte is `0x00`).
+- bits `0001` - Number of nibbles is odd. The first nibble MUST be stored in the 4 lowest bits of the first byte.
+
+All remaining nibbles are packed in pairs of two and added to the first byte.
 
 Examples:
 
 ```
-[1, 2, a, b] -> Nibbles(is_odd_length=false, packed_nibbles=[0x12, 0xab])
-[1, 2, a, b, c] -> Nibbles(is_odd_length=true, packed_nibbles=[0x01, 0x2a, 0xbc])
+[]              -> [0x00]
+[0]             -> [0x10]
+[1]             -> [0x11]
+[0, 1]          -> [0x00, 0x01]
+[1, 2, a, b]    -> [0x00, 0x12, 0xab]
+[1, 2, a, b, c] -> [0x11, 0x2a, 0xbc]
 ```
 
 ##### Merkle Patricia Trie (MPT) Proofs
