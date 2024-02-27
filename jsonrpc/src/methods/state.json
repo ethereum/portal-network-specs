@@ -137,7 +137,12 @@
     ],
     "result": {
       "$ref": "#/components/contentDescriptors/RecursiveFindContentResult"
-    }
+    },
+    "errors": [
+      {
+        "$ref": "#/components/schemas/ContentNotFoundError"
+      }
+    ]
   },
   {
     "name": "portal_stateStore",
@@ -164,7 +169,12 @@
     ],
     "result": {
       "$ref": "#/components/contentDescriptors/LocalContentResult"
-    }
+    },
+    "errors": [
+      {
+        "$ref": "#/components/schemas/ContentNotFoundError"
+      }
+    ]
   },
   {
     "name": "portal_stateGossip",

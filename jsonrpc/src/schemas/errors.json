@@ -1,0 +1,9 @@
+{
+  "ContentNotFoundError": {
+    "code": 32001,
+    "message": "RecursiveFindContent failed: Unable to locate content on the network.",
+    "data": {
+      "$ref": "#/components/schema/traceResultObject"
+    }
+  }
+}
