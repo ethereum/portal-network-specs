@@ -152,6 +152,14 @@
     }
   },
   {
+    "name": "portal_historyRadius",
+    "summary": "Returns the radius used by the history network.",
+    "params": [],
+    "result": {
+      "$ref": "#/components/contentDescriptors/DataRadiusResult"
+    }
+  },
+  {
     "name": "portal_historyStore",
     "summary": "Store history content key with content data",
     "params": [
