@@ -140,6 +140,26 @@
     }
   },
   {
+    "name": "portal_stateTraceRecursiveFindContent",
+    "summary": "Look up a target content key in the network and get tracing data",
+    "params": [
+      {
+        "$ref": "#/components/contentDescriptors/ContentKey"
+      }
+    ],
+    "result": {
+      "$ref": "#/components/contentDescriptors/TraceRecursiveFindContentResult"
+    }
+  },
+  {
+    "name": "portal_stateRadius",
+    "summary": "Returns the radius used by the state network.",
+    "params": [],
+    "result": {
+      "$ref": "#/components/contentDescriptors/DataRadiusResult"
+    }
+  },
+  {
     "name": "portal_stateStore",
     "summary": "Store state content key with content data",
     "params": [
@@ -179,6 +199,54 @@
     ],
     "result": {
       "$ref": "#/components/contentDescriptors/GossipResult"
+    }
+  },
+  {
+    "name": "portal_stateRecursiveFindAccountState",
+    "summary": "Traverses the state trie and returns the AccountState and its proof.",
+    "params": [
+      {
+        "$ref": "#/components/contentDescriptors/StateRoot"
+      },
+      {
+        "$ref": "#/components/contentDescriptors/Address"
+      }
+    ],
+    "result": {
+      "$ref": "#/components/contentDescriptors/AccountStateResult"
+    }
+  },
+  {
+    "name": "portal_stateRecursiveFindContractStorageAt",
+    "summary": "Traverses the contract's storage trie and returns value stored at the requested slot.",
+    "params": [
+      {
+        "$ref": "#/components/contentDescriptors/Address"
+      },
+      {
+        "$ref": "#/components/contentDescriptors/StorageRoot"
+      },
+      {
+        "$ref": "#/components/contentDescriptors/StorageSlot"
+      }
+    ],
+    "result": {
+      "$ref": "#/components/contentDescriptors/ContractStorageAtResult"
+    }
+  },
+  {
+    "name": "portal_stateRecursiveFindContractBytecode",
+    "summary": "Returns the contracts's bytecode.",
+    "params": [
+      {
+        "$ref": "#/components/contentDescriptors/Address"
+      },
+      {
+        "$ref": "#/components/contentDescriptors/Codehash"
+      }
+    ],
+    "result": {
+      "$ref": "#/components/contentDescriptors/ContractBytecodeResult"
     }
   }
 ]
