@@ -344,3 +344,43 @@ A bridge should compute the content-id values for all proofs that are part of th
 recursive gossip. These proofs should be sorted by proximity to its own node-id. Beginning with
 the content that is *closest* to its own node-id it should proceed to GOSSIP each individual proof
 to nodes interested in that content.
+
+## Implementation optimization
+
+Different clients can choose whether to implement suggested optimization or not. They are not
+mandatory in order for client to work according to protocol, but they are recommended as they
+should improve client and network performance.
+
+### Full recursive gossip
+
+Once a trie node (target node) is accepted and received, we indirectly received proof for all trie
+nodes that are in the proof, i.e. its ancestors. It is possible that portal network client wants to
+store some other trie nodes from the proof (the ones that fall within its radius). By following the
+protocol, those trie nodes and their proof would later be propagate through network using recursive
+gossip mechanism described above.
+
+This can be optimized by storing all trie nodes that fall within radius from every received proof.
+In order to ensure the correct behavior, clients should gossip all of those nodes and their
+parents. If any of such nodes was already stored, they and their parent wouldn't have to be
+gossiped.
+
+For example, let's assume that client with node id `0xA...` and radius `1/16` (implying that it
+stores all content ids that start with `0xA`) accepts and receives the following proof:
+
+```
+0xA1 -> 0xB1 -> 0xC1 -> 0xA2 -> 0xD1 -> 0xA3
+```
+
+> Note: Each item represents the beginning of the content id of a node in a trie, from root `0xA1`
+> to target node `0xA3`
+
+Using this optimization, the client would store all following trie nodes: `0xA1`, `0xA2` and
+`0xA3`, and would gossip proof for them and their parents:
+
+```
+0xA1 -> 0xB1 -> 0xC1 -> 0xA2 -> 0xD1 -> 0xA3 # 0xA3 = target node
+0xA1 -> 0xB1 -> 0xC1 -> 0xA2 -> 0xD1         # parent of 0xA3
+0xA1 -> 0xB1 -> 0xC1 -> 0xA2                 # 0xA2 node (within radius)
+0xA1 -> 0xB1 -> 0xC1                         # parent of 0xA2
+0xA1                                         # 0xA1 node (within radius)
+```
