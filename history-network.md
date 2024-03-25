@@ -212,7 +212,7 @@ all_transactions        = SSZList(ssz_transaction, max_length=MAX_TRANSACTION_CO
 ssz_transaction         = SSZList(encoded_transaction: ByteList, max_length=MAX_TRANSACTION_LENGTH)
 encoded_transaction     =
   if transaction.is_typed:
-    return transaction.type_byte + rlp.encode(transaction)
+    return rlp.encode(transaction.type_byte + rlp.encode(transaction))
   else:
     return rlp.encode(transaction)
 ssz_uncles              = SSZList(encoded_uncles: ByteList, max_length=MAX_ENCODED_UNCLES_LENGTH)
@@ -240,7 +240,7 @@ selector            = 0x02
 ssz_receipt         = SSZList(encoded_receipt: ByteList, max_length=MAX_RECEIPT_LENGTH)
 encoded_receipt     =
   if receipt.is_typed:
-    return type_byte + rlp.encode(receipt)
+    return rlp.encode(type_byte + rlp.encode(receipt))
   else:
     return rlp.encode(receipt)
 
