@@ -266,9 +266,9 @@ content_key           = selector + SSZ.serialize(epoch_accumulator_key)
 
 ### Algorithms
 
-#### The "Header Accumulator"
+#### The "Pre Merge Accumulator"
 
-The "Header Accumulator" is based on the [double-batched merkle log accumulator](https://ethresear.ch/t/double-batched-merkle-log-accumulator/571) that is currently used in the beacon chain.  This data structure is designed to allow nodes in the network to "forget" the deeper history of the chain, while still being able to reliably receive historical headers with a proof that the received header is indeed from the canonical chain (as opposed to an uncle mined at the same block height).  This data structure is only used for pre-merge blocks.
+The "Pre Merge Accumulator" is based on the [double-batched merkle log accumulator](https://ethresear.ch/t/double-batched-merkle-log-accumulator/571) that is currently used in the beacon chain.  This data structure is designed to allow nodes in the network to "forget" the deeper history of the chain, while still being able to reliably receive historical headers with a proof that the received header is indeed from the canonical chain (as opposed to an uncle mined at the same block height).  This data structure is only used for pre-merge blocks.
 
 The accumulator is defined as an [SSZ](https://ssz.dev/) data structure with the following schema:
 
@@ -282,7 +282,7 @@ HeaderRecord = Container[block_hash: bytes32, total_difficulty: uint256]
 # The records of the headers from within a single epoch
 EpochAccumulator = List[HeaderRecord, max_length=EPOCH_SIZE]
 
-MasterAccumulator = Container[
+PreMergeAccumulator = Container[
     historical_epochs: List[bytes32, max_length=MAX_HISTORICAL_EPOCHS],
     current_epoch: EpochAccumulator,
 ]
@@ -292,7 +292,7 @@ The algorithm for building the accumulator is as follows.
 
 
 ```python
-def update_accumulator(accumulator: MasterAccumulator, new_block_header: BlockHeader) -> None:
+def update_accumulator(accumulator: PreMergeAccumulator, new_block_header: BlockHeader) -> None:
     # get the previous total difficulty
     if len(accumulator.current_epoch) == 0:
         # genesis
@@ -331,7 +331,7 @@ An `AccumulatorProof` for a specific `BlockHeader` can be used to verify that
 this `BlockHeader` is part of the canonical chain. This is done by verifying the
 Merkle proof with the `BlockHeader`'s block hash as leave and the
 `EpochAccumulator` digest as root. This digest is available in the
-`MasterAccumulator`.
+`PreMergeAccumulator`.
 
-As the `MasterAccumulator` only accounts for blocks pre-merge, this proof can
+As the `PreMergeAccumulator` only accounts for blocks pre-merge, this proof can
 only be used to verify blocks pre-merge.

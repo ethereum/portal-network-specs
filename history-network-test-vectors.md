@@ -36,7 +36,7 @@ The resulted output of the serialized `BlockHeaderWithProof` should equal the
 ### Verification of the Proof
 
 After deserialization of `content_value`, the resulting `BlockHeader` and
-`AccumulatorProof` can be used together with the `MasterAccumulator` to verify
+`AccumulatorProof` can be used together with the `PreMergeAccumulator` to verify
 if the `BlockHeader` is part of the canonical chain.
 
 ## BlockBody Test Vector
