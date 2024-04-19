@@ -78,7 +78,7 @@ The beacon chain network supports the following protocol messages:
 
 In the beacon chain network the `custom_payload` field of the `Ping` and `Pong` messages is the serialization of an SSZ Container specified as `custom_data`:
 
-```
+```python
 custom_data = Container(data_radius: uint256)
 custom_payload = serialize(custom_data)
 ```
@@ -113,7 +113,7 @@ a node is "interested" in.
 
 We define the following function to determine whether node in the network should be interested in a piece of content:
 
-```
+```python
 interested(node, content) = distance(node.id, content.id) <= node.radius
 ```
 
@@ -138,7 +138,7 @@ The following data objects are ephemeral and we store only the latest values:
 
 We use the following constants from the beacon chain specs which are used in the various data type definitions:
 
-```py
+```python
 # Maximum number of `LightClientUpdate` instances in a single request
 # Defined in https://github.com/ethereum/consensus-specs/blob/dev/specs/altair/light-client/p2p-interface.md#configuration
 MAX_REQUEST_LIGHT_CLIENT_UPDATES = 2**7  # = 128
@@ -153,7 +153,7 @@ HISTORICAL_ROOTS_LIMIT = 2**24  # = 16,777,216
 
 #### LightClientBootstrap
 
-```
+```python
 light_client_bootstrap_key = Container(block_hash: Bytes32)
 selector                   = 0x10
 
@@ -163,7 +163,7 @@ content_key                = selector + SSZ.serialize(light_client_bootstrap_key
 
 #### LightClientUpdatesByRange
 
-```
+```python
 light_client_update_keys   = Container(start_period: uint64, count: uint64)
 selector                   = 0x11
 
@@ -176,7 +176,7 @@ the requested range it MUST NOT reply any content.
 
 #### LightClientFinalityUpdate
 
-```
+```python
 light_client_finality_update_key  = Container(finalized_slot: uint64)
 selector                          = 0x12
 
@@ -195,7 +195,7 @@ are potentially finalized.
 
 #### LightClientOptimisticUpdate
 
-```
+```python
 light_client_optimistic_update_key   = Container(optimistic_slot: uint64)
 selector                             = 0x13
 
@@ -214,7 +214,7 @@ and then use that slot as a starting point for retrieving the most recent update
 #### HistoricalSummaries
 
 Latest `HistoricalSummaries` object is stored in the network every 256 epochs (8192 slots).
-```
+```python
 HistoricalSummariesProof = Vector[Bytes32, 5]
 
 historical_summaries_with_proof = HistoricalSummariesWithProof(
