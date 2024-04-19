@@ -70,7 +70,7 @@ The history network supports the following protocol messages:
 
 In the history network the `custom_payload` field of the `Ping` and `Pong` messages is the serialization of an SSZ Container specified as `custom_data`:
 
-```
+```python
 custom_data = Container(data_radius: uint256)
 custom_payload = SSZ.serialize(custom_data)
 ```
@@ -86,7 +86,7 @@ The history network uses the standard routing table structure from the Portal Wi
 
 The history network includes one additional piece of node state that should be tracked.  Nodes must track the `data_radius` from the Ping and Pong messages for other nodes in the network.  This value is a 256 bit integer and represents the data that a node is "interested" in.  We define the following function to determine whether node in the network should be interested in a piece of content.
 
-```
+```python
 interested(node, content) = distance(node.id, content.id) <= node.radius
 ```
 
@@ -100,7 +100,7 @@ A node should track their own radius value and provide this value in all Ping or
 
 We define the following constants which are used in the various data type definitions.
 
-```py
+```python
 MAX_TRANSACTION_LENGTH = 2**24  # ~= 16 million
 # Maximum transaction body length is achieved by filling calldata with 0's
 # until the block limit of (currently) 30M gas is reached.
@@ -161,7 +161,7 @@ each receipt/transaction and re-rlp-encode it, but only if it is a legacy transa
 #### Block Header
 
 
-```
+```python
 # Content types
 
 AccumulatorProof = Vector[Bytes32, 15]
@@ -174,7 +174,7 @@ BlockHeaderWithProof = Container[
 ]
 ```
 
-```
+```python
 # Content and content key
 
 block_header_key = Container(block_hash: Bytes32)
@@ -204,7 +204,7 @@ the following sequence to decode & validate block bodies.
 - Decode the block body using either pre-shanghai or post-shanghai encoding.
 - Validate the decoded block body against the roots in the header.
 
-```
+```python
 block_body_key          = Container(block_hash: Bytes32)
 selector                = 0x01
 
@@ -233,7 +233,7 @@ Note 2: The `list_of_uncle_headers` refers to the array of uncle headers [define
 
 #### Receipts
 
-```
+```python
 receipt_key         = Container(block_hash: Bytes32)
 selector            = 0x02
 
@@ -254,7 +254,7 @@ for all current receipt types.
 
 #### Epoch Accumulator
 
-```
+```python
 epoch_accumulator_key = Container(epoch_hash: Bytes32)
 selector              = 0x03
 epoch_hash            = hash_tree_root(epoch_accumulator)
