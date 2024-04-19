@@ -214,13 +214,18 @@ content          = SSZ.serialize(block_header_with_proof)
 content_key      = selector + SSZ.serialize(block_header_key)
 ```
 
-> **_Note:_** The `BlockHeaderProof` allows to provide headers without a proof (`None`).
+The `BlockHeaderProof` allows to provide headers without a proof (`None`).
 For pre-merge headers, clients SHOULD NOT accept headers without a proof
 as there is the `AccumulatorProof` solution available.
+
 For post-merge until Capella headers, clients SHOULD NOT accept headers without a proof as there is the `HistoricalRootsBlockProof` solution available.
+
 For Capella headers, clients SHOULD NOT accept headers without a proof as there is the `HistoricalSummariesBlockProof` solution available.
+
 For headers that are not yet part of the last period, clients SHOULD
-accept headers without a proof.
+accept headers without a proof. These headers MAY be verified if the node is following Portal beacon light client updates by verifying the `ExecutionPayloadHeader.block_hash` of the relevant `LightClientHeader`.
+
+Clients SHOULD have a way of keeping track of the recent headers that it has stored without a proof (`None`). When these headers get added in the `historical_summaries` at the end of a period, they will be re-gossiped with their proofs. Clients SHOULD accept these headers with their proof and discard the old headers without proof.
 
 #### Block Body
 
