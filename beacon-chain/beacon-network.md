@@ -213,7 +213,8 @@ and then use that slot as a starting point for retrieving the most recent update
 
 #### HistoricalSummaries
 
-Latest `HistoricalSummaries` object is stored in the network every 256 epochs (8192 slots).
+Latest `HistoricalSummariesWithProof` object is stored in the network every epoch, even though the `historical_summaries` only updates every period (8192 slots). This is done to have an up to date proof every epoch, which makes it easier to verify the `historical_summaries` when starting the beacon light client sync.
+
 ```python
 HistoricalSummariesProof = Vector[Bytes32, 5]
 
