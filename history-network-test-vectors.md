@@ -28,7 +28,7 @@ The above test vectors can be used to verify the generated proof.
 
 As input it is required to have the specific `BlockHeader` and the
 `EpochAccumulator`, of which the `BlockHeader` is part of, to generate the
-`AccumulatorProof`.
+`PreMergeAccumulatorProof`.
 
 The resulted output of the serialized `BlockHeaderWithProof` should equal the
 `content_value`.
@@ -36,7 +36,7 @@ The resulted output of the serialized `BlockHeaderWithProof` should equal the
 ### Verification of the Proof
 
 After deserialization of `content_value`, the resulting `BlockHeader` and
-`AccumulatorProof` can be used together with the `PreMergeAccumulator` to verify
+`PreMergeAccumulatorProof` can be used together with the `PreMergeAccumulator` to verify
 if the `BlockHeader` is part of the canonical chain.
 
 ## BlockBody Test Vector
