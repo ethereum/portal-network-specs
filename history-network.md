@@ -164,9 +164,9 @@ each receipt/transaction and re-rlp-encode it, but only if it is a legacy transa
 ```python
 # Content types
 
-AccumulatorProof = Vector[Bytes32, 15]
+PreMergeAccumulatorProof = Vector[Bytes32, 15]
 
-BlockHeaderProof = Union[None, AccumulatorProof]
+BlockHeaderProof = Union[None, PreMergeAccumulatorProof]
 
 BlockHeaderWithProof = Container[
   header: ByteList, # RLP encoded header in SSZ ByteList
@@ -188,7 +188,7 @@ content_key      = selector + SSZ.serialize(block_header_key)
 
 > **_Note:_** The `BlockHeaderProof` allows to provide headers without a proof (`None`).
 For pre-merge headers, clients SHOULD NOT accept headers without a proof
-as there is the `AccumulatorProof` solution available.
+as there is the `PreMergeAccumulatorProof` solution available.
 For post-merge headers, there is currently no proof solution and clients SHOULD
 accept headers without a proof.
 
@@ -266,9 +266,9 @@ content_key           = selector + SSZ.serialize(epoch_accumulator_key)
 
 ### Algorithms
 
-#### The "Header Accumulator"
+#### The "Pre Merge Accumulator"
 
-The "Header Accumulator" is based on the [double-batched merkle log accumulator](https://ethresear.ch/t/double-batched-merkle-log-accumulator/571) that is currently used in the beacon chain.  This data structure is designed to allow nodes in the network to "forget" the deeper history of the chain, while still being able to reliably receive historical headers with a proof that the received header is indeed from the canonical chain (as opposed to an uncle mined at the same block height).  This data structure is only used for pre-merge blocks.
+The "Pre Merge Accumulator" is based on the [double-batched merkle log accumulator](https://ethresear.ch/t/double-batched-merkle-log-accumulator/571) that is currently used in the beacon chain.  This data structure is designed to allow nodes in the network to "forget" the deeper history of the chain, while still being able to reliably receive historical headers with a proof that the received header is indeed from the canonical chain (as opposed to an uncle mined at the same block height).  This data structure is only used for pre-merge blocks.
 
 The accumulator is defined as an [SSZ](https://ssz.dev/) data structure with the following schema:
 
@@ -282,7 +282,7 @@ HeaderRecord = Container[block_hash: bytes32, total_difficulty: uint256]
 # The records of the headers from within a single epoch
 EpochAccumulator = List[HeaderRecord, max_length=EPOCH_SIZE]
 
-MasterAccumulator = Container[
+PreMergeAccumulator = Container[
     historical_epochs: List[bytes32, max_length=MAX_HISTORICAL_EPOCHS],
     current_epoch: EpochAccumulator,
 ]
@@ -292,7 +292,7 @@ The algorithm for building the accumulator is as follows.
 
 
 ```python
-def update_accumulator(accumulator: MasterAccumulator, new_block_header: BlockHeader) -> None:
+def update_accumulator(accumulator: PreMergeAccumulator, new_block_header: BlockHeader) -> None:
     # get the previous total difficulty
     if len(accumulator.current_epoch) == 0:
         # genesis
@@ -316,9 +316,9 @@ def update_accumulator(accumulator: MasterAccumulator, new_block_header: BlockHe
 
 The network provides no mechanism for acquiring the *master* version of this accumulator.  Clients are encouraged to solve this however they choose, with the suggestion that they include a frozen copy of the accumulator at the point of the merge within their client code, and provide a mechanism for users to override this value if they so choose.
 
-#### AccumulatorProof
+#### PreMergeAccumulatorProof
 
-The `AccumulatorProof` is a Merkle proof as specified in the
+The `PreMergeAccumulatorProof` is a Merkle proof as specified in the
 [SSZ Merke proofs specification](https://github.com/ethereum/consensus-specs/blob/dev/ssz/merkle-proofs.md#merkle-multiproofs).
 
 It is a Merkle proof for the `BlockHeader`'s block hash on the relevant
@@ -327,11 +327,11 @@ the `BlockHeader`'s block hash is part of. The `GeneralizedIndex` selected must
 match the leave of the `EpochAccumulator` merkle tree which holds the
 `BlockHeader`'s block hash.
 
-An `AccumulatorProof` for a specific `BlockHeader` can be used to verify that
+An `PreMergeAccumulatorProof` for a specific `BlockHeader` can be used to verify that
 this `BlockHeader` is part of the canonical chain. This is done by verifying the
 Merkle proof with the `BlockHeader`'s block hash as leave and the
 `EpochAccumulator` digest as root. This digest is available in the
-`MasterAccumulator`.
+`PreMergeAccumulator`.
 
-As the `MasterAccumulator` only accounts for blocks pre-merge, this proof can
+As the `PreMergeAccumulator` only accounts for blocks pre-merge, this proof can
 only be used to verify blocks pre-merge.
