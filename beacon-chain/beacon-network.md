@@ -226,15 +226,15 @@ historical_summaries_with_proof = HistoricalSummariesWithProof(
     proof: HistoricalSummariesProof
 )
 
-historical_summaries_key   = 0 (uint8)
+historical_summaries_key   = Container(epoch: uint64)
 selector                   = 0x14
 
 content                    = ForkDigest + SSZ.serialize(historical_summaries_with_proof)
 content_key                = selector + SSZ.serialize(historical_summaries_key)
 ```
 
-> A `0` in the content key is equivalent to the request for the latest
-HistoricalSummaries that the requested node has available.
+> A node SHOULD return the latest `HistoricalSummariesWithProof` object it has in response to a `FindContent` request.
+> If a node cannot provide the requested or newer `HistoricalSummariesWithProof` object, it MUST NOT reply with any content.
 
 ### Algorithms
 
