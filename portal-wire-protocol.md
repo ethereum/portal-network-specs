@@ -20,9 +20,10 @@ Currently defined protocol identifiers:
 - Inclusive range of `0x5000` - `0x5009`: Reserved for future networks or network upgrades
 - `0x500A`: Execution State Network
 - `0x500B`: Execution History Network
-- `0x500C`: Execution Transaction Gossip Network
+- `0x500C`: Beacon Chain Light Client Network
 - `0x500D`: Execution Canonical Transaction Index Network
-- `0x501A`: Beacon Chain Light Client Network
+- `0x500E`: Execution Verkle State Network
+- `0x500F`: Execution Transaction Gossip Network
 
 ## Content Keys and Content IDs
 
