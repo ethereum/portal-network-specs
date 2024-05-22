@@ -85,7 +85,7 @@ A node should track their own radius value and provide this value in all Ping or
 
 #### OFFER/ACCEPT vs FINDCONTENT/FOUNDCONTENT payloads
 
-The data payloads for many content types in the history network differ between OFFER/ACCEPT and FINDCONTENT/FOUNDCONTENT.
+The data payloads for many content types in the state network differ between OFFER/ACCEPT and FINDCONTENT/FOUNDCONTENT.
 
 The OFFER/ACCEPT payloads need to be provable by their recipients.  These proofs are useful during OFFER/ACCEPT because they verify that the offered data is indeed part of the canonical chain.
 
