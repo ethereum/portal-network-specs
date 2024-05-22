@@ -63,7 +63,11 @@ custom_data = Container(data_radius: uint256)
 custom_payload = SSZ.serialize(custom_data)
 ```
 
-### Routing Table 
+#### POKE Mechanism
+
+The [POKE Mechanism](./portal-wire-protocol#poke-mechanism) MUST be disabled for the state network. As `content_for_retrieval` is different from `content_for_offer` the POKE mechanism cannot offer content that is verifiable.
+
+### Routing Table
 
 The execution state network uses the standard routing table structure from the Portal Wire Protocol.
 
