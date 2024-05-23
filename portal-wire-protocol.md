@@ -21,7 +21,7 @@ Currently defined mainnet protocol identifiers:
 - Inclusive range of `0x5000` - `0x5009`: Reserved for future networks or network upgrades
 - `0x500A`: Execution State Network
 - `0x500B`: Execution History Network
-- `0x500C`: Beacon Chain Light Client Network
+- `0x500C`: Beacon Chain Network
 - `0x500D`: Execution Canonical Transaction Index Network
 - `0x500E`: Execution Verkle State Network
 - `0x500F`: Execution Transaction Gossip Network
@@ -29,7 +29,7 @@ Currently defined mainnet protocol identifiers:
 Currently defined `angelfood` protocol identifiers:
 - `0x504A`: Execution State Network
 - `0x504B`: Execution History Network
-- `0x504C`: Beacon Chain Light Client Network
+- `0x504C`: Beacon Chain Network
 - `0x504D`: Execution Canonical Transaction Index Network
 - `0x504E`: Execution Verkle State Network
 - `0x504F`: Execution Transaction Gossip Network
