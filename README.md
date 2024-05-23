@@ -24,16 +24,18 @@ The term "light client" has historically referred to a client of the existing [D
 
 The Portal Network is built upon the [Discover V5 protocol](https://github.com/ethereum/devp2p/blob/master/discv5/discv5.md) and operates over the UDP transport.
 
-The Discovery v5 protocol allows building custom sub-protocols via the use of the built in TALKREQ and TALKRESP message.
+The Discovery v5 protocol allows building custom sub-protocols via the use of the built in TALKREQ and TALKRESP message. All sub-protocols use the [Portal Wire Protocol](./portal-wire-protocol.md) which uses the TALKREQ and TALKRESP messages as transport. This wire protocol allows for quick development of the network layer of any new sub-protocol.
 
 The Portal Network is divided into the following sub-protocols.
 
 - Execution State Network
 - Execution History Network
-- Execution Transaction Gossip Network
-- Execution Canonical Indices Network
+- Beacon Chain Network
+- Execution Canonical Transaction Index Network (preliminary)
+- Execution Verkle State Network (preliminary)
+- Execution Transaction Gossip Network (preliminary)
 
-Each of these sub-protocols is designed to deliver a specific unit of functionality.  Most portal clients will participate in all of these sub-protocols in order to deliver the full JSON-RPC API.  Each sub-protocol however is designed to be independent of the others, allowing clients the option of only participating in a subset of them if they wish.
+Each of these sub-protocols is designed to deliver a specific unit of functionality.  Most Portal clients will participate in all of these sub-protocols in order to deliver the full JSON-RPC API.  Each sub-protocol however is designed to be independent of the others, allowing clients the option of only participating in a subset of them if they wish.
 
 All of the sub-protocols in the Portal Network establish their own overlay DHT that is managed independent of the base Discovery V5 DHT.
 
@@ -61,7 +63,7 @@ These design principles are aimed at ensuring that participation in the Portal N
 
 ## The JSON-RPC API
 
-The following JSON-RPC API endpoints are directly supported by the portal network and exposed by portal clients.
+The following JSON-RPC API endpoints are directly supported by the Portal Network and exposed by Portal clients.
 
 - `eth_getBlockByHash`
 - `eth_getBlockByNumber`
@@ -82,11 +84,11 @@ The following JSON-RPC API endpoints are directly supported by the portal networ
 - `eth_getTransactionByBlockNumberAndIndex`
 - `eth_getTransactionReceipt`
 
-In addition to these endpoints, the following endpoints can be exposed by portal clients through the data available through the portal network.
+In addition to these endpoints, the following endpoints can be exposed by Portal clients through the data available through the Portal Network.
 
 - `eth_syncing`
 
-The following endpoints can be exposed by portal clients as they require no access to execution layer data.
+The following endpoints can be exposed by Portal clients as they require no access to execution layer data.
 
 - `eth_protocolVersion`
 - `eth_chainId`
@@ -115,7 +117,7 @@ The following endpoints can be exposed by portal clients as they require no acce
 
 ## Bridge Nodes
 
-The term "bridge node" refers to portal clients which, in addition to participating in the sub-protocols, also inject data into the Portal Network. Any client with valid data may participate as a bridge node. From the perspective of the protocols underlying the Portal Network there is nothing special about bridge nodes.
+The term "bridge node" refers to Portal clients which, in addition to participating in the sub-protocols, also inject data into the Portal Network. Any client with valid data may participate as a bridge node. From the perspective of the protocols underlying the Portal Network there is nothing special about bridge nodes.
 
 The planned architecture for bridge nodes is to pull data from the standard JSON-RPC API of a Full Node and "push" this data into their respective networks within the Portal Network.
 
@@ -177,16 +179,18 @@ This network is a pure gossip network and does not implement any form of content
 
 ## Network Specifications
 
+- [Portal Wire Protocol](./portal-wire-protocol.md)
 - [uTP over DiscoveryV5](./discv5-utp.md)
 - [State Network](./state-network.md)
     - Prior work: https://ethresear.ch/t/scalable-gossip-for-state-network/8958/4
-- [Chain History Network](./history-network.md)
+- [History Network](./history-network.md)
     - Prior work: https://notes.ethereum.org/oUJE4ZX2Q6eMOgEMiQPkpQ?view
     - Prior Python proof-of-concept: https://github.com/ethereum/ddht/tree/341e84e9163338556cd48dd2fcfda9eedec3eb45
         - This POC should NOT be considered representative of the end goal.  It incorporates mechanisms that aren't likely to be apart of the actual implementation, specifically the "advertisement" system which proved to be a big bottleneck, as well as the SSZ merkle root system which was a workaround for large data transfer which we now intend to solve with uTP.
-- [Transaction Gossip Network](./transaction-gossip.md):
-    - Spec is preliminary
-    - Prior work: https://ethresear.ch/t/scalable-transaction-gossip/8660
+- [Beacon Chain Network](./beacon-chain/beacon-network.md)
 - [Canonical Transaction Index Network](./canonical-transaction-index-network.md)
     - Spec is preliminary.
     - Network design borrows heavily from history network.
+- [Transaction Gossip Network](./transaction-gossip.md):
+    - Spec is preliminary
+    - Prior work: https://ethresear.ch/t/scalable-transaction-gossip/8660
