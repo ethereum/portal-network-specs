@@ -1,12 +1,12 @@
-# Portal Network: Testnet
-The [enr](https://eips.ethereum.org/EIPS/eip-778) addresses for the bootnodes of the Portal Network testnet.
+# Portal Network
+The [enr](https://eips.ethereum.org/EIPS/eip-778) addresses for the bootnodes of the Portal Network.
 
 
 ### Here be dragons...
 These bootnodes are currently all running [Trin](https://github.com/ethereum/trin), [Fluffy](https://github.com/status-im/nimbus-eth1/tree/master/fluffy#introduction), or [Ultralight](https://github.com/ethereumjs/ultralight) clients, so their functionality is limited to what has been implemented in those clients. All clients are still in alpha, so it is likely that bugs will occur or that the clients become unavailable for any number of reasons. If you have problems connecting to the bootnodes or encounter a bug, please let us know in the Portal Network discord.
 
 
-# Bootnodes
+# Bootnodes: Mainnet
 ```
 # Trin bootstrap nodes
 enr:-Jy4QIs2pCyiKna9YWnAF0zgf7bT0GzlAGoF8MEKFJOExmtofBIqzm71zDvmzRiiLkxaEJcs_Amr7XIhLI74k1rtlXICY5Z0IDAuMS4xLWFscGhhLjEtMTEwZjUwgmlkgnY0gmlwhKEjVaWJc2VjcDI1NmsxoQLSC_nhF1iRwsCw0n3J4jRjqoaRxtKgsEe5a-Dz7y0JloN1ZHCCIyg
@@ -24,3 +24,10 @@ enr:-IS4QFV_wTNknw7qiCGAbHf6LxB-xPQCktyrCEZX-b-7PikMOIKkBg-frHRBkfwhI3XaYo_T-HxB
 enr:-IS4QDpUz2hQBNt0DECFm8Zy58Hi59PF_7sw780X3qA0vzJEB2IEd5RtVdPUYZUbeg4f0LMradgwpyIhYUeSxz2Tfa8DgmlkgnY0gmlwhKRc9_OJc2VjcDI1NmsxoQJd4NAVKOXfbdxyjSOUJzmA4rjtg43EDeEJu1f8YRhb_4N1ZHCCE4o
 enr:-IS4QGG6moBhLW1oXz84NaKEHaRcim64qzFn1hAG80yQyVGNLoKqzJe887kEjthr7rJCNlt6vdVMKMNoUC9OCeNK-EMDgmlkgnY0gmlwhKRc9-KJc2VjcDI1NmsxoQLJhXByb3LmxHQaqgLDtIGUmpANXaBbFw3ybZWzGqb9-IN1ZHCCE4k
 enr:-IS4QA5hpJikeDFf1DD1_Le6_ylgrLGpdwn3SRaneGu9hY2HUI7peHep0f28UUMzbC0PvlWjN8zSfnqMG07WVcCyBhADgmlkgnY0gmlwhKRc9-KJc2VjcDI1NmsxoQJMpHmGj1xSP1O-Mffk_jYIHVcg6tY5_CjmWVg1gJEsPIN1ZHCCE4o
+```
+
+# Bootnodes: Testnet
+```
+# Trin bootstrap nodes
+enr:-LC4QMnoW2m4YYQRPjZhJ5hEpcA6a3V7iQs3slQ1TepzKBIVWQtjpcHsPINc0TcheMCbx6I2n5aax8M3AtUObt74ySUCY6p0IDVhYzI2NzViNGRmMjNhNmEwOWVjNDFkZTRlYTQ2ODQxNjk2ZTQ1YzSCaWSCdjSCaXCEQONKaYlzZWNwMjU2azGhAvZgYbpA9G8NQ6X4agu-R7Ymtu0hcX6xBQ--UEel_b6Pg3VkcIIjKA
+```
