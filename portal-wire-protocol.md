@@ -25,8 +25,8 @@ Currently defined mainnet protocol identifiers:
 - `0x500D`: Execution Canonical Transaction Index Network
 - `0x500E`: Execution Verkle State Network
 - `0x500F`: Execution Transaction Gossip Network
-### Testnet identifiers
-Currently defined testnet protocol identifiers:
+### Angelfood identifiers
+Currently defined `angelfood` protocol identifiers:
 - `0x504A`: Execution State Network
 - `0x504B`: Execution History Network
 - `0x504C`: Beacon Chain Light Client Network
