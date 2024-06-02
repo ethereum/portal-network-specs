@@ -72,6 +72,12 @@ All relevant data (extracted using `eth_getProof` and `eth_getCode`):
 
 The leaf node of the account trie that holds the account state.
 
+##### Content Key Input Parameters
+```
+path = [8, 6, 7, 9, 14, 8, 14, 13]
+node_hash = 0x6225fcc63b22b80301d9f2582014e450e91f9b329b7cc87ad16894722fff5296
+```
+
 ```json
 {
   "content_key": "0x20240000006225fcc63b22b80301d9f2582014e450e91f9b329b7cc87ad16894722fff5296008679e8ed",
@@ -86,6 +92,13 @@ The leaf node of the account trie that holds the account state.
 The leaf node of the contract storage trie that holds the number of decimal
 points used by the token.
 
+##### Content Key Input Parameters
+```
+address = 0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2
+path = [4, 0, 5, 7, 8, 7]
+node_hash = 0xeb43d68008d216e753fef198cf51077f5a89f406d9c244119d1643f0f2b19011
+```
+
 ```json
 {
   "content_key": "0x21c02aaa39b223fe8d0a0e5c4f27ead9083c756cc238000000eb43d68008d216e753fef198cf51077f5a89f406d9c244119d1643f0f2b1901100405787",
@@ -96,6 +109,12 @@ points used by the token.
 ```
 
 ## Contract Bytecode
+
+##### Content Key Input Parameters
+```
+address = 0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2
+code_hash = 0xd0a06b12ac47863b5c7be4185c2deaad1c61557033f56c7d4ea74429cbb25e23
+```
 
 ```json
 {

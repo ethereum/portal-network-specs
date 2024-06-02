@@ -180,10 +180,10 @@ This network is a pure gossip network and does not implement any form of content
 ## Network Specifications
 
 - [Portal Wire Protocol](./portal-wire-protocol.md)
-- [uTP over DiscoveryV5](./discv5-utp.md)
-- [State Network](./state-network.md)
+- [uTP over DiscoveryV5](./utp/discv5-utp.md)
+- [State Network](./state/state-network.md)
     - Prior work: https://ethresear.ch/t/scalable-gossip-for-state-network/8958/4
-- [History Network](./history-network.md)
+- [History Network](./history/history-network.md)
     - Prior work: https://notes.ethereum.org/oUJE4ZX2Q6eMOgEMiQPkpQ?view
     - Prior Python proof-of-concept: https://github.com/ethereum/ddht/tree/341e84e9163338556cd48dd2fcfda9eedec3eb45
         - This POC should NOT be considered representative of the end goal.  It incorporates mechanisms that aren't likely to be apart of the actual implementation, specifically the "advertisement" system which proved to be a big bottleneck, as well as the SSZ merkle root system which was a workaround for large data transfer which we now intend to solve with uTP.
@@ -191,6 +191,6 @@ This network is a pure gossip network and does not implement any form of content
 - [Canonical Transaction Index Network](./canonical-transaction-index-network.md)
     - Spec is preliminary.
     - Network design borrows heavily from history network.
-- [Transaction Gossip Network](./transaction-gossip.md):
+- [Transaction Gossip Network](./transaction-gossip/transaction-gossip.md):
     - Spec is preliminary
     - Prior work: https://ethresear.ch/t/scalable-transaction-gossip/8660

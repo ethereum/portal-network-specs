@@ -66,3 +66,64 @@ Includes both a pre and post Shapella upgrade test vector.
     }
 }
 ```
+
+## Content Id Derivations
+
+Following the testing of the encoding and decoding of the keys, we also test the proper derivation
+of the corresponding `content-id`. This is given as both the hex string and corresponding raw U256 integer.
+
+#### Block Header Key
+
+##### Input Parameters
+```
+block_hash = 0xd1c390624d3bd4e409a61a858e5dcc5517729a9170d014a6c96530d64dd8621d
+```
+
+##### Expected Output
+```
+content_key = 0x00d1c390624d3bd4e409a61a858e5dcc5517729a9170d014a6c96530d64dd8621d
+content_id = 0x3e86b3767b57402ea72e369ae0496ce47cc15be685bec3b4726b9f316e3895fe
+content_id: U256 = 28281392725701906550238743427348001871342819822834514257505083923073246729726
+```
+
+#### Block Body Key
+
+##### Input Parameters
+```
+block_hash = 0xd1c390624d3bd4e409a61a858e5dcc5517729a9170d014a6c96530d64dd8621d
+```
+
+##### Expected Output
+```
+content_key = 0x01d1c390624d3bd4e409a61a858e5dcc5517729a9170d014a6c96530d64dd8621d
+content_id = 0xebe414854629d60c58ddd5bf60fd72e41760a5f7a463fdcb169f13ee4a26786b
+content_id: U256 = 106696502175825986237944249828698290888857178633945273402044845898673345165419
+```
+
+#### Receipt Key
+
+##### Input Parameters
+```
+block_hash = 0xd1c390624d3bd4e409a61a858e5dcc5517729a9170d014a6c96530d64dd8621d
+```
+
+##### Expected Output
+```
+content_key = 0x02d1c390624d3bd4e409a61a858e5dcc5517729a9170d014a6c96530d64dd8621d
+content_id = 0xa888f4aafe9109d495ac4d4774a6277c1ada42035e3da5e10a04cc93247c04a4
+content_id: U256 = 76230538398907151249589044529104962263309222250374376758768131420767496438948
+```
+
+#### Epoch Accumulator Key
+
+##### Input Parameters
+```
+epoch_hash = 0xe242814b90ed3950e13aac7e56ce116540c71b41d1516605aada26c6c07cc491
+```
+
+##### Expected Output
+```
+content_key = 0x03e242814b90ed3950e13aac7e56ce116540c71b41d1516605aada26c6c07cc491
+content_id = 0x9fb2175e76c6989e0fdac3ee10c40d2a81eb176af32e1c16193e3904fe56896e
+content_id: U256 = 72232402989179419196382321898161638871438419016077939952896528930608027961710
+```

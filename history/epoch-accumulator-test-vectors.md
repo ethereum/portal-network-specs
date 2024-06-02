@@ -1,6 +1,6 @@
-# Header Gossip Network Test Vectors
+# Epoch Accumulator Test Vectors
 
-This document contains test vectors for the Header Gossip Network to help implementations conform to the specification.
+This document contains test vectors Epoch Accumulator for the Header Network to help implementations conform to the specification.
 
 ## Header Accumulator Encodings
 
