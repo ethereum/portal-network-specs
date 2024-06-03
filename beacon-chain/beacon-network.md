@@ -250,4 +250,20 @@ random gossip.
 
 #### Validation
 
+##### LightClientBootstrap
+
+While still light client syncing a node SHOULD only allow to store an offered `LightClientBootstrap` that it knows to be canonical.
+That is, a bootstrap which it can verify as it maps to a known trusted-block-root.
+E.g. trusted-block-root(s) provided through client config or pre-loaded in the client.
+
+Once a node is light client synced, it can verify a new `LightClientBootstrap` and then store and re-gossip it on successful verification.
+
+##### LightClientUpdate
+
+While still light client syncing a node SHOULD NOT store any offered `LightClientUpdate`. It SHOULD retrieve the updates required to sync and store those when verified.
+
+Once a node is light client synced, it can verify a new `LightClientUpdate` and then store and re-gossip it on successful verification.
+
+##### LightClientFinalityUpdate & LightClientOptimisticUpdate
+
 Validating `LightClientFinalityUpdate` and `LightClientOptimisticUpdate` follows the gossip domain(gossipsub) [consensus specs](https://github.com/ethereum/consensus-specs/blob/dev/specs/altair/light-client/p2p-interface.md#the-gossip-domain-gossipsub).
