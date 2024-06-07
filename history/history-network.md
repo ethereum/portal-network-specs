@@ -8,7 +8,7 @@ The chain history network is a [Kademlia](https://pdos.csail.mit.edu/~petar/pape
 
 Execution chain history data consists of historical block headers, block bodies (transactions and ommer) and block receipts.
 
-In addition, the chain history network provides individual epoch accumulators for the full range of pre-merge blocks mined before the transition to proof of stake.
+In addition, the chain history network provides individual epoch records for the full range of pre-merge blocks mined before the transition to proof of stake.
 
 ### Data
 
@@ -19,7 +19,7 @@ In addition, the chain history network provides individual epoch accumulators fo
     * Transactions
     * Ommers
 * Receipts
-* Header epoch accumulators (pre-merge only)
+* Header epoch records (pre-merge only)
 
 #### Retrieval
 
@@ -28,9 +28,9 @@ The network supports the following mechanisms for data retrieval:
 * Block header by block header hash
 * Block body by block header hash
 * Block receipts by block header hash
-* Header epoch accumulator by epoch accumulator hash
+* Header epoch record by epoch record hash
 
-> The presence of the pre-merge header accumulators provides an indirect way to lookup blocks by their number, but is restricted to pre-merge blocks.  Retrieval of blocks by their number for post-merge blocks is not intrinsically supported within this network.
+> The presence of the pre-merge header records provides an indirect way to lookup blocks by their number, but is restricted to pre-merge blocks.  Retrieval of blocks by their number for post-merge blocks is not intrinsically supported within this network.
 
 > This sub-protocol does **not** support retrieval of transactions by hash, only the full set of transactions for a given block. See the "Canonical Transaction Index" sub-protocol of the Portal Network for more information on how the portal network implements lookup of transactions by their individual hashes.
 
@@ -164,9 +164,9 @@ each receipt/transaction and re-rlp-encode it, but only if it is a legacy transa
 ```python
 # Content types
 
-PreMergeAccumulatorProof = Vector[Bytes32, 15]
+HistoricalHashesAccumulatorProof = Vector[Bytes32, 15]
 
-BlockHeaderProof = Union[None, PreMergeAccumulatorProof]
+BlockHeaderProof = Union[None, HistoricalHashesAccumulatorProof]
 
 BlockHeaderWithProof = Container[
   header: ByteList, # RLP encoded header in SSZ ByteList
@@ -188,8 +188,8 @@ content_key      = selector + SSZ.serialize(block_header_key)
 
 > **_Note:_** The `BlockHeaderProof` allows to provide headers without a proof (`None`).
 For pre-merge headers, clients SHOULD NOT accept headers without a proof
-as there is the `PreMergeAccumulatorProof` solution available.
-For post-merge headers, there is currently no proof solution and clients SHOULD
+as there is the `HistoricalHashesAccumulatorProof` solution available.
+For post-merge headers, there is currently no proof solution and clients MAY
 accept headers without a proof.
 
 #### Block Body
@@ -252,39 +252,39 @@ Note the type-specific encoding might be different in future receipt types, but 
 for all current receipt types.
 
 
-#### Epoch Accumulator
+#### Epoch Record
 
 ```python
-epoch_accumulator_key = Container(epoch_hash: Bytes32)
+epoch_record_key = Container(epoch_hash: Bytes32)
 selector              = 0x03
-epoch_hash            = hash_tree_root(epoch_accumulator)
+epoch_hash            = hash_tree_root(epoch_record)
 
-content               = SSZ.serialize(epoch_accumulator)
-content_key           = selector + SSZ.serialize(epoch_accumulator_key)
+content               = SSZ.serialize(epoch_record)
+content_key           = selector + SSZ.serialize(epoch_record_key)
 ```
 
 
 ### Algorithms
 
-#### The "Pre Merge Accumulator"
+#### The "Historical Hashes Accumulator"
 
-The "Pre Merge Accumulator" is based on the [double-batched merkle log accumulator](https://ethresear.ch/t/double-batched-merkle-log-accumulator/571) that is currently used in the beacon chain.  This data structure is designed to allow nodes in the network to "forget" the deeper history of the chain, while still being able to reliably receive historical headers with a proof that the received header is indeed from the canonical chain (as opposed to an uncle mined at the same block height).  This data structure is only used for pre-merge blocks.
+The "Historical Hashes Accumulator" is based on the [double-batched merkle log accumulator](https://ethresear.ch/t/double-batched-merkle-log-accumulator/571) that is currently used in the beacon chain.  This data structure is designed to allow nodes in the network to "forget" the deeper history of the chain, while still being able to reliably receive historical headers with a proof that the received header is indeed from the canonical chain (as opposed to an uncle mined at the same block height).  This data structure is only used for pre-merge blocks.
 
 The accumulator is defined as an [SSZ](https://ssz.dev/) data structure with the following schema:
 
 ```python
 EPOCH_SIZE = 8192 # blocks
-MAX_HISTORICAL_EPOCHS = 131072  # 2**17
+MAX_HISTORICAL_EPOCHS = 2048
 
 # An individual record for a historical header.
 HeaderRecord = Container[block_hash: bytes32, total_difficulty: uint256]
 
 # The records of the headers from within a single epoch
-EpochAccumulator = List[HeaderRecord, max_length=EPOCH_SIZE]
+EpochRecord = List[HeaderRecord, max_length=EPOCH_SIZE]
 
-PreMergeAccumulator = Container[
+HistoricalHashesAccumulator = Container[
     historical_epochs: List[bytes32, max_length=MAX_HISTORICAL_EPOCHS],
-    current_epoch: EpochAccumulator,
+    current_epoch: EpochRecord,
 ]
 ```
 
@@ -292,7 +292,7 @@ The algorithm for building the accumulator is as follows.
 
 
 ```python
-def update_accumulator(accumulator: PreMergeAccumulator, new_block_header: BlockHeader) -> None:
+def update_accumulator(accumulator: HistoricalHashesAccumulator, new_block_header: BlockHeader) -> None:
     # get the previous total difficulty
     if len(accumulator.current_epoch) == 0:
         # genesis
@@ -314,24 +314,28 @@ def update_accumulator(accumulator: PreMergeAccumulator, new_block_header: Block
     accumulator.current_epoch.append(header_record)
 ```
 
-The network provides no mechanism for acquiring the *master* version of this accumulator.  Clients are encouraged to solve this however they choose, with the suggestion that they include a frozen copy of the accumulator at the point of the merge within their client code, and provide a mechanism for users to override this value if they so choose.
+The `HistoricalHashesAccumulator` is fully build and frozen when the last block before TheMerge/Paris fork is added and the last incomplete `EpochRecord` its `hash_tree_root` is added to the `historical_epochs`.
+The network provides no mechanism for acquiring the fully build `HistoricalHashesAccumulator`.  Clients are encouraged to solve this however they choose, with the suggestion that they include a frozen copy of the accumulator at the point of TheMerge within their client code, and provide a mechanism for users to override this value if they so choose. The `hash_tree_root` of the `HistoricalHashesAccumulator` is
+defined in [EIP-7643](https://github.com/ethereum/EIPs/blob/master/EIPS/eip-7643.md).
 
-#### PreMergeAccumulatorProof
 
-The `PreMergeAccumulatorProof` is a Merkle proof as specified in the
+
+#### HistoricalHashesAccumulatorProof
+
+The `HistoricalHashesAccumulatorProof` is a Merkle proof as specified in the
 [SSZ Merke proofs specification](https://github.com/ethereum/consensus-specs/blob/dev/ssz/merkle-proofs.md#merkle-multiproofs).
 
 It is a Merkle proof for the `BlockHeader`'s block hash on the relevant
-`EpochAccumulator` object. The selected `EpochAccumulator` must be the one where
+`EpochRecord` object. The selected `EpochRecord` must be the one where
 the `BlockHeader`'s block hash is part of. The `GeneralizedIndex` selected must
-match the leave of the `EpochAccumulator` merkle tree which holds the
+match the leave of the `EpochRecord` merkle tree which holds the
 `BlockHeader`'s block hash.
 
-An `PreMergeAccumulatorProof` for a specific `BlockHeader` can be used to verify that
+An `HistoricalHashesAccumulatorProof` for a specific `BlockHeader` can be used to verify that
 this `BlockHeader` is part of the canonical chain. This is done by verifying the
 Merkle proof with the `BlockHeader`'s block hash as leave and the
-`EpochAccumulator` digest as root. This digest is available in the
-`PreMergeAccumulator`.
+`EpochRecord` digest as root. This digest is available in the
+`HistoricalHashesAccumulator`.
 
-As the `PreMergeAccumulator` only accounts for blocks pre-merge, this proof can
+As the `HistoricalHashesAccumulator` only accounts for blocks pre-merge, this proof can
 only be used to verify blocks pre-merge.
