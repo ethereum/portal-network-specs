@@ -133,10 +133,13 @@ Examples:
 
 Merkle Patricia Trie (MPT) proofs consist of a list of `TrieNode` objects that correspond to
 individual trie nodes from the MPT. Each node can be one of the different node types from the MPT
-(e.g. blank, branch, extension, leaf).  When serialized, each `TrieNode` is represented as an RLP
+(e.g. branch, extension, leaf).  When serialized, each `TrieNode` is represented as an RLP
 serialized list of the component elements. The largest possible node type is the branch node, which
 should be up to 532 bytes (16 child nodes of `Bytes32` with extra encoding info), but we specify
 1024 bytes to be on the safe side.
+
+Note that `blank` (or `nil`) trie node will never be useful in our context because we don't want to
+store it and it can't be part of the trie proof.
 
 ```
 TrieNode   := ByteList(1024)
@@ -275,8 +278,8 @@ content_for_retrieval  := Container(code: ByteList(32768))
 ## Gossip
 
 As each new block is added to the chain, the updated state from that block must be gossiped into
-the network. The state network defines a specific gossip algorithm which is referred to as
-"Recursive Gossip". This section of the specification defines how this gossip mechanism works.
+the network. In short, every trie node that is created or modified MUST be gossiped into the network,
+together with its proof.
 
 ### Terminology
 
@@ -305,46 +308,44 @@ state root and prove that *"target"* node is part of the trie defined by that st
 
 ### Overview
 
-We will give the overview of the process for the account trie. The same process should be applied
-for the storage trie as well.
-
-The goal of the "recursive gossip" mechanism is to reduce the burden of responsibility placed on
-bridge nodes for injecting new state data into the network while simultaniously spreading the
-responsibility for gossiping new state data across the nodes in the network.
-
-At each block we construct a proof for each new or modified value in the trie, which is stored in
-the leaf nodes. The bridge node would search the DHT for nodes that are *interested* in storing
-each leaf node and gossip the proof to those nodes.
-
-> For example, let this be the proof: `[A, B, C, D, E, F]`, then `A` is the root note and `F` is
-> the target node. This proof should be gossiped to nodes that are interested in storing node `F`.
-
-The recipients of this gossip are then responsible for gossiping the penultimate node of the proof
-(parent of the target node, `E` in our example). To do so, they would strip the last (target) node
-from the proof, create content-key with `E` being the target node, search the DHT for nodes that
-are interested in newly created content-key and gossip the content with proof to them.
-
-> It should be highlighted that creation of the content-key also requires updating the `path` field
-by removing one or more (in case of an extension node) nibbles from the end.
-
-This process repeats until it terminates at the state root, with the final round of gossip only
-containing the `[A]` which is the state root node of the trie.
-
-### Bridge Node Responsibilities
-
-The bridge is responsible for creating and gossiping all following data and their proofs:
+At each block, the bridge is responsible for creating and gossiping all following data and their proofs:
 
 - account trie data:
-    - all of the new and modified account nodes from the state trie
+    - all of the new and modified trie nodes from the state trie
 - contract storage trie data:
-    - all of the new and modified storage slots from each modified contract storage trie
+    - all of the new and modified trie nodes from each modified contract storage trie
     - proof has to include the proof for the account trie that corresponds to the same contract
-    - recursive gossip stops at the root of the storage trie
 - all contract bytecode for newly created contracts
     - proof has to include the proof for the account trie that corresponds to the same contract
-    - recursive gossip doesn't happen in this case
 
-A bridge should compute the content-id values for all proofs that are part of the initial round of
-recursive gossip. These proofs should be sorted by proximity to its own node-id. Beginning with
-the content that is *closest* to its own node-id it should proceed to GOSSIP each individual proof
-to nodes interested in that content.
+A bridge should compute the content-id values for all content key/value pairs. These content-ids
+should be sorted by proximity to its own node-id. Beginning with the content that is *closest* to its
+own node-id it should proceed to GOSSIP each individual content to nodes *interested* in that content.
+
+#### Special case to consider
+
+It should be highlighted that it's possible for a trie node to be modified even if it is not in the
+path of any value that was modified in the block. Consider following example:
+
+Let's assume that trie contains two key/value pairs: `(0x0123, A)` and `(0x1234, B)`. Trie would look
+something like this (numbers next to branches indicate the index in the branch node):
+
+```
+         branch (root)
+       /0             \1 
+prefix: 123            prefix: 234
+value:  A              value:  B
+```
+
+New key/value `(0x0246, C)` is inserted in the next block, resulting in the new trie:
+
+```
+                   branch (root)
+                /0              \1
+          branch                 prefix: 234
+        /1      \2               value:  B
+prefix: 23       prefix: 46
+value:  A        value:  C
+```
+
+Note that trie node that stores value `A` changed because its prefix changed, not its value.
