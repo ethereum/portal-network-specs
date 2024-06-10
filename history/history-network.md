@@ -169,7 +169,7 @@ PreMergeAccumulatorProof = Vector[Bytes32, 15]
 BlockHeaderProof = Union[None, PreMergeAccumulatorProof]
 
 BlockHeaderWithProof = Container[
-  header: ByteList, # RLP encoded header in SSZ ByteList
+  header: ByteList[2048], # RLP encoded header in SSZ ByteList
   proof: BlockHeaderProof
 ]
 ```
@@ -209,16 +209,16 @@ block_body_key          = Container(block_hash: Bytes32)
 selector                = 0x01
 
 all_transactions        = SSZList(ssz_transaction, max_length=MAX_TRANSACTION_COUNT)
-ssz_transaction         = SSZList(encoded_transaction: ByteList, max_length=MAX_TRANSACTION_LENGTH)
+ssz_transaction         = SSZList(encoded_transaction: ByteList[2048], max_length=MAX_TRANSACTION_LENGTH)
 encoded_transaction     =
   if transaction.is_typed:
     return transaction.type_byte + rlp.encode(transaction)
   else:
     return rlp.encode(transaction)
-ssz_uncles              = SSZList(encoded_uncles: ByteList, max_length=MAX_ENCODED_UNCLES_LENGTH)
+ssz_uncles              = SSZList(encoded_uncles: ByteList[2048], max_length=MAX_ENCODED_UNCLES_LENGTH)
 encoded_uncles          = rlp.encode(list_of_uncle_headers)
 all_withdrawals         = SSZList(ssz_withdrawal, max_length=MAX_WITHDRAWAL_COUNT)
-ssz_withdrawal          = SSZList(encoded_withdrawal: ByteList, max_length=MAX_WITHDRAWAL_LENGTH)
+ssz_withdrawal          = SSZList(encoded_withdrawal: ByteList[[2048], max_length=MAX_WITHDRAWAL_LENGTH)
 encoded_withdrawal      = rlp.encode(withdrawal)
 
 pre-shanghai content    = Container(all_transactions: SSZList(...), ssz_uncles: SSZList(...))
@@ -237,7 +237,7 @@ Note 2: The `list_of_uncle_headers` refers to the array of uncle headers [define
 receipt_key         = Container(block_hash: Bytes32)
 selector            = 0x02
 
-ssz_receipt         = SSZList(encoded_receipt: ByteList, max_length=MAX_RECEIPT_LENGTH)
+ssz_receipt         = SSZList(encoded_receipt: ByteList[2048], max_length=MAX_RECEIPT_LENGTH)
 encoded_receipt     =
   if receipt.is_typed:
     return type_byte + rlp.encode(receipt)
