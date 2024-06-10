@@ -53,7 +53,7 @@ content_id   := transaction_hash
 The data payload for a transaction comes with an merkle proof of the `transaction.to` account.
 
 ```
-payload     := Container(proof: Proof, transaction: ByteList)
+payload     := Container(proof: Proof, transaction: ByteList[2048])
 proof       := TODO
 transaction := TODO
 ```
