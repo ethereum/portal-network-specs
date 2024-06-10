@@ -17,7 +17,9 @@ Unsupported messages **SHOULD** receive a `TALKRESP` message with an empty paylo
 All protocol identifiers consist of two bytes. The first byte is "`P`" (`0x50`), to indicate "the Portal network", the second byte is a specific network identifier.
 
 ### Mainnet identifiers
+
 Currently defined mainnet protocol identifiers:
+
 - Inclusive range of `0x5000` - `0x5009`: Reserved for future networks or network upgrades
 - `0x500A`: Execution State Network
 - `0x500B`: Execution History Network
@@ -25,8 +27,11 @@ Currently defined mainnet protocol identifiers:
 - `0x500D`: Execution Canonical Transaction Index Network
 - `0x500E`: Execution Verkle State Network
 - `0x500F`: Execution Transaction Gossip Network
+
 ### Angelfood identifiers
+
 Currently defined `angelfood` protocol identifiers:
+
 - `0x504A`: Execution State Network
 - `0x504B`: Execution History Network
 - `0x504C`: Beacon Chain Network
@@ -50,18 +55,18 @@ The SHA256 Content ID derivation function is defined as:
 content_id = sha256(content_key)
 ```
 
-
 ## Nodes and Node IDs
 
-Nodes in the portal network are represented by their [EIP-778 Ethereum Node Record (ENR)](https://eips.ethereum.org/EIPS/eip-778) from the Discovery v5 network. A node's `node-id` is derived according to the node's identity scheme, which is specified in the node's ENR. A node's `node-id` represents its address in the DHT.  Node IDs are interchangeable between 32 byte identifiers and 256 bit integers.
+Nodes in the portal network are represented by their [EIP-778 Ethereum Node Record (ENR)](https://eips.ethereum.org/EIPS/eip-778) from the Discovery v5 network. A node's `node-id` is derived according to the node's identity scheme, which is specified in the node's ENR. A node's `node-id` represents its address in the DHT. Node IDs are interchangeable between 32 byte identifiers and 256 bit integers.
 
 ## Request - Response Messages
 
 The messages in the protocol are transmitted using the `TALKREQ` and `TALKRESP` messages from the base [Node Discovery Protocol](https://github.com/ethereum/devp2p/blob/master/discv5/discv5-wire.md#talkreq-request-0x05).
 
 All messages in the protocol have a request-response interaction:
-* Request messages **MUST** be sent using a `TALKREQ` message.
-* Response messages **MUST** be sent using the corresponding `TALKRESP` message.
+
+- Request messages **MUST** be sent using a `TALKREQ` message.
+- Response messages **MUST** be sent using the corresponding `TALKRESP` message.
 
 All messages are encoded as an [SSZ Union](https://github.com/ethereum/consensus-specs/blob/dev/ssz/simple-serialize.md#union) type.
 
@@ -79,6 +84,7 @@ The transmission of `content` data that is too large to fit a single packet is d
 ### Aliases
 
 For convenience we alias:
+
 - `ByteList` to `List[uint8, max_length=2048]`
 
 ### Message Types
@@ -92,8 +98,8 @@ selector     = 0x00
 ping         = Container(enr_seq: uint64, custom_payload: ByteList)
 ```
 
-* `enr_seq`: The node's current sequence number of their ENR record.
-* `custom_payload`: Custom payload specified per the network.
+- `enr_seq`: The node's current sequence number of their ENR record.
+- `custom_payload`: Custom payload specified per the network.
 
 #### Pong (0x01)
 
@@ -104,8 +110,8 @@ selector     = 0x01
 pong         = Container(enr_seq: uint64, custom_payload: ByteList)
 ```
 
-* `enr_seq`: The node's current sequence number of their ENR record.
-* `custom_payload`: Custom payload specified per the network.
+- `enr_seq`: The node's current sequence number of their ENR record.
+- `custom_payload`: Custom payload specified per the network.
 
 #### Find Nodes (0x02)
 
@@ -116,9 +122,9 @@ selector     = 0x02
 find_nodes   = Container(distances: List[uint16, max_length=256])
 ```
 
-* `distances`: a list of distances for which the node is requesting ENR records for.
-    * Each distance **MUST** be within the inclusive range `[0, 256]`
-    * Each distance in the list **MUST** be unique.
+- `distances`: a list of distances for which the node is requesting ENR records for.
+  - Each distance **MUST** be within the inclusive range `[0, 256]`
+  - Each distance in the list **MUST** be unique.
 
 #### Nodes (0x03)
 
@@ -129,11 +135,11 @@ selector     = 0x03
 nodes        = Container(total: uint8, enrs: List[ByteList, max_length=32])
 ```
 
-* `total`: The total number of `Nodes` response messages being sent.
-* `enrs`: List of byte strings, each of which is an RLP encoded ENR record.
-    * Individual ENR records **MUST** correspond to one of the requested distances.
-    * It is invalid to return multiple ENR records for the same `node_id`.
-    * The ENR record of the requesting node **SHOULD** be filtered out of the list.
+- `total`: The total number of `Nodes` response messages being sent.
+- `enrs`: List of byte strings, each of which is an RLP encoded ENR record.
+  - Individual ENR records **MUST** correspond to one of the requested distances.
+  - It is invalid to return multiple ENR records for the same `node_id`.
+  - The ENR record of the requesting node **SHOULD** be filtered out of the list.
 
 > Note: If the number of ENR records cannot be encoded into a single message, then they should be sent back using multiple messages, with the `total` field representing the total number of messages that are being sent.
 
@@ -146,7 +152,7 @@ selector     = 0x04
 find_content = Container(content_key: ByteList)
 ```
 
-* `content_key`: The key for the content being requested. The encoding of `content_key` is specified per the network.
+- `content_key`: The key for the content being requested. The encoding of `content_key` is specified per the network.
 
 #### Content (0x05)
 
@@ -160,38 +166,41 @@ selector     = 0x05
 content      = Union[connection_id: Bytes2, content: ByteList, enrs: List[ByteList, 32]]
 ```
 
-* `connection_id`: Connection ID to set up a uTP stream to transmit the requested data.
-    * Connection ID values **SHOULD** be randomly generated.
-*  `content`: byte string of the requested content.
-    * This field **MUST** be used when the requested data can fit in this single response.
-* `enrs`: List of byte strings, each of which is an RLP encoded ENR record.
-    * The list of ENR records **MUST** be closest nodes to the requested content that the responding node has stored.
-    * The set of derived `node_id` values from the ENR records **MUST** be unique.
-    * The ENR record of the requesting & responding node **SHOULD** be filtered out of the list.
+- `connection_id`: Connection ID to set up a uTP stream to transmit the requested data.
+  - Connection ID values **SHOULD** be randomly generated.
+- `content`: byte string of the requested content.
+  - This field **MUST** be used when the requested data can fit in this single response.
+- `enrs`: List of byte strings, each of which is an RLP encoded ENR record.
+  - The list of ENR records **MUST** be closest nodes to the requested content that the responding node has stored.
+  - The set of derived `node_id` values from the ENR records **MUST** be unique.
+  - The ENR record of the requesting & responding node **SHOULD** be filtered out of the list.
 
 If the node does not hold the requested content, and the node does not know of any nodes with eligible ENR values, then the node **MUST** return `enrs` as an empty list.
 
-Upon *sending* this message with a `connection_id`, the sending node **SHOULD** *listen* for an incoming uTP stream with the generated `connection_id`.
+Upon _sending_ this message with a `connection_id`, the sending node **SHOULD** _listen_ for an incoming uTP stream with the generated `connection_id`.
 
-Upon *receiving* this message with a `connection_id`, the receiving node **SHOULD** *initiate* a uTP stream with the received `connection_id`.
+Upon _receiving_ this message with a `connection_id`, the receiving node **SHOULD** _initiate_ a uTP stream with the received `connection_id`.
 
 ##### `content` Union Definition
 
 The `Union` defined in the `content` field of the `Content (0x05)` message is defined as below:
 
 **`connection_id`**
+
 ```
 selector = 0x00
 ssz-type = Bytes2
 ```
 
 **`content`**
+
 ```
 selector = 0x01
 ssz-type = ByteList
 ```
 
 **`enrs`**
+
 ```
 selector = 0x02
 ssz-type = List[ByteList, 32]
@@ -206,7 +215,7 @@ selector     = 0x06
 offer        = Container(content_keys: List[ByteList, max_length=64])
 ```
 
-* `content_keys`: A list of encoded `content_key` entries. The encoding of each `content_key` is specified per the network.
+- `content_keys`: A list of encoded `content_key` entries. The encoding of each `content_key` is specified per the network.
 
 #### Accept (0x07)
 
@@ -219,14 +228,14 @@ selector     = 0x07
 accept       = Container(connection_id: Bytes2, content_keys: BitList[max_length=64]]
 ```
 
-* `connection_id`: Connection ID to set up a uTP stream to transmit the requested data.
-    * ConnectionID values **SHOULD** be randomly generated.
-* `content_keys`: Signals which content keys are desired.
-    * A bit-list corresponding to the offered keys with the bits in the positions of the desired keys set to `1`.
+- `connection_id`: Connection ID to set up a uTP stream to transmit the requested data.
+  - ConnectionID values **SHOULD** be randomly generated.
+- `content_keys`: Signals which content keys are desired.
+  - A bit-list corresponding to the offered keys with the bits in the positions of the desired keys set to `1`.
 
-Upon *sending* this message, the requesting node **SHOULD** *listen* for an incoming uTP stream with the generated `connection_id`.
+Upon _sending_ this message, the requesting node **SHOULD** _listen_ for an incoming uTP stream with the generated `connection_id`.
 
-Upon *receiving* this message, the serving node **SHOULD** *initiate* a uTP stream with the received `connection_id`.
+Upon _receiving_ this message, the serving node **SHOULD** _initiate_ a uTP stream with the received `connection_id`.
 
 ##### Content Encoding
 
@@ -241,6 +250,7 @@ The maximum size allowed for this application is limited to `uint32`.
 The content item itself MUST be encoded as is defined for each specific network and content type.
 
 The encoded data of n encoded content items to be send over the stream can be formalized as:
+
 ```py
 # n encoded content items to be send over the stream, with n <= 64
 encoded_content_list = [content_0, content_1, ..., content_n]
@@ -268,12 +278,10 @@ Similarly, we define a `logdistance` function identically to the Discovery v5 ne
 logdistance(a: uint256, b: uint256) = log2(distance(a, b))
 ```
 
-
 ### Test Vectors
 
 A collection of test vectors for this specification can be found in the
 [Portal wire test vectors](./portal-wire-test-vectors.md) document.
-
 
 ## Routing Table
 
@@ -310,13 +318,11 @@ port       := UDP port number
 
 ### Protocol Specific Node State
 
-Sub protocols may define additional node state information which should be tracked in the node state database.  This information will typically be transmitted in the `Ping.custom_data` and `Pong.custom_data` fields.
-
+Sub protocols may define additional node state information which should be tracked in the node state database. This information will typically be transmitted in the `Ping.custom_data` and `Pong.custom_data` fields.
 
 ## Algorithms
 
 Here we define a collection of generic algorithms which can be applied to a sub-protocol implementing the wire protocol.
-
 
 ### Lookup
 
@@ -346,9 +352,10 @@ To find a piece of content for `content-id`, a node performs a content lookup vi
 
 ### Storing Content
 
-The concept of content storage is only applicable to sub-protocols that implement persistant storage of data.
+The concept of content storage is only applicable to sub-protocols that implement persistent storage of data.
 
 Content will get stored by a node when:
+
 - the node receives the content through the `Offer` - `Accept` message flow and the content falls within the node's radius
 - the node requests content through the `FindContent` - `Content` message flow and the content falls within the node's radius
 
@@ -356,15 +363,15 @@ The network cannot make guarantees about the storage of particular content. A la
 
 ### Neighborhood Gossip
 
-We use the term *neighborhood gossip* to refer to the process through which content is disseminated to all of the DHT nodes *near* the location in the DHT where the content is located.
+We use the term _neighborhood gossip_ to refer to the process through which content is disseminated to all of the DHT nodes _near_ the location in the DHT where the content is located.
 
 The process works as follows:
 
 - A DHT node is offered and receives a piece of content that it is interested in.
-- This DHT node checks their routing table for `k` nearby DHT nodes that should also be interested in the content. Those `k` nodes **SHOULD** not include the node that originally provided aformentioned content.
+- This DHT node checks their routing table for `k` nearby DHT nodes that should also be interested in the content. Those `k` nodes **SHOULD** not include the node that originally provided aforementioned content.
 - If the DHT node finds `n` or more DHT nodes interested it selects `n` of these nodes and offers the content to them.
 - If the DHT node finds less than `n` DHT nodes interested, it launches a node lookup with target `content-id` and it
-offers the content to maximum `n` of the newly discovered nodes.
+  offers the content to maximum `n` of the newly discovered nodes.
 
 The process above should quickly saturate the area of the DHT where the content is located and naturally terminate as more nodes become aware of the content.
 
