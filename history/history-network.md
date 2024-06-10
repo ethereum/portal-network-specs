@@ -6,7 +6,7 @@ This document is the specification for the sub-protocol that supports on-demand 
 
 The chain history network is a [Kademlia](https://pdos.csail.mit.edu/~petar/papers/maymounkov-kademlia-lncs.pdf) DHT that uses the [Portal Wire Protocol](./portal-wire-protocol.md) to establish an overlay network on top of the [Discovery v5](https://github.com/ethereum/devp2p/blob/master/discv5/discv5-wire.md) protocol.
 
-Execution chain history data consists of historical block headers, block bodies (transactions and ommer) and block receipts.
+Execution chain history data consists of historical block headers, block bodies (transactions, ommers and withdrawals) and block receipts.
 
 In addition, the chain history network provides individual epoch accumulators for the full range of pre-merge blocks mined before the transition to proof of stake.
 
@@ -18,6 +18,7 @@ In addition, the chain history network provides individual epoch accumulators fo
 * Block bodies
     * Transactions
     * Ommers
+    * Withdrawals
 * Receipts
 * Header epoch accumulators (pre-merge only)
 
