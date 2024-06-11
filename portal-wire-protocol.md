@@ -81,12 +81,6 @@ The type values for the `Union` are the SSZ Containers specified per message typ
 
 The transmission of `content` data that is too large to fit a single packet is done over [uTP](./discv5-utp.md).
 
-### Aliases
-
-For convenience we alias:
-
-- `ByteList` to `List[uint8, max_length=2048]`
-
 ### Message Types
 
 #### Ping (0x00)
@@ -95,7 +89,7 @@ Request message to check if a node is reachable, communicate basic information a
 
 ```
 selector     = 0x00
-ping         = Container(enr_seq: uint64, custom_payload: ByteList)
+ping         = Container(enr_seq: uint64, custom_payload: ByteList[2048])
 ```
 
 - `enr_seq`: The node's current sequence number of their ENR record.
@@ -107,7 +101,7 @@ Response message to Ping(0x00)
 
 ```
 selector     = 0x01
-pong         = Container(enr_seq: uint64, custom_payload: ByteList)
+pong         = Container(enr_seq: uint64, custom_payload: ByteList[2048])
 ```
 
 - `enr_seq`: The node's current sequence number of their ENR record.
@@ -132,16 +126,22 @@ Response message to FindNodes(0x02).
 
 ```
 selector     = 0x03
-nodes        = Container(total: uint8, enrs: List[ByteList, max_length=32])
+nodes        = Container(total: uint8, enrs: List[ByteList[2048], max_length=32])
 ```
+
+<<<<<<< HEAD
 
 - `total`: The total number of `Nodes` response messages being sent.
 - `enrs`: List of byte strings, each of which is an RLP encoded ENR record.
   - Individual ENR records **MUST** correspond to one of the requested distances.
   - It is invalid to return multiple ENR records for the same `node_id`.
-  - The ENR record of the requesting node **SHOULD** be filtered out of the list.
+  - # The ENR record of the requesting node **SHOULD** be filtered out of the list.
 
-> Note: If the number of ENR records cannot be encoded into a single message, then they should be sent back using multiple messages, with the `total` field representing the total number of messages that are being sent.
+* `total`: The total number of `Nodes` response messages being sent. Currently fixed to only 1 response message.
+* `enrs`: List of byte strings, each of which is an RLP encoded ENR record.
+  _ Individual ENR records **MUST** correspond to one of the requested distances.
+  _ It is invalid to return multiple ENR records for the same `node_id`. \* The ENR record of the requesting node **SHOULD** be filtered out of the list.
+  > > > > > > > master
 
 #### Find Content (0x04)
 
@@ -149,7 +149,7 @@ Request message to get the `content` with `content_key`, **or**, in case the rec
 
 ```
 selector     = 0x04
-find_content = Container(content_key: ByteList)
+find_content = Container(content_key: ByteList[2048])
 ```
 
 - `content_key`: The key for the content being requested. The encoding of `content_key` is specified per the network.
@@ -163,7 +163,7 @@ requested content.
 
 ```
 selector     = 0x05
-content      = Union[connection_id: Bytes2, content: ByteList, enrs: List[ByteList, 32]]
+content      = Union[connection_id: Bytes2, content: ByteList[2048], enrs: List[ByteList[2048], 32]]
 ```
 
 - `connection_id`: Connection ID to set up a uTP stream to transmit the requested data.
@@ -196,14 +196,14 @@ ssz-type = Bytes2
 
 ```
 selector = 0x01
-ssz-type = ByteList
+ssz-type = ByteList[2048]
 ```
 
 **`enrs`**
 
 ```
 selector = 0x02
-ssz-type = List[ByteList, 32]
+ssz-type = List[ByteList[2048], 32]
 ```
 
 #### Offer (0x06)
@@ -212,7 +212,7 @@ Request message to offer a set of `content_keys` that this node has `content` av
 
 ```
 selector     = 0x06
-offer        = Container(content_keys: List[ByteList, max_length=64])
+offer        = Container(content_keys: List[ByteList[2048], max_length=64])
 ```
 
 - `content_keys`: A list of encoded `content_key` entries. The encoding of each `content_key` is specified per the network.

@@ -6,7 +6,7 @@ This document is the specification for the sub-protocol that supports on-demand 
 
 The chain history network is a [Kademlia](https://pdos.csail.mit.edu/~petar/papers/maymounkov-kademlia-lncs.pdf) DHT that uses the [Portal Wire Protocol](./portal-wire-protocol.md) to establish an overlay network on top of the [Discovery v5](https://github.com/ethereum/devp2p/blob/master/discv5/discv5-wire.md) protocol.
 
-Execution chain history data consists of historical block headers, block bodies (transactions and ommer) and block receipts.
+Execution chain history data consists of historical block headers, block bodies (transactions, ommers and withdrawals) and block receipts.
 
 In addition, the chain history network provides individual epoch accumulators for the full range of pre-merge blocks mined before the transition to proof of stake.
 
@@ -18,6 +18,7 @@ In addition, the chain history network provides individual epoch accumulators fo
 * Block bodies
     * Transactions
     * Ommers
+    * Withdrawals
 * Receipts
 * Header epoch accumulators (pre-merge only)
 
@@ -169,7 +170,7 @@ PreMergeAccumulatorProof = Vector[Bytes32, 15]
 BlockHeaderProof = Union[None, PreMergeAccumulatorProof]
 
 BlockHeaderWithProof = Container[
-  header: ByteList, # RLP encoded header in SSZ ByteList
+  header: ByteList[2048], # RLP encoded header in SSZ ByteList
   proof: BlockHeaderProof
 ]
 ```
@@ -209,16 +210,16 @@ block_body_key          = Container(block_hash: Bytes32)
 selector                = 0x01
 
 all_transactions        = SSZList(ssz_transaction, max_length=MAX_TRANSACTION_COUNT)
-ssz_transaction         = SSZList(encoded_transaction: ByteList, max_length=MAX_TRANSACTION_LENGTH)
+ssz_transaction         = SSZList(encoded_transaction: ByteList[2048], max_length=MAX_TRANSACTION_LENGTH)
 encoded_transaction     =
   if transaction.is_typed:
     return transaction.type_byte + rlp.encode(transaction)
   else:
     return rlp.encode(transaction)
-ssz_uncles              = SSZList(encoded_uncles: ByteList, max_length=MAX_ENCODED_UNCLES_LENGTH)
+ssz_uncles              = SSZList(encoded_uncles: ByteList[2048], max_length=MAX_ENCODED_UNCLES_LENGTH)
 encoded_uncles          = rlp.encode(list_of_uncle_headers)
 all_withdrawals         = SSZList(ssz_withdrawal, max_length=MAX_WITHDRAWAL_COUNT)
-ssz_withdrawal          = SSZList(encoded_withdrawal: ByteList, max_length=MAX_WITHDRAWAL_LENGTH)
+ssz_withdrawal          = SSZList(encoded_withdrawal: ByteList[[2048], max_length=MAX_WITHDRAWAL_LENGTH)
 encoded_withdrawal      = rlp.encode(withdrawal)
 
 pre-shanghai content    = Container(all_transactions: SSZList(...), ssz_uncles: SSZList(...))
@@ -237,7 +238,7 @@ Note 2: The `list_of_uncle_headers` refers to the array of uncle headers [define
 receipt_key         = Container(block_hash: Bytes32)
 selector            = 0x02
 
-ssz_receipt         = SSZList(encoded_receipt: ByteList, max_length=MAX_RECEIPT_LENGTH)
+ssz_receipt         = SSZList(encoded_receipt: ByteList[2048], max_length=MAX_RECEIPT_LENGTH)
 encoded_receipt     =
   if receipt.is_typed:
     return type_byte + rlp.encode(receipt)
