@@ -217,5 +217,76 @@
       "title": "number of peers",
       "type": "number"
     }
+  },
+  "DataRadiusResult": {
+    "name": "radiusResult",
+    "description": "The radius of the local node.",
+    "schema": {
+      "$ref": "#/components/schemas/DataRadius"
+    }
+  },
+  "AccountStateResult": {
+    "name": "accountStateResult",
+    "description": "The state of the account.",
+    "schema": {
+      "type": "object",
+      "required": [
+        "nonce",
+        "balance",
+        "storageRoot",
+        "codehash",
+        "proof"
+      ],
+      "properties": {
+        "nonce": {
+          "description": "The account's nonce",
+          "$ref": "#/components/schemas/uint"
+        },
+        "balance": {
+          "description": "The account's balance",
+          "$ref": "#/components/schemas/uint256"
+        },
+        "storageRoot": {
+          "description": "The root of the storate trie of the smart contract",
+          "$ref": "#/components/schemas/bytes32"
+        },
+        "codehash": {
+          "description": "The hash of the smart contract's code",
+          "$ref": "#/components/schemas/bytes32"
+        },
+        "proof": {
+          "description": "The proof of the account state inclusion",
+          "$ref": "#/components/schemas/trieProof"
+        }
+      }
+    }
+  },
+  "ContractStorageAtResult": {
+    "name": "contractStorageAtResult",
+    "description": "The value that is stored in the contract's storage trie.",
+    "schema": {
+      "type": "object",
+      "required": [
+        "value",
+        "proof"
+      ],
+      "properties": {
+        "value": {
+          "description": "The value stored in the storage trie, or \"0x0\" if missing",
+          "$ref": "#/components/schemas/uint256"
+        },
+        "proof": {
+          "description": "The proof of the inclusion",
+          "$ref": "#/components/schemas/trieProof"
+        }
+      }
+    }
+  },
+  "ContractBytecodeResult": {
+    "name": "contractBytecodeResult",
+    "description": "The contract's bytecode",
+    "schema": {
+      "$ref": "#/components/schemas/hexString"
+    }
   }
 }

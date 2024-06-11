@@ -72,5 +72,45 @@
     "schema": {
       "$ref": "#/components/schemas/DataRadius"
     }
+  },
+  "Address": {
+    "name": "address",
+    "description": "The address of the account",
+    "required": true,
+    "schema": {
+      "$ref": "#/components/schemas/bytes20"
+    }
+  },
+  "StateRoot": {
+    "name": "stateRoot",
+    "description": "The root of the state trie",
+    "required": true,
+    "schema": {
+      "$ref": "#/components/schemas/bytes32"
+    }
+  },
+  "Codehash": {
+    "name": "codehash",
+    "description": "The hash of the contract's code.",
+    "required": true,
+    "schema": {
+      "$ref": "#/components/schemas/bytes32"
+    }
+  },
+  "StorageRoot": {
+    "name": "storageRoot",
+    "description": "The root of the contract's storage trie",
+    "required": true,
+    "schema": {
+      "$ref": "#/components/schemas/bytes32"
+    }
+  },
+  "StorageSlot": {
+    "name": "storageSlot",
+    "description": "The slot in the storage trie",
+    "required": true,
+    "schema": {
+      "$ref": "#/components/schemas/uint256"
+    }
   }
 }
