@@ -129,19 +129,10 @@ selector     = 0x03
 nodes        = Container(total: uint8, enrs: List[ByteList[2048], max_length=32])
 ```
 
-<<<<<<< HEAD
-
-- `total`: The total number of `Nodes` response messages being sent.
+- `total`: The total number of `Nodes` response messages being sent. Currently fixed to only 1 response message.
 - `enrs`: List of byte strings, each of which is an RLP encoded ENR record.
-  - Individual ENR records **MUST** correspond to one of the requested distances.
-  - It is invalid to return multiple ENR records for the same `node_id`.
-  - # The ENR record of the requesting node **SHOULD** be filtered out of the list.
-
-* `total`: The total number of `Nodes` response messages being sent. Currently fixed to only 1 response message.
-* `enrs`: List of byte strings, each of which is an RLP encoded ENR record.
   _ Individual ENR records **MUST** correspond to one of the requested distances.
   _ It is invalid to return multiple ENR records for the same `node_id`. \* The ENR record of the requesting node **SHOULD** be filtered out of the list.
-  > > > > > > > master
 
 #### Find Content (0x04)
 
