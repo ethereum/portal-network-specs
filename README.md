@@ -190,7 +190,10 @@ This network is a pure gossip network and does not implement any form of content
 - [Beacon Chain Network](./beacon-chain/beacon-network.md)
 - [Canonical Transaction Index Network](./canonical-transaction-index-network.md)
     - Spec is preliminary.
-    - Network design borrows heavily from history network.
-- [Transaction Gossip Network](./transaction-gossip/transaction-gossip.md):
+    - Network design borrows heavily from history network
+- [Transaction Gossip Network](./transaction-gossip/transaction-gossip.md)
     - Spec is preliminary
     - Prior work: https://ethresear.ch/t/scalable-transaction-gossip/8660
+- [Verkle State Network](./verkle/verkle-state-network.md)
+    - Spec is preliminary
+    - Prior work: https://ethresear.ch/t/portal-network-verkle/19339
