@@ -1,0 +1,204 @@
+[
+  {
+    "name": "portal_beaconRoutingTableInfo",
+    "summary": "Returns meta information about beacon network routing table.",
+    "params": [],
+    "result": {
+      "$ref": "#/components/contentDescriptors/RoutingTableInfoResult"
+    }
+  },
+  {
+    "name": "portal_beaconAddEnr",
+    "summary": "Write an ethereum node record to the routing table.",
+    "params": [
+      {
+        "$ref": "#/components/contentDescriptors/Enr"
+      }
+    ],
+    "result": {
+      "$ref": "#/components/contentDescriptors/AddEnrResult"
+    }
+  },
+  {
+    "name": "portal_beaconGetEnr",
+    "summary": "Fetch from the local node the latest ENR associated with the given NodeId",
+    "params": [
+      {
+        "$ref": "#/components/contentDescriptors/NodeId"
+      }
+    ],
+    "result": {
+      "$ref": "#/components/contentDescriptors/GetEnrResult"
+    }
+  },
+  {
+    "name": "portal_beaconDeleteEnr",
+    "summary": "Delete a Node ID from the routing table",
+    "params": [
+      {
+        "$ref": "#/components/contentDescriptors/NodeId"
+      }
+    ],
+    "result": {
+      "$ref": "#/components/contentDescriptors/DeleteEnrResult"
+    }
+  },
+  {
+    "name": "portal_beaconLookupEnr",
+    "summary": "Fetch from the DHT the latest ENR associated with the given NodeId",
+    "params": [
+      {
+        "$ref": "#/components/contentDescriptors/NodeId"
+      }
+    ],
+    "result": {
+      "$ref": "#/components/contentDescriptors/LookupEnrResult"
+    }
+  },
+  {
+    "name": "portal_beaconPing",
+    "summary": "Send a PING message to the designated node and wait for a PONG response.",
+    "params": [
+      {
+        "$ref": "#/components/contentDescriptors/Enr"
+      }
+    ],
+    "result": {
+      "$ref": "#/components/contentDescriptors/PingResult"
+    }
+  },
+  {
+    "name": "portal_beaconFindNodes",
+    "summary": "Send a FINDNODES request for nodes that fall within the given set of distances, to the designated peer and wait for a response.",
+    "params": [
+      {
+        "$ref": "#/components/contentDescriptors/Enr"
+      },
+      {
+        "$ref": "#/components/contentDescriptors/Distances"
+      }
+    ],
+    "result": {
+      "$ref": "#/components/contentDescriptors/FindNodeResult"
+    }
+  },
+  {
+    "name": "portal_beaconFindContent",
+    "summary": "Send FINDCONTENT message to get the content with a content key.",
+    "params": [
+      {
+        "$ref": "#/components/contentDescriptors/Enr"
+      },
+      {
+        "$ref": "#/components/contentDescriptors/ContentKey"
+      }
+    ],
+    "result": {
+      "$ref": "#/components/contentDescriptors/FindContentResult"
+    }
+  },
+  {
+    "name": "portal_beaconOffer",
+    "summary": "Send an OFFER request with given ContentKey, to the designated peer and wait for a response.",
+    "params": [
+      {
+        "$ref": "#/components/contentDescriptors/Enr"
+      },
+      {
+        "$ref": "#/components/contentDescriptors/ContentKey"
+      },
+      {
+        "$ref": "#/components/contentDescriptors/ContentValue"
+      }
+    ],
+    "result": {
+      "$ref": "#/components/contentDescriptors/OfferResult"
+    }
+  },
+  {
+    "name": "portal_beaconOptimisticStateRoot",
+    "summary": "Get latest known optimistic beacon state root.",
+    "params": [],
+    "result": {
+      "$ref": "#/components/contentDescriptors/BeaconOptimisticStateRootResult"
+    }
+  },
+  {
+    "name": "portal_beaconRecursiveFindNodes",
+    "summary": "Look up ENRs closest to the given target, that are members of the beacon network",
+    "params": [
+      {
+        "$ref": "#/components/contentDescriptors/NodeId"
+      }
+    ],
+    "result": {
+      "$ref": "#/components/contentDescriptors/RecursiveFindNodesResult"
+    }
+  },
+  {
+    "name": "portal_beaconRecursiveFindContent",
+    "summary": "Look up a target content key in the network",
+    "params": [
+      {
+        "$ref": "#/components/contentDescriptors/ContentKey"
+      }
+    ],
+    "result": {
+      "$ref": "#/components/contentDescriptors/RecursiveFindContentResult"
+    }
+  },
+  {
+    "name": "portal_beaconTraceRecursiveFindContent",
+    "summary": "Look up a target content key in the network and get tracing data",
+    "params": [
+      {
+        "$ref": "#/components/contentDescriptors/ContentKey"
+      }
+    ],
+    "result": {
+      "$ref": "#/components/contentDescriptors/TraceRecursiveFindContentResult"
+    }
+  },
+  {
+    "name": "portal_beaconStore",
+    "summary": "Store beacon content key with content data",
+    "params": [
+      {
+        "$ref": "#/components/contentDescriptors/ContentKey"
+      },
+      {
+        "$ref": "#/components/contentDescriptors/ContentValue"
+      }
+    ],
+    "result": {
+      "$ref": "#/components/contentDescriptors/StoreResult"
+    }
+  },
+  {
+    "name": "portal_beaconLocalContent",
+    "summary": "Get a content from the local database",
+    "params": [
+      {
+        "$ref": "#/components/contentDescriptors/ContentKey"
+      }
+    ],
+    "result": {
+      "$ref": "#/components/contentDescriptors/LocalContentResult"
+    }
+  },
+  {
+    "name": "portal_beaconGossip",
+    "summary": "Send the provided content item to interested peers. Clients may choose to send to some or all peers.",
+    "params": [
+      {
+        "$ref": "#/components/contentDescriptors/ContentKey"
+      },
+      {
+        "$ref": "#/components/contentDescriptors/ContentValue"
+      }
+    ],
+    "result": {
+      "$ref": "#/components/contentDescriptors/GossipResult"
+    }
+  }
+]
