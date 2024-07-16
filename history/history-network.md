@@ -161,7 +161,6 @@ each receipt/transaction and re-rlp-encode it, but only if it is a legacy transa
 
 #### Block Header
 
-
 ```python
 # Content types
 
@@ -183,8 +182,21 @@ HistoricalRootsBlockProof = Container[
     slot: Slot
 ]
 
-BlockHeaderProof = Union[None, HistoricalHashesAccumulatorProof, HistoricalRootsBlockProof]
+# Proof that BeaconBlock root is part of HistoricalRoots and thus canonical
+# For Capella and onwards
+HistoricalSummariesProof = Vector[Bytes32, 13]
 
+# Proof for EL BlockHeader for Capella and onwards
+HistoricalSummariesBlockProof = Container[
+    beaconBlockProof: BeaconBlockProof,
+    beaconBlockRoot: Bytes32,
+    historicalSummariesProof: HistoricalSummariesProof,
+    slot: Slot
+]
+
+BlockHeaderProof = Union[None, HistoricalHashesAccumulatorProof, HistoricalRootsBlockProof, HistoricalSummariesBlockProof]
+
+# Content type
 BlockHeaderWithProof = Container[
   header: ByteList[2048], # RLP encoded header in SSZ ByteList
   proof: BlockHeaderProof
@@ -207,8 +219,8 @@ content_key      = selector + SSZ.serialize(block_header_key)
 For pre-merge headers, clients SHOULD NOT accept headers without a proof
 as there is the `HistoricalHashesAccumulatorProof` solution available.
 For post-merge until Capella headers, clients SHOULD NOT accept headers without a proof as there is the `HistoricalRootsBlockProof` solution available.
-
-For post Capella headers, there is currently no proof solution and clients SHOULD
+For Capella and onwards headers, clients SHOULD NOT accept headers without a proof as there is the `HistoricalSummariesBlockProof` solution available.
+For headers that are not yet part of the last period, clients SHOULD
 accept headers without a proof.
 
 #### Block Body
@@ -365,3 +377,12 @@ The container holds a chain of 2 proofs. This chain of proofs allows for verifyi
 The `historical_roots` is a [`BeaconState` field](https://github.com/ethereum/consensus-specs/blob/dev/specs/capella/beacon-chain.md#beaconstate) that is frozen since the Capella fork. The `HistoricalRootsBlockProof` MUST be used to verify blocks from TheMerge/Paris until the Capella fork.
 
 The Portal network does not provide a mechanism to acquire the `historical_roots` over the network. Clients are encouraged to solve this however they choose, with the suggestion that they can include a frozen copy of the `historical_roots` within their client code, and provide a mechanism for users to override this value if they choose so.
+
+#### HistoricalSummariesBlockProof
+
+The `HistoricalSummariesBlockProof` is an SSZ container which holds two Merkle proofs as specified in the [SSZ Merke proofs specification](https://github.com/ethereum/consensus-specs/blob/dev/ssz/merkle-proofs.md#merkle-multiproofs).
+
+The container holds a chain of 2 proofs. This chain of proofs allows for verifying that an EL `BlockHeader` is part of the canonical chain. The only requirement is having access to the beacon chain `historical_summaries`.
+The `historical_summaries` is a [`BeaconState` field](https://github.com/ethereum/consensus-specs/blob/dev/specs/capella/beacon-chain.md#beaconstate) that was introduced since the Capella fork. It gets updated every period (8192 slots). The `HistoricalSummariesBlockProof` MUST be used to verify blocks from the Capella fork onwards.
+
+The Portal beacon network [provides access](./beacon-chain/beacon-network.md#historicalsummaries) to an up to date `historical_summaries` object.
