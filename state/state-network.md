@@ -143,7 +143,7 @@ store it and it can't be part of the trie proof.
 
 ```
 TrieNode   := ByteList(1024)
-TrieProof  := List(TrieNode, max_length=65)
+TrieProof  := List(TrieNode, limit=65)
 ```
 
 The `TrieProof` type is used for both Account Trie and Contract Storage trie.
