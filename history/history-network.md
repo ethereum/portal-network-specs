@@ -122,13 +122,13 @@ MAX_RECEIPT_LENGTH = 2**27  # ~= 134 million
 # and it's not clear what the practical limits for receipts are, so we should add more buffer room.
 # Imagine the cost drops by 2x and the block gas limit goes up by 8x. So we add 2**4 = 16x buffer.
 
-_MAX_HEADER_LENGTH = 2**13  # = 8192
+MAX_HEADER_LENGTH = 2**11  # = 2048
 # Maximum header length is fairly stable at about 500 bytes. It might change at
 # the merge, and beyond. Since the length is relatively small, and the future
 # of the format is unclear to me, I'm leaving more room for expansion, and
-# setting the max at about 8 kilobytes.
+# setting the max at about 2 kilobytes.
 
-MAX_ENCODED_UNCLES_LENGTH = _MAX_HEADER_LENGTH * 2**4  # = 2**17 ~= 131k
+MAX_ENCODED_UNCLES_LENGTH = MAX_HEADER_LENGTH * 2**4  # = 2**17 ~= 32k
 # Maximum number of uncles is currently 2. Using 16 leaves some room for the
 # protocol to increase the number of uncles.
 
@@ -150,10 +150,10 @@ SHANGHAI_TIMESTAMP = 1681338455
 
 The encoding choices generally favor easy verification of the data, minimizing decoding. For
 example:
-- `keccak(encoded-uncles) == header.uncles_hash`
-- Each `encoded-transaction` can be inserted into a trie to compare to the
+- `keccak(encoded_uncles) == header.uncles_hash`
+- Each `encoded_transaction` can be inserted into a trie to compare to the
   `header.transactions_root`
-- Each `encoded-receipt` can be inserted into a trie to compare to the `header.receipts_root`
+- Each `encoded_receipt` can be inserted into a trie to compare to the `header.receipts_root`
 
 Combining all of the block body in RLP, in contrast, would require that a validator loop through
 each receipt/transaction and re-rlp-encode it, but only if it is a legacy transaction.
@@ -169,10 +169,10 @@ HistoricalHashesAccumulatorProof = Vector[Bytes32, 15]
 
 BlockHeaderProof = Union[None, HistoricalHashesAccumulatorProof]
 
-BlockHeaderWithProof = Container[
-  header: ByteList[2048], # RLP encoded header in SSZ ByteList
+BlockHeaderWithProof = Container(
+  header: ByteList[MAX_HEADER_LENGTH], # RLP encoded header in SSZ ByteList
   proof: BlockHeaderProof
-]
+)
 ```
 
 ```python
@@ -209,26 +209,41 @@ the following sequence to decode & validate block bodies.
 block_body_key          = Container(block_hash: Bytes32)
 selector                = 0x01
 
-all_transactions        = List(ssz_transaction, limit=MAX_TRANSACTION_COUNT)
-ssz_transaction         = List(encoded_transaction: ByteList[2048], limit=MAX_TRANSACTION_LENGTH)
+# Transactions
+transactions            = List(ssz_transaction, limit=MAX_TRANSACTION_COUNT)
+ssz_transaction         = ByteList[MAX_TRANSACTION_LENGTH](encoded_transaction)
 encoded_transaction     =
   if transaction.is_typed:
     return transaction.type_byte + rlp.encode(transaction)
   else:
     return rlp.encode(transaction)
-ssz_uncles              = List(encoded_uncles: ByteList[2048], limit=MAX_ENCODED_UNCLES_LENGTH)
+
+# Uncles
+uncles                  = ByteList[MAX_ENCODED_UNCLES_LENGTH](encoded_uncles)
 encoded_uncles          = rlp.encode(list_of_uncle_headers)
-all_withdrawals         = List(ssz_withdrawal, limit=MAX_WITHDRAWAL_COUNT)
-ssz_withdrawal          = List(encoded_withdrawal: ByteList[[2048], limit=MAX_WITHDRAWAL_LENGTH)
+
+# Withdrawals
+withdrawals             = List(ssz_withdrawal, limit=MAX_WITHDRAWAL_COUNT)
+ssz_withdrawal          = ByteList[MAX_WITHDRAWAL_LENGTH](encoded_withdrawal)
 encoded_withdrawal      = rlp.encode(withdrawal)
 
-pre-shanghai content    = Container(all_transactions: List(...), ssz_uncles: List(...))
-post-shanghai content   = Container(all_transactions: List(...), ssz_uncles: List(encoded_uncles), all_withdrawals: List(...))
+# Block body
+pre_shanghai_body       = Container(
+  transactions: transactions,
+  uncles: uncles
+)
+post_shanghai_body      = Container(
+  transactions: transactions,
+  uncles: uncles,
+  withdrawals: withdrawals
+)
+
+# Encoded content
+content                 = SSZ.serialize(pre_shanghai_body | post_shanghai_body)
 content_key             = selector + SSZ.serialize(block_body_key)
 ```
 
-Note 1: The type-specific encoding might be different in future transaction types, but this encoding
-works for all current transaction types.
+Note 1: The type-specific transactions encoding might be different for future transaction types, but this content encoding is agnostic to the underlying transaction encodings.
 
 Note 2: The `list_of_uncle_headers` refers to the array of uncle headers [defined in the devp2p spec](https://github.com/ethereum/devp2p/blob/master/caps/eth.md#block-encoding-and-validity).
 
@@ -238,19 +253,19 @@ Note 2: The `list_of_uncle_headers` refers to the array of uncle headers [define
 receipt_key         = Container(block_hash: Bytes32)
 selector            = 0x02
 
-ssz_receipt         = List(encoded_receipt: ByteList[2048], limit=MAX_RECEIPT_LENGTH)
+receipts            = List(ssz_receipt, limit=MAX_TRANSACTION_COUNT)
+ssz_receipt         = ByteList[MAX_RECEIPT_LENGTH](encoded_receipt)
 encoded_receipt     =
   if receipt.is_typed:
     return type_byte + rlp.encode(receipt)
   else:
     return rlp.encode(receipt)
 
-content             = List(ssz_receipt, limit=MAX_TRANSACTION_COUNT)
+content             = SSZ.serialize(receipts)
 content_key         = selector + SSZ.serialize(receipt_key)
 ```
 
-Note the type-specific encoding might be different in future receipt types, but this encoding works
-for all current receipt types.
+Note: The type-specific receipts encoding might be different for future receipt types, but this content encoding is agnostic to the underlying receipt encodings.
 
 
 #### Epoch Record
