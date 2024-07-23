@@ -209,21 +209,21 @@ the following sequence to decode & validate block bodies.
 block_body_key          = Container(block_hash: Bytes32)
 selector                = 0x01
 
-all_transactions        = SSZList(ssz_transaction, max_length=MAX_TRANSACTION_COUNT)
-ssz_transaction         = SSZList(encoded_transaction: ByteList[2048], max_length=MAX_TRANSACTION_LENGTH)
+all_transactions        = List(ssz_transaction, limit=MAX_TRANSACTION_COUNT)
+ssz_transaction         = List(encoded_transaction: ByteList[2048], limit=MAX_TRANSACTION_LENGTH)
 encoded_transaction     =
   if transaction.is_typed:
     return transaction.type_byte + rlp.encode(transaction)
   else:
     return rlp.encode(transaction)
-ssz_uncles              = SSZList(encoded_uncles: ByteList[2048], max_length=MAX_ENCODED_UNCLES_LENGTH)
+ssz_uncles              = List(encoded_uncles: ByteList[2048], limit=MAX_ENCODED_UNCLES_LENGTH)
 encoded_uncles          = rlp.encode(list_of_uncle_headers)
-all_withdrawals         = SSZList(ssz_withdrawal, max_length=MAX_WITHDRAWAL_COUNT)
-ssz_withdrawal          = SSZList(encoded_withdrawal: ByteList[[2048], max_length=MAX_WITHDRAWAL_LENGTH)
+all_withdrawals         = List(ssz_withdrawal, limit=MAX_WITHDRAWAL_COUNT)
+ssz_withdrawal          = List(encoded_withdrawal: ByteList[[2048], limit=MAX_WITHDRAWAL_LENGTH)
 encoded_withdrawal      = rlp.encode(withdrawal)
 
-pre-shanghai content    = Container(all_transactions: SSZList(...), ssz_uncles: SSZList(...))
-post-shanghai content   = Container(all_transactions: SSZList(...), ssz_uncles: SSZList(encoded_uncles), all_withdrawals: SSZList(...))
+pre-shanghai content    = Container(all_transactions: List(...), ssz_uncles: List(...))
+post-shanghai content   = Container(all_transactions: List(...), ssz_uncles: List(encoded_uncles), all_withdrawals: List(...))
 content_key             = selector + SSZ.serialize(block_body_key)
 ```
 
@@ -238,14 +238,14 @@ Note 2: The `list_of_uncle_headers` refers to the array of uncle headers [define
 receipt_key         = Container(block_hash: Bytes32)
 selector            = 0x02
 
-ssz_receipt         = SSZList(encoded_receipt: ByteList[2048], max_length=MAX_RECEIPT_LENGTH)
+ssz_receipt         = List(encoded_receipt: ByteList[2048], limit=MAX_RECEIPT_LENGTH)
 encoded_receipt     =
   if receipt.is_typed:
     return type_byte + rlp.encode(receipt)
   else:
     return rlp.encode(receipt)
 
-content             = SSZList(ssz_receipt, max_length=MAX_TRANSACTION_COUNT)
+content             = List(ssz_receipt, limit=MAX_TRANSACTION_COUNT)
 content_key         = selector + SSZ.serialize(receipt_key)
 ```
 
@@ -278,13 +278,13 @@ EPOCH_SIZE = 8192 # blocks
 MAX_HISTORICAL_EPOCHS = 2048
 
 # An individual record for a historical header.
-HeaderRecord = Container[block_hash: bytes32, total_difficulty: uint256]
+HeaderRecord = Container[block_hash: Bytes32, total_difficulty: uint256]
 
 # The records of the headers from within a single epoch
-EpochRecord = List[HeaderRecord, max_length=EPOCH_SIZE]
+EpochRecord = List[HeaderRecord, limit=EPOCH_SIZE]
 
 HistoricalHashesAccumulator = Container[
-    historical_epochs: List[bytes32, max_length=MAX_HISTORICAL_EPOCHS],
+    historical_epochs: List[Bytes32, limit=MAX_HISTORICAL_EPOCHS],
     current_epoch: EpochRecord,
 ]
 ```

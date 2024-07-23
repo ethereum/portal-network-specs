@@ -167,7 +167,7 @@ content_key                = selector + SSZ.serialize(light_client_bootstrap_key
 light_client_update_keys   = Container(start_period: uint64, count: uint64)
 selector                   = 0x11
 
-content                    = SSZList(ForkDigest + LightClientUpdate, max_lenght=MAX_REQUEST_LIGHT_CLIENT_UPDATES)
+content                    = List(ForkDigest + LightClientUpdate, limit=MAX_REQUEST_LIGHT_CLIENT_UPDATES)
 content_key                = selector + SSZ.serialize(light_client_update_keys)
 ```
 
@@ -222,7 +222,7 @@ historical_summaries_with_proof = HistoricalSummariesWithProof(
     epoch: uint64,
     # HistoricalSummary object is defined in consensus specs:
     # https://github.com/ethereum/consensus-specs/blob/dev/specs/capella/beacon-chain.md#historicalsummary.
-    historical_summaries: SSZList(HistoricalSummary, max_length=HISTORICAL_ROOTS_LIMIT),
+    historical_summaries: List(HistoricalSummary, limit=HISTORICAL_ROOTS_LIMIT),
     proof: HistoricalSummariesProof
 )
 

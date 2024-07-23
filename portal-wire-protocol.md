@@ -108,7 +108,7 @@ Request message to get ENR records from the recipient's routing table at the giv
 
 ```
 selector     = 0x02
-find_nodes   = Container(distances: List[uint16, max_length=256])
+find_nodes   = Container(distances: List[uint16, limit=256])
 ```
 
 * `distances`: a list of distances for which the node is requesting ENR records for.
@@ -121,7 +121,7 @@ Response message to FindNodes(0x02).
 
 ```
 selector     = 0x03
-nodes        = Container(total: uint8, enrs: List[ByteList[2048], max_length=32])
+nodes        = Container(total: uint8, enrs: List[ByteList[2048], limit=32])
 ```
 
 * `total`: The total number of `Nodes` response messages being sent. Currently fixed to only 1 response message.
@@ -196,7 +196,7 @@ Request message to offer a set of `content_keys` that this node has `content` av
 
 ```
 selector     = 0x06
-offer        = Container(content_keys: List[ByteList[2048], max_length=64])
+offer        = Container(content_keys: List[ByteList[2048], limit=64])
 ```
 
 * `content_keys`: A list of encoded `content_key` entries. The encoding of each `content_key` is specified per the network.
@@ -209,7 +209,7 @@ Signals interest in receiving the offered data from the corresponding Offer mess
 
 ```
 selector     = 0x07
-accept       = Container(connection_id: Bytes2, content_keys: BitList[max_length=64]]
+accept       = Container(connection_id: Bytes2, content_keys: BitList[limit=64]]
 ```
 
 * `connection_id`: Connection ID to set up a uTP stream to transmit the requested data.
