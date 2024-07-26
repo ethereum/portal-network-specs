@@ -14,27 +14,26 @@ In addition, the chain history network provides individual epoch records for the
 
 #### Types
 
-* Block headers
-* Block bodies
-    * Transactions
-    * Ommers
-    * Withdrawals
-* Receipts
-* Header epoch records (pre-merge only)
+- Block headers
+- Block bodies
+    - Transactions
+    - Ommers
+    - Withdrawals
+- Receipts
+- Header epoch records (pre-merge only)
 
 #### Retrieval
 
 The network supports the following mechanisms for data retrieval:
 
-* Block header by block header hash
-* Block body by block header hash
-* Block receipts by block header hash
-* Header epoch record by epoch record hash
+- Block header by block header hash
+- Block body by block header hash
+- Block receipts by block header hash
+- Header epoch record by epoch record hash
 
-> The presence of the pre-merge header records provides an indirect way to lookup blocks by their number, but is restricted to pre-merge blocks.  Retrieval of blocks by their number for post-merge blocks is not intrinsically supported within this network.
-
+> The presence of the pre-merge header records provides an indirect way to lookup blocks by their number, but is restricted to pre-merge blocks.  Retrieval of blocks by their number for post-merge blocks is not intrinsically supported within this network. 
+>
 > This sub-protocol does **not** support retrieval of transactions by hash, only the full set of transactions for a given block. See the "Canonical Transaction Index" sub-protocol of the Portal Network for more information on how the portal network implements lookup of transactions by their individual hashes.
-
 
 ## Specification
 
@@ -42,16 +41,13 @@ The network supports the following mechanisms for data retrieval:
 
 The history network uses the stock XOR distance metric defined in the portal wire protocol specification.
 
-
 ### Content ID Derivation Function
 
 The history network uses the SHA256 Content ID derivation function from the portal wire protocol specification.
 
-
 ### Wire Protocol
 
 The [Portal wire protocol](./portal-wire-protocol.md) is used as wire protocol for the history network.
-
 
 #### Protocol Identifier
 
@@ -66,7 +62,6 @@ The history network supports the following protocol messages:
 - `Find Content` - `Found Content`
 - `Offer` - `Accept`
 
-
 #### `Ping.custom_data` & `Pong.custom_data`
 
 In the history network the `custom_payload` field of the `Ping` and `Pong` messages is the serialization of an SSZ Container specified as `custom_data`:
@@ -75,7 +70,6 @@ In the history network the `custom_payload` field of the `Ping` and `Pong` messa
 custom_data = Container(data_radius: uint256)
 custom_payload = SSZ.serialize(custom_data)
 ```
-
 
 ### Routing Table
 
@@ -150,6 +144,7 @@ SHANGHAI_TIMESTAMP = 1681338455
 
 The encoding choices generally favor easy verification of the data, minimizing decoding. For
 example:
+
 - `keccak(encoded_uncles) == header.uncles_hash`
 - Each `encoded_transaction` can be inserted into a trie to compare to the
   `header.transactions_root`
@@ -158,9 +153,7 @@ example:
 Combining all of the block body in RLP, in contrast, would require that a validator loop through
 each receipt/transaction and re-rlp-encode it, but only if it is a legacy transaction.
 
-
 #### Block Header
-
 
 ```python
 # Content types
@@ -199,6 +192,7 @@ After the addition of `withdrawals` to the block body in the [EIP-4895](https://
 clients need to support multiple encodings for the block body content type. For the time being,
 since a client is required for block body validation it is recommended that clients implement
 the following sequence to decode & validate block bodies.
+
 - Receive raw block body content value.
 - Fetch respective header from the network.
 - Compare header timestamp against `SHANGHAI_TIMESTAMP` to determine what encoding scheme the block body uses.
@@ -267,7 +261,6 @@ content_key         = selector + SSZ.serialize(receipt_key)
 
 Note: The type-specific receipts encoding might be different for future receipt types, but this content encoding is agnostic to the underlying receipt encodings.
 
-
 #### Epoch Record
 
 ```python
@@ -278,7 +271,6 @@ epoch_hash            = hash_tree_root(epoch_record)
 content               = SSZ.serialize(epoch_record)
 content_key           = selector + SSZ.serialize(epoch_record_key)
 ```
-
 
 ### Algorithms
 
@@ -330,11 +322,10 @@ def update_accumulator(accumulator: HistoricalHashesAccumulator, new_block_heade
     accumulator.current_epoch.append(header_record)
 ```
 
+
 The `HistoricalHashesAccumulator` is fully build and frozen when the last block before TheMerge/Paris fork is added and the last incomplete `EpochRecord` its `hash_tree_root` is added to the `historical_epochs`.
 The network provides no mechanism for acquiring the fully build `HistoricalHashesAccumulator`.  Clients are encouraged to solve this however they choose, with the suggestion that they include a frozen copy of the accumulator at the point of TheMerge within their client code, and provide a mechanism for users to override this value if they so choose. The `hash_tree_root` of the `HistoricalHashesAccumulator` is
 defined in [EIP-7643](https://github.com/ethereum/EIPs/blob/master/EIPS/eip-7643.md).
-
-
 
 #### HistoricalHashesAccumulatorProof
 
