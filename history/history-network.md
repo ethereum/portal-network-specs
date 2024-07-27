@@ -6,34 +6,34 @@ This document is the specification for the sub-protocol that supports on-demand 
 
 The chain history network is a [Kademlia](https://pdos.csail.mit.edu/~petar/papers/maymounkov-kademlia-lncs.pdf) DHT that uses the [Portal Wire Protocol](./portal-wire-protocol.md) to establish an overlay network on top of the [Discovery v5](https://github.com/ethereum/devp2p/blob/master/discv5/discv5-wire.md) protocol.
 
-Execution chain history data consists of historical block headers, block bodies (transactions and ommer) and block receipts.
+Execution chain history data consists of historical block headers, block bodies (transactions, ommers and withdrawals) and block receipts.
 
-In addition, the chain history network provides individual epoch accumulators for the full range of pre-merge blocks mined before the transition to proof of stake.
+In addition, the chain history network provides individual epoch records for the full range of pre-merge blocks mined before the transition to proof of stake.
 
 ### Data
 
 #### Types
 
-* Block headers
-* Block bodies
-    * Transactions
-    * Ommers
-* Receipts
-* Header epoch accumulators (pre-merge only)
+- Block headers
+- Block bodies
+    - Transactions
+    - Ommers
+    - Withdrawals
+- Receipts
+- Header epoch records (pre-merge only)
 
 #### Retrieval
 
 The network supports the following mechanisms for data retrieval:
 
-* Block header by block header hash
-* Block body by block header hash
-* Block receipts by block header hash
-* Header epoch accumulator by epoch accumulator hash
+- Block header by block header hash
+- Block body by block header hash
+- Block receipts by block header hash
+- Header epoch record by epoch record hash
 
-> The presence of the pre-merge header accumulators provides an indirect way to lookup blocks by their number, but is restricted to pre-merge blocks.  Retrieval of blocks by their number for post-merge blocks is not intrinsically supported within this network.
-
+> The presence of the pre-merge header records provides an indirect way to lookup blocks by their number, but is restricted to pre-merge blocks.  Retrieval of blocks by their number for post-merge blocks is not intrinsically supported within this network. 
+>
 > This sub-protocol does **not** support retrieval of transactions by hash, only the full set of transactions for a given block. See the "Canonical Transaction Index" sub-protocol of the Portal Network for more information on how the portal network implements lookup of transactions by their individual hashes.
-
 
 ## Specification
 
@@ -41,16 +41,13 @@ The network supports the following mechanisms for data retrieval:
 
 The history network uses the stock XOR distance metric defined in the portal wire protocol specification.
 
-
 ### Content ID Derivation Function
 
 The history network uses the SHA256 Content ID derivation function from the portal wire protocol specification.
 
-
 ### Wire Protocol
 
 The [Portal wire protocol](./portal-wire-protocol.md) is used as wire protocol for the history network.
-
 
 #### Protocol Identifier
 
@@ -65,7 +62,6 @@ The history network supports the following protocol messages:
 - `Find Content` - `Found Content`
 - `Offer` - `Accept`
 
-
 #### `Ping.custom_data` & `Pong.custom_data`
 
 In the history network the `custom_payload` field of the `Ping` and `Pong` messages is the serialization of an SSZ Container specified as `custom_data`:
@@ -74,7 +70,6 @@ In the history network the `custom_payload` field of the `Ping` and `Pong` messa
 custom_data = Container(data_radius: uint256)
 custom_payload = SSZ.serialize(custom_data)
 ```
-
 
 ### Routing Table
 
@@ -121,13 +116,13 @@ MAX_RECEIPT_LENGTH = 2**27  # ~= 134 million
 # and it's not clear what the practical limits for receipts are, so we should add more buffer room.
 # Imagine the cost drops by 2x and the block gas limit goes up by 8x. So we add 2**4 = 16x buffer.
 
-_MAX_HEADER_LENGTH = 2**13  # = 8192
+MAX_HEADER_LENGTH = 2**11  # = 2048
 # Maximum header length is fairly stable at about 500 bytes. It might change at
 # the merge, and beyond. Since the length is relatively small, and the future
 # of the format is unclear to me, I'm leaving more room for expansion, and
-# setting the max at about 8 kilobytes.
+# setting the max at about 2 kilobytes.
 
-MAX_ENCODED_UNCLES_LENGTH = _MAX_HEADER_LENGTH * 2**4  # = 2**17 ~= 131k
+MAX_ENCODED_UNCLES_LENGTH = MAX_HEADER_LENGTH * 2**4  # = 2**17 ~= 32k
 # Maximum number of uncles is currently 2. Using 16 leaves some room for the
 # protocol to increase the number of uncles.
 
@@ -149,29 +144,28 @@ SHANGHAI_TIMESTAMP = 1681338455
 
 The encoding choices generally favor easy verification of the data, minimizing decoding. For
 example:
-- `keccak(encoded-uncles) == header.uncles_hash`
-- Each `encoded-transaction` can be inserted into a trie to compare to the
+
+- `keccak(encoded_uncles) == header.uncles_hash`
+- Each `encoded_transaction` can be inserted into a trie to compare to the
   `header.transactions_root`
-- Each `encoded-receipt` can be inserted into a trie to compare to the `header.receipts_root`
+- Each `encoded_receipt` can be inserted into a trie to compare to the `header.receipts_root`
 
 Combining all of the block body in RLP, in contrast, would require that a validator loop through
 each receipt/transaction and re-rlp-encode it, but only if it is a legacy transaction.
 
-
 #### Block Header
-
 
 ```python
 # Content types
 
-PreMergeAccumulatorProof = Vector[Bytes32, 15]
+HistoricalHashesAccumulatorProof = Vector[Bytes32, 15]
 
-BlockHeaderProof = Union[None, PreMergeAccumulatorProof]
+BlockHeaderProof = Union[None, HistoricalHashesAccumulatorProof]
 
-BlockHeaderWithProof = Container[
-  header: ByteList, # RLP encoded header in SSZ ByteList
+BlockHeaderWithProof = Container(
+  header: ByteList[MAX_HEADER_LENGTH], # RLP encoded header in SSZ ByteList
   proof: BlockHeaderProof
-]
+)
 ```
 
 ```python
@@ -188,8 +182,8 @@ content_key      = selector + SSZ.serialize(block_header_key)
 
 > **_Note:_** The `BlockHeaderProof` allows to provide headers without a proof (`None`).
 For pre-merge headers, clients SHOULD NOT accept headers without a proof
-as there is the `PreMergeAccumulatorProof` solution available.
-For post-merge headers, there is currently no proof solution and clients SHOULD
+as there is the `HistoricalHashesAccumulatorProof` solution available.
+For post-merge headers, there is currently no proof solution and clients MAY
 accept headers without a proof.
 
 #### Block Body
@@ -198,6 +192,7 @@ After the addition of `withdrawals` to the block body in the [EIP-4895](https://
 clients need to support multiple encodings for the block body content type. For the time being,
 since a client is required for block body validation it is recommended that clients implement
 the following sequence to decode & validate block bodies.
+
 - Receive raw block body content value.
 - Fetch respective header from the network.
 - Compare header timestamp against `SHANGHAI_TIMESTAMP` to determine what encoding scheme the block body uses.
@@ -208,26 +203,41 @@ the following sequence to decode & validate block bodies.
 block_body_key          = Container(block_hash: Bytes32)
 selector                = 0x01
 
-all_transactions        = SSZList(ssz_transaction, max_length=MAX_TRANSACTION_COUNT)
-ssz_transaction         = SSZList(encoded_transaction: ByteList, max_length=MAX_TRANSACTION_LENGTH)
+# Transactions
+transactions            = List(ssz_transaction, limit=MAX_TRANSACTION_COUNT)
+ssz_transaction         = ByteList[MAX_TRANSACTION_LENGTH](encoded_transaction)
 encoded_transaction     =
   if transaction.is_typed:
     return transaction.type_byte + rlp.encode(transaction)
   else:
     return rlp.encode(transaction)
-ssz_uncles              = SSZList(encoded_uncles: ByteList, max_length=MAX_ENCODED_UNCLES_LENGTH)
+
+# Uncles
+uncles                  = ByteList[MAX_ENCODED_UNCLES_LENGTH](encoded_uncles)
 encoded_uncles          = rlp.encode(list_of_uncle_headers)
-all_withdrawals         = SSZList(ssz_withdrawal, max_length=MAX_WITHDRAWAL_COUNT)
-ssz_withdrawal          = SSZList(encoded_withdrawal: ByteList, max_length=MAX_WITHDRAWAL_LENGTH)
+
+# Withdrawals
+withdrawals             = List(ssz_withdrawal, limit=MAX_WITHDRAWAL_COUNT)
+ssz_withdrawal          = ByteList[MAX_WITHDRAWAL_LENGTH](encoded_withdrawal)
 encoded_withdrawal      = rlp.encode(withdrawal)
 
-pre-shanghai content    = Container(all_transactions: SSZList(...), ssz_uncles: SSZList(...))
-post-shanghai content   = Container(all_transactions: SSZList(...), ssz_uncles: SSZList(encoded_uncles), all_withdrawals: SSZList(...))
+# Block body
+pre_shanghai_body       = Container(
+  transactions: transactions,
+  uncles: uncles
+)
+post_shanghai_body      = Container(
+  transactions: transactions,
+  uncles: uncles,
+  withdrawals: withdrawals
+)
+
+# Encoded content
+content                 = SSZ.serialize(pre_shanghai_body | post_shanghai_body)
 content_key             = selector + SSZ.serialize(block_body_key)
 ```
 
-Note 1: The type-specific encoding might be different in future transaction types, but this encoding
-works for all current transaction types.
+Note 1: The type-specific transactions encoding might be different for future transaction types, but this content encoding is agnostic to the underlying transaction encodings.
 
 Note 2: The `list_of_uncle_headers` refers to the array of uncle headers [defined in the devp2p spec](https://github.com/ethereum/devp2p/blob/master/caps/eth.md#block-encoding-and-validity).
 
@@ -237,54 +247,52 @@ Note 2: The `list_of_uncle_headers` refers to the array of uncle headers [define
 receipt_key         = Container(block_hash: Bytes32)
 selector            = 0x02
 
-ssz_receipt         = SSZList(encoded_receipt: ByteList, max_length=MAX_RECEIPT_LENGTH)
+receipts            = List(ssz_receipt, limit=MAX_TRANSACTION_COUNT)
+ssz_receipt         = ByteList[MAX_RECEIPT_LENGTH](encoded_receipt)
 encoded_receipt     =
   if receipt.is_typed:
     return type_byte + rlp.encode(receipt)
   else:
     return rlp.encode(receipt)
 
-content             = SSZList(ssz_receipt, max_length=MAX_TRANSACTION_COUNT)
+content             = SSZ.serialize(receipts)
 content_key         = selector + SSZ.serialize(receipt_key)
 ```
 
-Note the type-specific encoding might be different in future receipt types, but this encoding works
-for all current receipt types.
+Note: The type-specific receipts encoding might be different for future receipt types, but this content encoding is agnostic to the underlying receipt encodings.
 
-
-#### Epoch Accumulator
+#### Epoch Record
 
 ```python
-epoch_accumulator_key = Container(epoch_hash: Bytes32)
+epoch_record_key = Container(epoch_hash: Bytes32)
 selector              = 0x03
-epoch_hash            = hash_tree_root(epoch_accumulator)
+epoch_hash            = hash_tree_root(epoch_record)
 
-content               = SSZ.serialize(epoch_accumulator)
-content_key           = selector + SSZ.serialize(epoch_accumulator_key)
+content               = SSZ.serialize(epoch_record)
+content_key           = selector + SSZ.serialize(epoch_record_key)
 ```
-
 
 ### Algorithms
 
-#### The "Pre Merge Accumulator"
+#### The "Historical Hashes Accumulator"
 
-The "Pre Merge Accumulator" is based on the [double-batched merkle log accumulator](https://ethresear.ch/t/double-batched-merkle-log-accumulator/571) that is currently used in the beacon chain.  This data structure is designed to allow nodes in the network to "forget" the deeper history of the chain, while still being able to reliably receive historical headers with a proof that the received header is indeed from the canonical chain (as opposed to an uncle mined at the same block height).  This data structure is only used for pre-merge blocks.
+The "Historical Hashes Accumulator" is based on the [double-batched merkle log accumulator](https://ethresear.ch/t/double-batched-merkle-log-accumulator/571) that is currently used in the beacon chain.  This data structure is designed to allow nodes in the network to "forget" the deeper history of the chain, while still being able to reliably receive historical headers with a proof that the received header is indeed from the canonical chain (as opposed to an uncle mined at the same block height).  This data structure is only used for pre-merge blocks.
 
 The accumulator is defined as an [SSZ](https://ssz.dev/) data structure with the following schema:
 
 ```python
 EPOCH_SIZE = 8192 # blocks
-MAX_HISTORICAL_EPOCHS = 131072  # 2**17
+MAX_HISTORICAL_EPOCHS = 2048
 
 # An individual record for a historical header.
-HeaderRecord = Container[block_hash: bytes32, total_difficulty: uint256]
+HeaderRecord = Container[block_hash: Bytes32, total_difficulty: uint256]
 
 # The records of the headers from within a single epoch
-EpochAccumulator = List[HeaderRecord, max_length=EPOCH_SIZE]
+EpochRecord = List[HeaderRecord, limit=EPOCH_SIZE]
 
-PreMergeAccumulator = Container[
-    historical_epochs: List[bytes32, max_length=MAX_HISTORICAL_EPOCHS],
-    current_epoch: EpochAccumulator,
+HistoricalHashesAccumulator = Container[
+    historical_epochs: List[Bytes32, limit=MAX_HISTORICAL_EPOCHS],
+    current_epoch: EpochRecord,
 ]
 ```
 
@@ -292,7 +300,7 @@ The algorithm for building the accumulator is as follows.
 
 
 ```python
-def update_accumulator(accumulator: PreMergeAccumulator, new_block_header: BlockHeader) -> None:
+def update_accumulator(accumulator: HistoricalHashesAccumulator, new_block_header: BlockHeader) -> None:
     # get the previous total difficulty
     if len(accumulator.current_epoch) == 0:
         # genesis
@@ -314,24 +322,27 @@ def update_accumulator(accumulator: PreMergeAccumulator, new_block_header: Block
     accumulator.current_epoch.append(header_record)
 ```
 
-The network provides no mechanism for acquiring the *master* version of this accumulator.  Clients are encouraged to solve this however they choose, with the suggestion that they include a frozen copy of the accumulator at the point of the merge within their client code, and provide a mechanism for users to override this value if they so choose.
 
-#### PreMergeAccumulatorProof
+The `HistoricalHashesAccumulator` is fully build and frozen when the last block before TheMerge/Paris fork is added and the last incomplete `EpochRecord` its `hash_tree_root` is added to the `historical_epochs`.
+The network provides no mechanism for acquiring the fully build `HistoricalHashesAccumulator`.  Clients are encouraged to solve this however they choose, with the suggestion that they include a frozen copy of the accumulator at the point of TheMerge within their client code, and provide a mechanism for users to override this value if they so choose. The `hash_tree_root` of the `HistoricalHashesAccumulator` is
+defined in [EIP-7643](https://github.com/ethereum/EIPs/blob/master/EIPS/eip-7643.md).
 
-The `PreMergeAccumulatorProof` is a Merkle proof as specified in the
+#### HistoricalHashesAccumulatorProof
+
+The `HistoricalHashesAccumulatorProof` is a Merkle proof as specified in the
 [SSZ Merke proofs specification](https://github.com/ethereum/consensus-specs/blob/dev/ssz/merkle-proofs.md#merkle-multiproofs).
 
 It is a Merkle proof for the `BlockHeader`'s block hash on the relevant
-`EpochAccumulator` object. The selected `EpochAccumulator` must be the one where
+`EpochRecord` object. The selected `EpochRecord` must be the one where
 the `BlockHeader`'s block hash is part of. The `GeneralizedIndex` selected must
-match the leave of the `EpochAccumulator` merkle tree which holds the
+match the leave of the `EpochRecord` merkle tree which holds the
 `BlockHeader`'s block hash.
 
-An `PreMergeAccumulatorProof` for a specific `BlockHeader` can be used to verify that
+An `HistoricalHashesAccumulatorProof` for a specific `BlockHeader` can be used to verify that
 this `BlockHeader` is part of the canonical chain. This is done by verifying the
 Merkle proof with the `BlockHeader`'s block hash as leave and the
-`EpochAccumulator` digest as root. This digest is available in the
-`PreMergeAccumulator`.
+`EpochRecord` digest as root. This digest is available in the
+`HistoricalHashesAccumulator`.
 
-As the `PreMergeAccumulator` only accounts for blocks pre-merge, this proof can
+As the `HistoricalHashesAccumulator` only accounts for blocks pre-merge, this proof can
 only be used to verify blocks pre-merge.
