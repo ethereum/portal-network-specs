@@ -1,14 +1,12 @@
 # Portal Wire Protocol
 
-The Portal wire protocol is the default p2p protocol by which Portal nodes communicate.
+The Portal wire protocol is the default peer-to-peer protocol by which Portal nodes communicate.
 
-The different sub-protocols within the Portal network **MAY** use this wire protocol, but they **MUST** remain separated per network.
+The Portal wire protocol enables nodes to communicate over the [Node Discovery Protocol v5](https://github.com/ethereum/devp2p/blob/56a498ee34ee0fb69ffd33dda026d632af4c4048/discv5/discv5-wire.md#talkreq-request-0x05) layer using the `TALKREQ` and `TALKRESP` messages.
 
-This is done at the [Node Discovery Protocol v5](https://github.com/ethereum/devp2p/blob/master/discv5/discv5-wire.md#talkreq-request-0x05) layer, by providing a different protocol byte string, per protocol, in the `TALKREQ` message.
+Sub-protocols using the Portal wire protocol **MUST** choose a byte string to serve as the protocol identifier. Messages are differentiated between different sub-protocol by this protocol identifier which is set in the `TALKREQ` message.
 
-The value for the protocol byte string in the `TALKREQ` message is specified as protocol identifier per network.
-
-Each network using the wire protocol **MUST** specify which messages are supported.
+Sub-protocol using the wire protocol **MAY** choose to exclude certain message types and **MUST** specify which messages are supported.
 
 Unsupported messages **SHOULD** receive a `TALKRESP` message with an empty payload.
 
@@ -17,57 +15,74 @@ Unsupported messages **SHOULD** receive a `TALKRESP` message with an empty paylo
 All protocol identifiers consist of two bytes. The first byte is "`P`" (`0x50`), to indicate "the Portal network", the second byte is a specific network identifier.
 
 ### Mainnet identifiers
+
 Currently defined mainnet protocol identifiers:
+
 - Inclusive range of `0x5000` - `0x5009`: Reserved for future networks or network upgrades
 - `0x500A`: Execution State Network
 - `0x500B`: Execution History Network
 - `0x500C`: Beacon Chain Network
-- `0x500D`: Execution Canonical Transaction Index Network
-- `0x500E`: Execution Verkle State Network
-- `0x500F`: Execution Transaction Gossip Network
-### Angelfood identifiers
+- `0x500D`: Execution Canonical Transaction Index Network (planned but not implemented)
+- `0x500E`: Execution Verkle State Network (planned but not implemented)
+- `0x500F`: Execution Transaction Gossip Network (planned but not implemented)
+
+### Angelfood identifiers (testnet)
+
+> Angelfood is the name for our current test network.
+
 Currently defined `angelfood` protocol identifiers:
+
 - `0x504A`: Execution State Network
 - `0x504B`: Execution History Network
 - `0x504C`: Beacon Chain Network
-- `0x504D`: Execution Canonical Transaction Index Network
-- `0x504E`: Execution Verkle State Network
-- `0x504F`: Execution Transaction Gossip Network
-
-## Content Keys and Content IDs
-
-Content keys are used to request or offer specific content data. As such the content key and content data can be represented as a key:value pair.
-
-Content keys are passed as byte strings to the messages defined in the Portal wire protocol. How they are encoded is defined per content network specification.
-
-Content IDs are derived from the content keys and are used to identify where the content is located in the network. The derivation is defined per content network specification.
-
-### SHA256 Content ID Derivation Function
-
-The SHA256 Content ID derivation function is defined as:
-
-```
-content_id = sha256(content_key)
-```
-
+- `0x504D`: Execution Canonical Transaction Index Network (planned but not implemented)
+- `0x504E`: Execution Verkle State Network (planned but not implemented)
+- `0x504F`: Execution Transaction Gossip Network (planned but not implemented)
 
 ## Nodes and Node IDs
 
-Nodes in the portal network are represented by their [EIP-778 Ethereum Node Record (ENR)](https://eips.ethereum.org/EIPS/eip-778) from the Discovery v5 network. A node's `node-id` is derived according to the node's identity scheme, which is specified in the node's ENR. A node's `node-id` represents its address in the DHT.  Node IDs are interchangeable between 32 byte identifiers and 256 bit integers.
+Nodes in the portal network are represented by their [EIP-778 Ethereum Node Record (ENR)](https://github.com/ethereum/EIPs/blob/master/EIPS/eip-778.md) from the Discovery v5 network. A node's `node-id` is derived according to the node's identity scheme, which is specified in the node's ENR. A node's `node-id` represents its address in the DHT.  Node IDs are interchangeable between 32 byte identifiers and 256 bit integers.
+
+
+## Content Keys and Content IDs
+
+Content keys are used to request or offer specific content data. As such the content key and content data can be thought of as a key-value pair with nodes in the network storing the content data and the content key being the identifier used to request and retrieve the data.
+
+Each sub-protocol defines the set of supported content keys and the corresponding data payloads for each content key.  The encoding of content keys is defined at the sub-protocol level.
+
+Content keys are passed in their encoded format as byte strings to the messages defined in the Portal wire protocol.
+
+Content IDs are derived from the content key.  The Content ID can be represented interchangeably as either a 32 byte value or a 256 bit integer.  The Content ID defines the address of the content in the DHT.  The function for deriving the Content ID from a content key is defined at the sub-protocol level.
+
+### SHA256 Content ID Derivation Function
+
+The SHA256 Content ID derivation function is defined here for convenience as it is the most commonly used:
+
+```
+content_id = sha256(encoded_content_key)
+```
+
+## Transmission of data that exceeds the UDP packet limit
+
+The transmission of data that is too large to fit a single packet is done using [uTP](../assets/eip-7718/bep_0029-rst_post.pdf).
+
+> The Portal wire protocol currently implements uTP over the `TALKREQ/TALKRESP` messages.  Future plans are to move to the [sub-protocol data transmission](https://github.com/ethereum/devp2p/issues/229) in order to use a protocol native mechanism for establishing packet streams between clients.
+
 
 ## Request - Response Messages
 
-The messages in the protocol are transmitted using the `TALKREQ` and `TALKRESP` messages from the base [Node Discovery Protocol](https://github.com/ethereum/devp2p/blob/master/discv5/discv5-wire.md#talkreq-request-0x05).
+The messages in the protocol are transmitted using the `TALKREQ` and `TALKRESP` messages from the base [Node Discovery Protocol](https://github.com/ethereum/devp2p/blob/56a498ee34ee0fb69ffd33dda026d632af4c4048/discv5/discv5-wire.md#talkreq-request-0x05).
 
 All messages in the protocol have a request-response interaction:
-* Request messages **MUST** be sent using a `TALKREQ` message.
-* Response messages **MUST** be sent using the corresponding `TALKRESP` message.
 
-All messages are encoded as an [SSZ Union](https://github.com/ethereum/consensus-specs/blob/dev/ssz/simple-serialize.md#union) type.
+- Request messages **MUST** be sent using a `TALKREQ` message.
+- Response messages **MUST** be sent using the corresponding `TALKRESP` message.
+
+All messages are encoded as an [SSZ Union](https://github.com/ethereum/consensus-specs/blob/04f5ec595d78c0e3e43794fb7644c18f2584770d/ssz/simple-serialize.md#union) type.
 
 ```
 message = Union[ping, pong, find_nodes, nodes, find_content, content, offer, accept]
-serialized_message = serialize(message)
+serialized_message = SSZ.serialize(message)
 ```
 
 The `serialized_message` is the payload passed to the `request` field of the `TALKREQ` message or the `reponse` field of the `TALKRESP` message.
@@ -80,15 +95,15 @@ The transmission of `content` data that is too large to fit a single packet is d
 
 #### Ping (0x00)
 
-Request message to check if a node is reachable, communicate basic information about our node, and request basic information about the recipient node.
+Request message to check if a node is reachable, communicate basic information about our node, and request basic information about the recipient node.  Additionally sub-protocol can define a schema for the `custom_payload` field to exchange additional information.
 
 ```
 selector     = 0x00
 ping         = Container(enr_seq: uint64, custom_payload: ByteList[2048])
 ```
 
-* `enr_seq`: The node's current sequence number of their ENR record.
-* `custom_payload`: Custom payload specified per the network.
+- `enr_seq`: The node's current sequence number of their ENR record.
+- `custom_payload`: Custom payload specified per the network.
 
 #### Pong (0x01)
 
@@ -99,8 +114,8 @@ selector     = 0x01
 pong         = Container(enr_seq: uint64, custom_payload: ByteList[2048])
 ```
 
-* `enr_seq`: The node's current sequence number of their ENR record.
-* `custom_payload`: Custom payload specified per the network.
+- `enr_seq`: The node's current sequence number of their ENR record.
+- `custom_payload`: Custom payload specified per the network.
 
 #### Find Nodes (0x02)
 
@@ -111,9 +126,9 @@ selector     = 0x02
 find_nodes   = Container(distances: List[uint16, limit=256])
 ```
 
-* `distances`: a list of distances for which the node is requesting ENR records for.
-    * Each distance **MUST** be within the inclusive range `[0, 256]`
-    * Each distance in the list **MUST** be unique.
+- `distances`: a sorted list of distances for which the node is requesting ENR records for.
+    - Each distance **MUST** be within the inclusive range `[0, 256]`
+    - Each distance in the list **MUST** be unique.
 
 #### Nodes (0x03)
 
@@ -124,43 +139,46 @@ selector     = 0x03
 nodes        = Container(total: uint8, enrs: List[ByteList[2048], limit=32])
 ```
 
-* `total`: The total number of `Nodes` response messages being sent. Currently fixed to only 1 response message.
-* `enrs`: List of byte strings, each of which is an RLP encoded ENR record.
+- `total`: The total number of `Nodes` response messages being sent. Currently fixed to only 1 response message.
+- `enrs`: List of byte strings, each of which is an RLP encoded ENR record.
     * Individual ENR records **MUST** correspond to one of the requested distances.
     * It is invalid to return multiple ENR records for the same `node_id`.
     * The ENR record of the requesting node **SHOULD** be filtered out of the list.
 
 #### Find Content (0x04)
 
-Request message to get the `content` with `content_key`, **or**, in case the recipient does not have the data, a list of ENR records of nodes that are closest to the requested content.
+Request message to get the `content` with `content_key`. In case the recipient does not have the data, a list of ENR records of nodes that are closest to the requested content.
 
 ```
 selector     = 0x04
 find_content = Container(content_key: ByteList[2048])
 ```
 
-* `content_key`: The key for the content being requested. The encoding of `content_key` is specified per the network.
+- `content_key`: The encoded content key for the content being requested.
 
 #### Content (0x05)
 
 Response message to Find Content (0x04).
 
-This message can contain either a uTP connection ID, a list of ENRs or the
-requested content.
+This message can contain any of 
+
+- a uTP connection ID
+- the requested content
+- a list of ENRs
 
 ```
 selector     = 0x05
 content      = Union[connection_id: Bytes2, content: ByteList[2048], enrs: List[ByteList[2048], 32]]
 ```
 
-* `connection_id`: Connection ID to set up a uTP stream to transmit the requested data.
-    * Connection ID values **SHOULD** be randomly generated.
-*  `content`: byte string of the requested content.
-    * This field **MUST** be used when the requested data can fit in this single response.
-* `enrs`: List of byte strings, each of which is an RLP encoded ENR record.
-    * The list of ENR records **MUST** be closest nodes to the requested content that the responding node has stored.
-    * The set of derived `node_id` values from the ENR records **MUST** be unique.
-    * The ENR record of the requesting & responding node **SHOULD** be filtered out of the list.
+- `connection_id`: Connection ID to set up a uTP stream to transmit the requested data.
+    - Connection ID values **SHOULD** be randomly generated.
+- `content`: byte string of the requested content.
+    - This field **MUST** be used when the requested data can fit in this single response.
+- `enrs`: List of byte strings, each of which is an RLP encoded ENR record.
+    - The list of ENR records **MUST** be closest nodes to the requested content that the responding node has stored.
+    - The set of derived `node_id` values from the ENR records **MUST** be unique.
+    - The ENR record of the requesting & responding node **SHOULD** be filtered out of the list.
 
 If the node does not hold the requested content, and the node does not know of any nodes with eligible ENR values, then the node **MUST** return `enrs` as an empty list.
 
@@ -173,18 +191,21 @@ Upon *receiving* this message with a `connection_id`, the receiving node **SHOUL
 The `Union` defined in the `content` field of the `Content (0x05)` message is defined as below:
 
 **`connection_id`**
+
 ```
 selector = 0x00
 ssz-type = Bytes2
 ```
 
 **`content`**
+
 ```
 selector = 0x01
 ssz-type = ByteList[2048]
 ```
 
 **`enrs`**
+
 ```
 selector = 0x02
 ssz-type = List[ByteList[2048], 32]
@@ -199,7 +220,7 @@ selector     = 0x06
 offer        = Container(content_keys: List[ByteList[2048], limit=64])
 ```
 
-* `content_keys`: A list of encoded `content_key` entries. The encoding of each `content_key` is specified per the network.
+- `content_keys`: A list of encoded `content_key` entries.
 
 #### Accept (0x07)
 
@@ -212,10 +233,10 @@ selector     = 0x07
 accept       = Container(connection_id: Bytes2, content_keys: BitList[limit=64]]
 ```
 
-* `connection_id`: Connection ID to set up a uTP stream to transmit the requested data.
-    * ConnectionID values **SHOULD** be randomly generated.
-* `content_keys`: Signals which content keys are desired.
-    * A bit-list corresponding to the offered keys with the bits in the positions of the desired keys set to `1`.
+- `connection_id`: Connection ID to set up a uTP stream to transmit the requested data.
+    - ConnectionID values **SHOULD** be randomly generated.
+- `content_keys`: Signals which content keys are desired.
+    - A bit-list corresponding to the offered keys with the bits in the positions of the desired keys set to `1`.
 
 Upon *sending* this message, the requesting node **SHOULD** *listen* for an incoming uTP stream with the generated `connection_id`.
 
@@ -228,12 +249,13 @@ Up to 64 content items can be sent over the uTP stream after an `Offer` request 
 In order to be able to discern these different content items, a variable length unsigned integer (varint) MUST be prefixed to each content item.
 The varint MUST hold the size, in bytes, of the consecutive content item.
 
-The varint encoding used is [Unsigned LEB128](https://en.wikipedia.org/wiki/LEB128#Encode_unsigned_integer).
+The varint encoding used is Unsigned LEB128.
 The maximum size allowed for this application is limited to `uint32`.
 
 The content item itself MUST be encoded as is defined for each specific network and content type.
 
 The encoded data of n encoded content items to be send over the stream can be formalized as:
+
 ```py
 # n encoded content items to be send over the stream, with n <= 64
 encoded_content_list = [content_0, content_1, ..., content_n]
@@ -261,16 +283,14 @@ Similarly, we define a `logdistance` function identically to the Discovery v5 ne
 logdistance(a: uint256, b: uint256) = log2(distance(a, b))
 ```
 
-
 ### Test Vectors
 
-A collection of test vectors for this specification can be found in the
-[Portal wire test vectors](./portal-wire-test-vectors.md) document.
+A collection of test vectors for this specification can be found in the [Portal wire test vectors](./portal-wire-test-vectors.md) document.
 
 
 ## Routing Table
 
-Most networks that use the Portal Wire Protocol will form an independent DHT which requires individual nodes to maintain a routing table.
+Sub-networks that use the Portal Wire Protocol will form an independent overlay DHT which requires nodes to maintain a separate routing table from the one used in the base Discv5 protocol.
 
 ### Standard Routing Table
 
