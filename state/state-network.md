@@ -6,11 +6,11 @@ This document is the specification for the sub-protocol that supports on-demand 
 
 The execution state network is a [Kademlia](https://pdos.csail.mit.edu/~petar/papers/maymounkov-kademlia-lncs.pdf) DHT that uses the [Portal Wire Protocol](./portal-wire-protocol.md) to establish an overlay network on top of the [Discovery v5](https://github.com/ethereum/devp2p/blob/master/discv5/discv5-wire.md) protocol.
 
-State data from the execution chain consists of all account data from the main storage trie, all contract storage data from all of the individual contract storage tries, and the individul bytecodes for all contracts across all historical state roots.  This is traditionally referred to as an "archive node".
+State data from the execution chain consists of all account data from the main storage trie, all contract storage data from all of the individual contract storage tries, and the individual bytecodes for all contracts across all historical state roots.  This is traditionally referred to as an "archive node".
 
 ### Data
 
-The network stores the full execution layer state which emcompases the following:
+The network stores the full execution layer state which encompasses the following:
 
 - Account trie nodes
 - Contract storage trie nodes
@@ -209,7 +209,7 @@ content_for_retrieval := Container(node: TrieNode)
 These data types represent a node from an individual contract storage trie.
 
 ```
-storage_trie_node_key  := Container(address: Address, path: Nibbles, node_hash: Bytes32)
+storage_trie_node_key  := Container(address_hash: keccak(Address), path: Nibbles, node_hash: Bytes32)
 selector               := 0x21
 
 content_key            := selector + SSZ.serialize(storage_trie_node_key)
@@ -226,7 +226,7 @@ This type MUST be used when content offered via OFFER/ACCEPT.
 content_for_offer      := Container(storage_proof: TrieProof, account_proof: TrieProof, block_hash: Bytes32)
 ```
 
-The `account_proof` field MUST contain the proof for the account state specified by the `address`
+The `account_proof` field MUST contain the proof for the account state specified by the `address_hash`
 field in the key and it MUST be anchored to the block specified by the `block_hash` field.
 
 The `storage_proof` field MUST contain the proof for the trie node whose position in the trie and
@@ -245,11 +245,11 @@ content_for_retrieval  := Container(node: TrieNode)
 
 These data types represent the bytecode for a contract.
 
-> NOTE: Because CREATE2 opcode allows for redeployment of new code at an existing address, we MUST randomly distribute contract code storage across the DHT keyspace to avoid hotspots developing in the network for any contract that has had many different code deployments.  Were we to use the path based *high-bits* approach for computing the content-id, it would be possible for a single location in the network to accumulate a large number of contract code objects that all live in roughly the same space.
+> NOTE: Because CREATE2 opcode allows for redeployment of new code at an existing address_hash, we MUST randomly distribute contract code storage across the DHT keyspace to avoid hotspots developing in the network for any contract that has had many different code deployments.  Were we to use the path based *high-bits* approach for computing the content-id, it would be possible for a single location in the network to accumulate a large number of contract code objects that all live in roughly the same space.
 Problematic!
 
 ```
-contract_code_key      := Container(address: Address, code_hash: Bytes32)
+contract_code_key      := Container(address_hash: keccak(Address), code_hash: Bytes32)
 selector               := 0x22
 
 content_key            := selector + SSZ.serialize(contract_code_key)
@@ -263,7 +263,7 @@ This types MUST be used when content offered via OFFER/ACCEPT.
 content_for_offer      := Container(code: ByteList(32768), account_proof: TrieProof, block_hash: Bytes32)
 ```
 
-The `account_proof` field MUST contain the proof for the account state specified by the `address`
+The `account_proof` field MUST contain the proof for the account state specified by the `address_hash`
 field in the key and it MUST be anchored to the block specified by the `block_hash` field.
 
 ##### Contract Code: FINDCONTENT/FOUNDCONTENT
