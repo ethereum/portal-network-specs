@@ -131,7 +131,7 @@ Examples:
 
 ##### Address Hash
 
-An address hash is a sha256 of an Ethereum Address
+An address hash is calculated using `keccak` of the Ethereum Address
 
 ```
 AddressHash := Bytes32
