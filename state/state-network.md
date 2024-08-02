@@ -129,6 +129,14 @@ Examples:
 [1, 2, a, b, c] -> [0x11, 0x2a, 0xbc]
 ```
 
+##### Address Hash
+
+An address hash is a sha256 of an Ethereum Address
+
+```
+AddressHash := Bytes32
+```
+
 ##### Merkle Patricia Trie (MPT) Proofs
 
 Merkle Patricia Trie (MPT) proofs consist of a list of `TrieNode` objects that correspond to
@@ -209,7 +217,7 @@ content_for_retrieval := Container(node: TrieNode)
 These data types represent a node from an individual contract storage trie.
 
 ```
-storage_trie_node_key  := Container(address_hash: keccak(Address), path: Nibbles, node_hash: Bytes32)
+storage_trie_node_key  := Container(address_hash: AddressHash, path: Nibbles, node_hash: Bytes32)
 selector               := 0x21
 
 content_key            := selector + SSZ.serialize(storage_trie_node_key)
@@ -249,7 +257,7 @@ These data types represent the bytecode for a contract.
 Problematic!
 
 ```
-contract_code_key      := Container(address_hash: keccak(Address), code_hash: Bytes32)
+contract_code_key      := Container(address_hash: AddressHash, code_hash: Bytes32)
 selector               := 0x22
 
 content_key            := selector + SSZ.serialize(contract_code_key)
