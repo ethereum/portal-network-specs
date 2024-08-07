@@ -3,6 +3,8 @@
 This document is the specification for the sub-protocol that supports on-demand availability of Verkle state data from the execution chain. Verkle trie is the upcoming structure for storing Ethereum state. See [EIP-6800](https://eips.ethereum.org/EIPS/eip-6800) for mode details.
 
 > 🚧 THE SPEC IS IN A STATE OF FLUX AND SHOULD BE CONSIDERED UNSTABLE 🚧
+>
+> The prototype implementation of core types can be found [here](https://github.com/morph-dev/portal-verkle-primitives/tree/53193cdf2d57c3f5372a578a21c4d99395d6579d).
 
 ## Overview
 
@@ -19,14 +21,15 @@ To represent the trie node, the Verkle Trie uses Pedersen Commitment, which is c
 $$C = Commit(a_0, a_1, ..., a_{255}) = a_0B_0 + a_1B_1 + ... + a_{255}B_{255}$$
 
 where:
+
 - $B_i$ is basis of the Pedersen commitment
-    - already fixed Elliptic curve points on Banderwagon (a prime order subgroup over [Bandersnatch](https://ethresear.ch/t/introducing-bandersnatch-a-fast-elliptic-curve-built-over-the-bls12-381-scalar-field/9957)) curve.
+  - already fixed Elliptic curve points on Banderwagon (a prime order subgroup over [Bandersnatch](https://ethresear.ch/t/introducing-bandersnatch-a-fast-elliptic-curve-built-over-the-bls12-381-scalar-field/9957)) curve.
 - $a_i$ are values we are committing to
-    - value from elliptic curve's scalar field $F_r$ (maximum value is less than $2^{253}$)
+  - value from elliptic curve's scalar field $F_r$ (maximum value is less than $2^{253}$)
 - $C$ is the commitment of $a_i$ values, which on its own is a point on the elliptic curve
-    - in order to commit to another commitment, we map commitment $C$ to the scalar field $F_r$ and we call that **Pedersen Hash** or **hash commitment**
-    - these two values are frequently used interchangeably, but they are not one-to-one mapping
-    - in this document, we will use $C$ to indicate commitment expressed as elliptic point, and $c$ when it's mapped to scalar field (hash commitment)
+  - in order to commit to another commitment, we map commitment $C$ to the scalar field $F_r$ and we call that **Pedersen Hash** or **hash commitment**
+  - these two values are frequently used interchangeably, but they are not one-to-one mapping
+  - in this document, we will use $C$ to indicate commitment expressed as elliptic point, and $c$ when it's mapped to scalar field (hash commitment)
 
 #### Trie Node
 
@@ -78,9 +81,8 @@ where:
 - $marker$ - currently only value $1$ is used
 - $stem$ - the path from the root of the trie (31 bytes)
 - $v_i^{low+access}$ - the lower 16 bytes of the value $v_i$ plus $2^{128}$ if value is modified
-    - note that if value is not modified, it will be equal to $0$
+  - note that if value is not modified, it will be equal to $0$
 - $v_i^{high}$ - the higher 16 bytes of the value $v_i$
-
 
 For optimization reasons, Portal Network splits leaf node into 2-layer mini network in the following way:
 
@@ -116,7 +118,6 @@ $$
 C = marker \cdot B_0 + stem \cdot B_1 + c_1B_2 + c_2B_3
 $$
 
-
 ## Specification
 
 ### Protocol Identifier
@@ -125,74 +126,96 @@ As specified in the [Protocol identifiers](./../portal-wire-protocol.md#protocol
 
 ### Helper Data Types
 
-#### Path and Stem
+#### Stem
 
-The Path represents the trie path from the root to the branch node. The Stem represents the first 31 bytes of the Verkle Trie key.
+The Stem represents the first 31 bytes of the Verkle Trie key.
 
-```
-Path := List[uint8; 30]
+```text
 Stem := Bytes31
 ```
+
+#### Children
+
+All nodes store up to 16 children. The `type` of children can be different, but in all cases they have fixed encoding length (32 bytes).
+
+```text
+Children[type]  := SparseVector[type; 16]
+```
+
+The encoding of the `SparseVector` is the following:
+
+- 2 bytes representing the bitmap of the present children (little-endian encoding)
+- encoding of each present child
+  - note that each child has fixed length encoding (32 bytes)
+
+Note that the count of set bits inside `bitmap` field MUST be equal to the number of encoded `children`. The order of the children is from the lowest to the highest set bit.
 
 #### Commitment
 
 Both elliptic curve point (commitment) and scalar field value (hash commitment) can be encoded using 32 bytes. We will define them separately in order to be explicit.
 
-```
+```text
 EllipticCurvePoint := Bytes32
 ScalarFieldValue   := Bytes32
-```
-
-#### Bundle Commitment Proof
-
-**⚠️ This section needs more reserach and detailed specifiction. ⚠️**
-
-In order to prevent bad actors from creating false data for the `bundle` nodes of the mini tries, we have to create and include proof that fragment commitments are correct. The exact proof schema is being researched.
-
-```
-BundleProof := Bytes1024
 ```
 
 #### Trie Proof
 
 Using IPA and Multiproof, the same proving scheme that Verkle uses, we can prove that any node or value is included in a trie in a memory efficient way.
 
-**⚠️ This section needs detailed specifiction. ⚠️**
+Additional data is usually needed in order to verify the proof. Such data depends on the context and will be extractable from other fields within content key/value.
 
-Exact details of the specification are up to be decided. We provide only temporary types (based on execution witness from the verkle devnet).
-
-```
-IpaProof         := Container(
-                        cl: Vector[EllipticCurvePoint; 8],
-                        cr: Vector[EllipticCurvePoint; 8],
-                        final_evaluation: ScalarFieldValue,
-                    )
-MultiPointProof  := Container(
-                        open_proof: IpaProof,
-                        g_x: EllipticCurvePoint,
-                    )
-
-TrieProof        := Container(
-                        commitments_by_path: List[EllipticCurvePoint; 32],
-                        multiproof: MultiPointProof,
-                    )
+```text
+MultiProof := Container(
+                  ipa_proof: IpaProof,
+                  g_commitment: EllipticCurvePoint,
+              )
+IpaProof   := Container(
+                  cl: Vector[EllipticCurvePoint; 8],
+                  cr: Vector[EllipticCurvePoint; 8],
+                  final_evaluation: ScalarFieldValue,
+              )
 ```
 
-#### Children
+#### Trie path commitments
 
-All our nodes store up to 16 children. We encode bitmap of present children, and then the children themself.
+Verification of proofs require trie path from the root, along with commitments of branch nodes along the way.
 
+For branch nodes, we combine node commitment and child index.
+
+```text
+PathWithCommitments      := List(CommitmentChildIndexPair; 30)
+CommitmentChildIndexPair := Container(
+                                commitment: EllipticCurvePoint,
+                                child_index: u8,
+                            )
 ```
-Children[type]  := Container(bitmap: Bitvector(16), children: List[type; 16])
+
+For leaf nodes, we only need commitments along the trie path. The path itself can be derive from the stem, that is provided separately.
+
+```text
+PathCommitments          := List(EllipticCurvePoint, 31)
 ```
 
-Note that the count of set bits inside `bitmap` field MUST be equal to the length of the `children` field. The order of the children is from the lowest to the highest set bit.
+#### Bundle Commitment Proof
+
+| **⚠️ This section needs more research. ⚠️**
+
+In order to prevent bad actors from creating false data for the `bundle` nodes of the mini tries, we have to create and include proof that fragment commitments are correct.
+
+The simplest approach is to use `MultiProof`, but it might not be the most efficient approach and more research is needed in this regard.
+
+```text
+BundleProof := MultiProof
+```
+
+To verify the proof, one has to create openings for each fragment commitments at indices that **don't** correspond to that fragment and prove that values are `0`.
 
 #### Trie node
 
 Each trie node has a different type and different proof.
 
-```
+```text
 BranchBundleNode             := Container(
                                     fragments: Children[EllipticCurvePoint],
                                     proof: BundleProof,
@@ -200,8 +223,8 @@ BranchBundleNode             := Container(
 BranchBundleNodeWithProof    := Container(
                                     node: BranchBundleNode,
                                     block_hash: Bytes32,
-                                    path: Path,
-                                    proof: Union[None, TrieProof],
+                                    trie_path: PathWithCommitments,
+                                    multiproof: MultiProof,
                                 )
 
 BranchFragmentNode           := Container(
@@ -211,12 +234,13 @@ BranchFragmentNode           := Container(
 BranchFragmentNodeWithProof  := Container(
                                     node: BranchFragmentNode,
                                     block_hash: Bytes32,
-                                    path: Path,
-                                    proof: Union[None, TrieProof],
+                                    bundle_commitment: EllipticCurvePoint,
+                                    trie_path: PathWithCommitments,
+                                    multiproof: MultiProof,
                                 )                               
 
 LeafBundleNode               := Container(
-                                    marker: uint32,
+                                    marker: uint64,
                                     stem: Stem,
                                     fragments: Children[EllipticCurvePoint],
                                     proof: BundleProof,
@@ -224,21 +248,24 @@ LeafBundleNode               := Container(
 LeafBundleNodeWithProof      := Container(
                                     node: LeafBundleNode,
                                     block_hash: Bytes32,
-                                    proof: TrieProof,
+                                    trie_path: PathCommitments,
+                                    multiproof: MultiProof,
                                 )
 
 LeafFragmentNode             := Container(
                                     fragment_index: uint8,
                                     values: Children[Bytes32],
                                 )
-LeafFragmentNodeWithProof      := Container(
+LeafFragmentNodeWithProof    := Container(
                                     node: LeafFragmentNode,
                                     block_hash: Bytes32,
-                                    proof: TrieProof,
+                                    marker: uint64,
+                                    bundle_commitment: EllipticCurvePoint,
+                                    suffix_commitment: EllipticCurvePoint,
+                                    trie_path: PathCommitments,
+                                    multiproof: MultiProof,
                                 )
 ```
-
-It's worth noting that `proof` is `None` for the branch-bundle and branch-fragments that correspond to the root of the trie (in which case `path` is empty as well).
 
 ### Content types
 
@@ -250,7 +277,7 @@ The branch-fragment key has to be different from the branch-bundle key, because 
 
 The leaf-fragment key should include the `stem`, in order to avoid hot-spots. Others keys don't have to worry about hot-spots because they are build on top of leaf-bundle nodes that already includes `stem` in its commitment (effectively guaranteeing the uniqueness).
 
-```
+```text
 bundle_node_key              := EllipticCurvePoint
 bundle_content_key           := 0x30 + SSZ.serialize(bundle_node_key)
 
@@ -263,25 +290,26 @@ leaf_fragment_content_key    := 0x32 + SSZ.serialize(leaf_fragment_node_key)
 
 #### Content values
 
-The OFFER/ACCEPT payloads need to be provable by their recipients, while FINDCONTENT/FOUNDCONTENT payloads have to be verifiable that they match the commitment that identifies them.
+```text
+VerkleNode           := Union(
+                            BranchBundleNode,
+                            BranchFragmentNode,
+                            LeafBundleNode,
+                            LeafFragmentNode,
+                        )
+VerkleNodeWithProof  := Union(
+                            BranchBundleNodeWithProof,
+                            BranchFragmentNodeWithProof,
+                            LeafBundleNodeWithProof,
+                            LeafFragmentNodeWithProof,
+                        )
 
-The content value has to correspond to the content-key.
-
+content_value := Union(VerkleNode, VerkleNodeWithProof)
 ```
-content_value_for_offer      := Union(
-                                    BranchBundleNodeWithProof,
-                                    BranchFragmentNodeWithProof,
-                                    LeafBundleNodeWithProof,
-                                    LeafFragmentNodeWithProof,
-                                )
 
-content_value_for_retrieval  := Union(
-                                    BranchBundleNode,
-                                    BranchFragmentNode,
-                                    LeafBundleNode,
-                                    LeafFragmentNode,
-                                )
-```
+The FINDCONTENT/FOUNDCONTENT payloads have to be verifiable that they match the commitment that identifies them, while the OFFER/ACCEPT payloads need to be provable by their recipients. For this reason, the FINDCONTENT/FOUNDCONTENT payloads MUST use `VerkleNode` variant, while the OFFER/ACCEPT payloads MUST use `VerkleNodeWithProof` variant.
+
+The content-value has to correspond to the content-key.
 
 ## Gossip
 
