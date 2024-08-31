@@ -198,7 +198,7 @@ Each bucket is limited to `K` total members
 
 ### D.3.d - Replacement cache
 
-Each bucket maintains a set of additional nodes known to be at the appropriate distance.  When a node is removed from the routing table it is replaced by a node from the replacement cache when one is available. The cache is managed such that it remains disjoint from the nodes in the corresponding bucket.
+Each bucket maintains a set of additional nodes known to be at the appropriate distance. When a node is removed from the routing table it is replaced by a node from the replacement cache when one is available. The cache is managed such that it remains disjoint from the nodes in the corresponding bucket.
 
 ## D.4 - Retrieve nodes at specified log-distance
 
@@ -218,7 +218,7 @@ The client uses a set of bootnodes to acquire an initial view of the network.
 
 ### E.1.a - Bootnodes
 
-Each supported sub protocol can have its own set of bootnodes.  These records can be either hard coded into the client or provided via client configuration.
+Each supported sub protocol can have its own set of bootnodes. These records can be either hard coded into the client or provided via client configuration.
 
 ## E.2 - Population of routing table
 
@@ -226,7 +226,7 @@ The client actively seeks to populate its routing table by performing [RFN](#TOD
 
 ## E.3 - Liveliness checks
 
-The client tracks *liveliness* of nodes in its routing table and periodically checks the liveliness of the node in its routing table which was least recently checked.
+The client tracks _liveliness_ of nodes in its routing table and periodically checks the liveliness of the node in its routing table which was least recently checked.
 
 ### E.3.a - Rate Limiting Liviliness Checks
 
@@ -238,7 +238,7 @@ Management of stored content.
 
 ## F.1 - Content can be stored
 
-Content can be stored in a persistent database.  Databases are segmented by sub protocol.
+Content can be stored in a persistent database. Databases are segmented by sub protocol.
 
 ## F.2 - Content can be retrieved by `content_id`
 
@@ -248,11 +248,9 @@ Given a known `content_id` the corresponding content payload can be retrieved.
 
 Content can be removed.
 
-
 ## F.4 - Query furthest by distance
 
 Retrieval of the content from the database which is furthest from a provided `node_id` using the custom distance function.
-
 
 ## F.5 - Total size of stored content
 
@@ -274,7 +272,7 @@ The ability to listening for an inbound connection from another node with a `con
 
 ## G.2 - Enforcement of maximum stored content size
 
-When the total size of stored content exceeds the configured maximum content storage size the content which is furthest from the local `node_id` is evicted in a timely manner.  This should also result in any "data radius" values relevant to this network being adjusted.
+When the total size of stored content exceeds the configured maximum content storage size the content which is furthest from the local `node_id` is evicted in a timely manner. This should also result in any "data radius" values relevant to this network being adjusted.
 
 ## G.3 - Retrieval via FINDCONTENT/FOUNDCONTENT & uTP
 
@@ -298,13 +296,13 @@ Support for receipt of content using the OFFER/ACCEPT messages and uTP sub proto
 
 ### G.4.a - Handle incoming gossip
 
-Client can listen for incoming OFFER messages, responding with an ACCEPT message for any offered content which is of interest to the client.  
+Client can listen for incoming OFFER messages, responding with an ACCEPT message for any offered content which is of interest to the client.
 
 #### G.4.a.1 - Receipt via uTP
 
 After sending an ACCEPT response to an OFFER request the client listens for an inbound uTP stream with the `connection-id` that was sent with the ACCEPT response.
 
-### G.4.b - Neighborhood Gossip Propogation
+### G.4.b - Neighborhood Gossip Propagation
 
 Upon receiving and validating gossip content, the content should then be gossiped to some set of interested nearby peers.
 
@@ -312,13 +310,11 @@ Upon receiving and validating gossip content, the content should then be gossipe
 
 Upon receiving an ACCEPT message in response to our own OFFER message the client can initiate a uTP stream with the other node and can send the content payload across the stream.
 
-
 ## G.5 - Serving Content
 
 The client should listen for FINDCONTENT messages.
 
 When a FINDCONTENT message is received either the requested content or the nodes known to be closest to the content are returned via a FOUNDCONTENT message.
-
 
 # H - JSON-RPC
 

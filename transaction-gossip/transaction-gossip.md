@@ -12,7 +12,6 @@ The transaction gossip network is designed with the following requirements.
 - Under normal network conditions, nodes that are interested in observing the full transaction pool will reliably receive the full set of valid transactions currently being gossiped.
 - Participants are not required to process the full pool and can control the total percentage of the transaction pool they wish to process.
 
-
 ## Wire Protocol
 
 The [Portal wire protocol](./portal-wire-protocol.md) is used as wire protocol for the transaction gossip network.
@@ -20,7 +19,6 @@ The [Portal wire protocol](./portal-wire-protocol.md) is used as wire protocol f
 As specified in the [Protocol identifiers](./portal-wire-protocol.md#protocol-identifiers) section of the Portal wire protocol, the `protocol` field in the `TALKREQ` message **MUST** contain the value of `0x500C`.
 
 The network uses the PING/PONG/FINDNODES/FOUNDNODES/OFFER/ACCEPT messages from the [Portal Wire Protocol](./portal-wire-protocol.md).
-
 
 ### Distance Function
 
@@ -62,7 +60,7 @@ transaction := TODO
 
 Clients in the Transaction Gossip Network are expected to maintain both the standard routing table and a secondary routing table that is anchored to node radius values.
 
-The secondary routing table is subject to all of the same maintenance and management rules as the primary table.  Any node that is added to the secondary routing table must also satisfy the following validity condition:
+The secondary routing table is subject to all of the same maintenance and management rules as the primary table. Any node that is added to the secondary routing table must also satisfy the following validity condition:
 
 ```
 node.transaction_radius >= distance(node.node_id, self.node_id)
@@ -70,14 +68,13 @@ node.transaction_radius >= distance(node.node_id, self.node_id)
 
 The additional validity rule aims to ensure that the table is populated with nodes will have shared interest in mostly the same transactions as us.
 
-
 ## Gossip Algorithm
 
 The gossip mechanism for transactions is designed to allow DHT nodes to control what percentage of the transaction pool they wish to process.
 
 ### Radius
 
-We use the term "radius" to refer to the mechanism through which a node may limit how much of the transaction pool they wish to process.  The `radius` is a 256 bit integer.  
+We use the term "radius" to refer to the mechanism through which a node may limit how much of the transaction pool they wish to process. The `radius` is a 256 bit integer.
 
 A DHT node that wishes to process the full transaction pool would publis a radius value of `2**256-1`. We refer to such a DHT node as a "full radius node".
 
@@ -85,15 +82,13 @@ A DHT node is expected to process transactions that satisfy the condition: `dist
 
 Each DHT node includes their current `radius` value in both PING and PONG messages.
 
-
 ### Validation
 
 DHT nodes **should** drop transactions which do not pass the following validation rules
 
-
 #### 2. Proof valid
 
-The proof must be valid and against a *recent* state root. Individual implementations may choose the boundary for which a proof is considered stale.
+The proof must be valid and against a _recent_ state root. Individual implementations may choose the boundary for which a proof is considered stale.
 
 > TODO: 8 blocks seems like a good simple starting point
 
@@ -111,7 +106,6 @@ A DHT node should only be offer'd a transaction that is inside of its radius.
 A DHT node should OFFER transactions to all of the DHT nodes present in their secondary routing table (skipping any nodes for whom the transaction is outside of their radius).
 
 A DHT node should only OFFER any individual transaction to a DHT node once.
-
 
 ### Proof Updating
 

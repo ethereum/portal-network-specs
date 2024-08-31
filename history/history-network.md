@@ -16,9 +16,9 @@ In addition, the chain history network provides individual epoch records for the
 
 - Block headers
 - Block bodies
-    - Transactions
-    - Ommers
-    - Withdrawals
+  - Transactions
+  - Ommers
+  - Withdrawals
 - Receipts
 - Header epoch records (pre-merge only)
 
@@ -31,7 +31,7 @@ The network supports the following mechanisms for data retrieval:
 - Block receipts by block header hash
 - Header epoch record by epoch record hash
 
-> The presence of the pre-merge header records provides an indirect way to lookup blocks by their number, but is restricted to pre-merge blocks.  Retrieval of blocks by their number for post-merge blocks is not intrinsically supported within this network. 
+> The presence of the pre-merge header records provides an indirect way to lookup blocks by their number, but is restricted to pre-merge blocks. Retrieval of blocks by their number for post-merge blocks is not intrinsically supported within this network.
 >
 > This sub-protocol does **not** support retrieval of transactions by hash, only the full set of transactions for a given block. See the "Canonical Transaction Index" sub-protocol of the Portal Network for more information on how the portal network implements lookup of transactions by their individual hashes.
 
@@ -79,7 +79,7 @@ The history network uses the standard routing table structure from the Portal Wi
 
 #### Data Radius
 
-The history network includes one additional piece of node state that should be tracked.  Nodes must track the `data_radius` from the Ping and Pong messages for other nodes in the network.  This value is a 256 bit integer and represents the data that a node is "interested" in.  We define the following function to determine whether node in the network should be interested in a piece of content.
+The history network includes one additional piece of node state that should be tracked. Nodes must track the `data_radius` from the Ping and Pong messages for other nodes in the network. This value is a 256 bit integer and represents the data that a node is "interested" in. We define the following function to determine whether node in the network should be interested in a piece of content.
 
 ```python
 interested(node, content) = distance(node.id, content.id) <= node.radius
@@ -112,7 +112,7 @@ MAX_RECEIPT_LENGTH = 2**27  # ~= 134 million
 # Maximum receipt length is logging a bunch of data out, currently at a cost of
 # 8 gas per byte. Since that is double the cost of 0 calldata bytes, the
 # maximum size is roughly half that of the transaction: 3.75 million bytes.
-# But there is more reason for protocol devs to constrain the transaction length,
+# But there is more reason for protocol developers to constrain the transaction length,
 # and it's not clear what the practical limits for receipts are, so we should add more buffer room.
 # Imagine the cost drops by 2x and the block gas limit goes up by 8x. So we add 2**4 = 16x buffer.
 
@@ -181,10 +181,10 @@ content_key      = selector + SSZ.serialize(block_header_key)
 ```
 
 > **_Note:_** The `BlockHeaderProof` allows to provide headers without a proof (`None`).
-For pre-merge headers, clients SHOULD NOT accept headers without a proof
-as there is the `HistoricalHashesAccumulatorProof` solution available.
-For post-merge headers, there is currently no proof solution and clients MAY
-accept headers without a proof.
+> For pre-merge headers, clients SHOULD NOT accept headers without a proof
+> as there is the `HistoricalHashesAccumulatorProof` solution available.
+> For post-merge headers, there is currently no proof solution and clients MAY
+> accept headers without a proof.
 
 #### Block Body
 
@@ -276,7 +276,7 @@ content_key           = selector + SSZ.serialize(epoch_record_key)
 
 #### The "Historical Hashes Accumulator"
 
-The "Historical Hashes Accumulator" is based on the [double-batched merkle log accumulator](https://ethresear.ch/t/double-batched-merkle-log-accumulator/571) that is currently used in the beacon chain.  This data structure is designed to allow nodes in the network to "forget" the deeper history of the chain, while still being able to reliably receive historical headers with a proof that the received header is indeed from the canonical chain (as opposed to an uncle mined at the same block height).  This data structure is only used for pre-merge blocks.
+The "Historical Hashes Accumulator" is based on the [double-batched merkle log accumulator](https://ethresear.ch/t/double-batched-merkle-log-accumulator/571) that is currently used in the beacon chain. This data structure is designed to allow nodes in the network to "forget" the deeper history of the chain, while still being able to reliably receive historical headers with a proof that the received header is indeed from the canonical chain (as opposed to an uncle mined at the same block height). This data structure is only used for pre-merge blocks.
 
 The accumulator is defined as an [SSZ](https://ssz.dev/) data structure with the following schema:
 
@@ -297,7 +297,6 @@ HistoricalHashesAccumulator = Container[
 ```
 
 The algorithm for building the accumulator is as follows.
-
 
 ```python
 def update_accumulator(accumulator: HistoricalHashesAccumulator, new_block_header: BlockHeader) -> None:
@@ -322,9 +321,8 @@ def update_accumulator(accumulator: HistoricalHashesAccumulator, new_block_heade
     accumulator.current_epoch.append(header_record)
 ```
 
-
 The `HistoricalHashesAccumulator` is fully build and frozen when the last block before TheMerge/Paris fork is added and the last incomplete `EpochRecord` its `hash_tree_root` is added to the `historical_epochs`.
-The network provides no mechanism for acquiring the fully build `HistoricalHashesAccumulator`.  Clients are encouraged to solve this however they choose, with the suggestion that they include a frozen copy of the accumulator at the point of TheMerge within their client code, and provide a mechanism for users to override this value if they so choose. The `hash_tree_root` of the `HistoricalHashesAccumulator` is
+The network provides no mechanism for acquiring the fully build `HistoricalHashesAccumulator`. Clients are encouraged to solve this however they choose, with the suggestion that they include a frozen copy of the accumulator at the point of TheMerge within their client code, and provide a mechanism for users to override this value if they so choose. The `hash_tree_root` of the `HistoricalHashesAccumulator` is
 defined in [EIP-7643](https://github.com/ethereum/EIPs/blob/master/EIPS/eip-7643.md).
 
 #### HistoricalHashesAccumulatorProof
