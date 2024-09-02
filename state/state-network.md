@@ -247,7 +247,7 @@ content_for_retrieval  := Container(node: TrieNode)
 
 These data types represent the bytecode for a contract.
 
-> NOTE: Because CREATE2 opcode allows for redeployment of new code at an existing address*hash, we MUST randomly distribute contract code storage across the DHT keyspace to avoid hotspots developing in the network for any contract that has had many different code deployments. Were we to use the path based \_high-bits* approach for computing the content-id, it would be possible for a single location in the network to accumulate a large number of contract code objects that all live in roughly the same space.
+> NOTE: Because CREATE2 opcode allows for redeployment of new code at an existing address_hash, we MUST randomly distribute contract code storage across the DHT keyspace to avoid hotspots developing in the network for any contract that has had many different code deployments. Were we to use the path based _high-bits_ approach for computing the content-id, it would be possible for a single location in the network to accumulate a large number of contract code objects that all live in roughly the same space.
 > Problematic!
 
 ```
