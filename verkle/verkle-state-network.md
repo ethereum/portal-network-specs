@@ -19,14 +19,15 @@ To represent the trie node, the Verkle Trie uses Pedersen Commitment, which is c
 $$C = Commit(a_0, a_1, ..., a_{255}) = a_0B_0 + a_1B_1 + ... + a_{255}B_{255}$$
 
 where:
+
 - $B_i$ is basis of the Pedersen commitment
-    - already fixed Elliptic curve points on Banderwagon (a prime order subgroup over [Bandersnatch](https://ethresear.ch/t/introducing-bandersnatch-a-fast-elliptic-curve-built-over-the-bls12-381-scalar-field/9957)) curve.
+  - already fixed Elliptic curve points on Banderwagon (a prime order subgroup over [Bandersnatch](https://ethresear.ch/t/introducing-bandersnatch-a-fast-elliptic-curve-built-over-the-bls12-381-scalar-field/9957)) curve.
 - $a_i$ are values we are committing to
-    - value from elliptic curve's scalar field $F_r$ (maximum value is less than $2^{253}$)
+  - value from elliptic curve's scalar field $F_r$ (maximum value is less than $2^{253}$)
 - $C$ is the commitment of $a_i$ values, which on its own is a point on the elliptic curve
-    - in order to commit to another commitment, we map commitment $C$ to the scalar field $F_r$ and we call that **Pedersen Hash** or **hash commitment**
-    - these two values are frequently used interchangeably, but they are not one-to-one mapping
-    - in this document, we will use $C$ to indicate commitment expressed as elliptic point, and $c$ when it's mapped to scalar field (hash commitment)
+  - in order to commit to another commitment, we map commitment $C$ to the scalar field $F_r$ and we call that **Pedersen Hash** or **hash commitment**
+  - these two values are frequently used interchangeably, but they are not one-to-one mapping
+  - in this document, we will use $C$ to indicate commitment expressed as elliptic point, and $c$ when it's mapped to scalar field (hash commitment)
 
 #### Trie Node
 
@@ -78,9 +79,8 @@ where:
 - $marker$ - currently only value $1$ is used
 - $stem$ - the path from the root of the trie (31 bytes)
 - $v_i^{low+access}$ - the lower 16 bytes of the value $v_i$ plus $2^{128}$ if value is modified
-    - note that if value is not modified, it will be equal to $0$
+  - note that if value is not modified, it will be equal to $0$
 - $v_i^{high}$ - the higher 16 bytes of the value $v_i$
-
 
 For optimization reasons, Portal Network splits leaf node into 2-layer mini network in the following way:
 
@@ -116,7 +116,6 @@ $$
 C = marker \cdot B_0 + stem \cdot B_1 + c_1B_2 + c_2B_3
 $$
 
-
 ## Specification
 
 ### Protocol Identifier
@@ -145,7 +144,7 @@ ScalarFieldValue   := Bytes32
 
 #### Bundle Commitment Proof
 
-**⚠️ This section needs more reserach and detailed specifiction. ⚠️**
+**⚠️ This section needs more reserach and detailed specification. ⚠️**
 
 In order to prevent bad actors from creating false data for the `bundle` nodes of the mini tries, we have to create and include proof that fragment commitments are correct. The exact proof schema is being researched.
 
@@ -213,7 +212,7 @@ BranchFragmentNodeWithProof  := Container(
                                     block_hash: Bytes32,
                                     path: Path,
                                     proof: Union[None, TrieProof],
-                                )                               
+                                )
 
 LeafBundleNode               := Container(
                                     marker: uint32,

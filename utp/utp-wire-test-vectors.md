@@ -10,14 +10,14 @@ uTP specification - https://www.bittorrent.org/beps/bep_0029.html.
 
 Each packet input parameters are - `(PacketHeader, List[Extension], payload)`
 
-Altough spec defines only one extension called - `SelectiveAckExtension`
+Although spec defines only one extension called - `SelectiveAckExtension`
 
 Taking that into account, packet inputs can be simplified to - `(PacketHeader, Option[SelectiveAckExtension], Payload)`
 
 Where:
 `payload` is an `ByteArray`
 
-`PacketHeader` is object with input paramaters - 
+`PacketHeader` is object with input parameters -
 `(type, version, extension, connection_id, timestamp_microseconds, timestamp_difference_microseconds, wnd_size, seq_nr, ack_nr)`
 
 `Option[SelectiveAckExtension]` is either, bitmask of 32bits where each bit represents one packet in the send window
@@ -45,6 +45,7 @@ Payload = []
 ```
 
 #### Expected Output
+
 ```
 packet = 0x41002741c9b699ba00000000001000002e6c0000
 ```
@@ -71,10 +72,10 @@ Payload = []
 ```
 
 #### Expected Output
+
 ```
 packet = 0x21002741005e885e36a7e8830010000041a72e6d
 ```
-
 
 ### Ack Packet (with selective ack extension)
 
@@ -98,10 +99,10 @@ Payload = []
 ```
 
 #### Expected Output
+
 ```
 packet = 0x21012741005e885e36a7e8830010000041a72e6d000401000080
 ```
-
 
 ### DATA Packet
 
@@ -125,10 +126,10 @@ Payload = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9]
 ```
 
 #### Expected Output
+
 ```
 packet = 0x0100667d0f0cbacf0e710cbf00100000208e41a600010203040506070809
 ```
-
 
 ### FIN Packet
 
@@ -152,10 +153,10 @@ Payload = []
 ```
 
 #### Expected Output
+
 ```
 packet = 0x11004a3b1eb5be8f1e7c94d100100000a05a41a6
 ```
-
 
 ### RESET Packet
 
@@ -179,7 +180,7 @@ Payload = []
 ```
 
 #### Expected Output
+
 ```
 packet = 0x3100f34d2cc6cfbb0000000000000000d87541a7
 ```
-
