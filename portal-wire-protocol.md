@@ -25,6 +25,7 @@ Currently defined mainnet protocol identifiers:
 - `0x500D`: Execution Canonical Transaction Index Network (planned but not implemented)
 - `0x500E`: Execution Verkle State Network (planned but not implemented)
 - `0x500F`: Execution Transaction Gossip Network (planned but not implemented)
+- `0x5010`: Execution Canonical Block Index Network (planned but not implemented)
 
 ### Angelfood identifiers (testnet)
 
@@ -37,7 +38,7 @@ Currently defined `angelfood` protocol identifiers:
 - `0x504C`: Beacon Chain Network
 - `0x504D`: Execution Canonical Transaction Index Network (planned but not implemented)
 - `0x504E`: Execution Verkle State Network (planned but not implemented)
-- `0x504F`: Execution Transaction Gossip Network (planned but not implemented)
+- `0x5050`: Execution Canonical Block Index Network (planned but not implemented)
 
 ## Nodes and Node IDs
 
