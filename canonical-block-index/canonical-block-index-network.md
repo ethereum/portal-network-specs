@@ -4,11 +4,9 @@ This document is the specification for the sub-protocol that supports on-demand 
 
 ## Overview
 
-The chain history network is a [Kademlia](https://pdos.csail.mit.edu/~petar/papers/maymounkov-kademlia-lncs.pdf) DHT that uses the [Portal Wire Protocol](./portal-wire-protocol.md) to establish an overlay network on top of the [Discovery v5](https://github.com/ethereum/devp2p/blob/master/discv5/discv5-wire.md) protocol.
+The canonical block index network is a [Kademlia](https://pdos.csail.mit.edu/~petar/papers/maymounkov-kademlia-lncs.pdf) DHT that uses the [Portal Wire Protocol](./portal-wire-protocol.md) to establish an overlay network on top of the [Discovery v5](https://github.com/ethereum/devp2p/blob/master/discv5/discv5-wire.md) protocol.
 
-Execution chain history data consists of historical block headers, block bodies (transactions, ommers and withdrawals) and block receipts.
-
-In addition, the chain history network provides individual epoch records for the full range of pre-merge blocks mined before the transition to proof of stake.
+Execution chain canonical block index data consists of historical block headers via block number
 
 ### Data
 
@@ -20,7 +18,7 @@ In addition, the chain history network provides individual epoch records for the
 
 The network supports the following mechanisms for data retrieval:
 
-- Block header hash by block header number
+- Block header by block header number
 
 ## Specification
 
@@ -122,6 +120,7 @@ Pro's of Option 1
 - One less step for validation than option 2 which would then require fetching the header from the history network
 - Copy's the validation scheme used in the history network, which inherently validates the block number is valid
 - Has less latency as you don't have to make 2 synchronous requests only 1
+- simpler seeding
 
 Con's of Option 1
 - Requires less then 10GB to store the full index
@@ -131,4 +130,12 @@ Pro's of Option 2
   
 Con's of Option 2
 - Requires a synchronous fetch from the History Network for the block header, which adds a lot of latency
+- seeding requires the header to validate the content key is correct
+
+
+Option 1 was choose due to
+- having lower latency
+- only 9GB more storage required
+- simpler seeding
+
 
