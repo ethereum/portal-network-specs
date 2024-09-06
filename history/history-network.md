@@ -26,9 +26,9 @@ In addition, the chain history network provides block number to historical block
 The network supports the following mechanisms for data retrieval:
 
 - Block header by block header hash
+- Block header by block number
 - Block body by block header hash
 - Block receipts by block header hash
-- Block header by block number
 
 > This sub-protocol does **not** support retrieval of transactions by hash, only the full set of transactions for a given block. See the "Canonical Transaction Index" sub-protocol of the Portal Network for more information on how the portal network implements lookup of transactions by their individual hashes.
 
