@@ -8,7 +8,7 @@ The chain history network is a [Kademlia](https://pdos.csail.mit.edu/~petar/pape
 
 Execution chain history data consists of historical block headers, block bodies (transactions, ommers and withdrawals) and block receipts.
 
-In addition, the chain history network provides block number to historical block header lookups
+In addition, the chain history network provides block number to historical block header lookups.
 
 ### Data
 
@@ -192,7 +192,7 @@ content_key      = selector + SSZ.serialize(block_header_key)
 # Content and content key
 
 block_number_key = Container(block_number: uint64)
-selector         = 0x04
+selector         = 0x03
 
 block_header_with_proof = BlockHeaderWithProof(header: rlp.encode(header), proof: proof)
 
