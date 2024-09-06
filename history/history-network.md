@@ -20,7 +20,6 @@ In addition, the chain history network provides block number to historical block
     - Ommers
     - Withdrawals
 - Receipts
-- Block header indexes
 
 #### Retrieval
 
@@ -166,6 +165,14 @@ BlockHeaderWithProof = Container(
 )
 ```
 
+> **_Note:_** The `BlockHeaderProof` allows to provide headers without a proof (`None`).
+For pre-merge headers, clients SHOULD NOT accept headers without a proof
+as there is the `HistoricalHashesAccumulatorProof` solution available.
+For post-merge headers, there is currently no proof solution and clients MAY
+accept headers without a proof.
+
+##### Block Header by Hash
+
 ```python
 # Content and content key
 
@@ -178,11 +185,20 @@ content          = SSZ.serialize(block_header_with_proof)
 content_key      = selector + SSZ.serialize(block_header_key)
 ```
 
-> **_Note:_** The `BlockHeaderProof` allows to provide headers without a proof (`None`).
-For pre-merge headers, clients SHOULD NOT accept headers without a proof
-as there is the `HistoricalHashesAccumulatorProof` solution available.
-For post-merge headers, there is currently no proof solution and clients MAY
-accept headers without a proof.
+##### Block Header by Number
+
+
+```python
+# Content and content key
+
+block_number_key = Container(block_number: uint64)
+selector         = 0x04
+
+block_header_with_proof = BlockHeaderWithProof(header: rlp.encode(header), proof: proof)
+
+content          = SSZ.serialize(block_header_with_proof)
+content_key      = selector + SSZ.serialize(block_number_key)
+```
 
 #### Block Body
 
@@ -258,27 +274,6 @@ content_key         = selector + SSZ.serialize(receipt_key)
 ```
 
 Note: The type-specific receipts encoding might be different for future receipt types, but this content encoding is agnostic to the underlying receipt encodings.
-
-#### Block Header Indexes
-
-
-```python
-# Content and content key
-
-block_number_key = Container(block_number: uint64)
-selector         = 0x04
-
-block_header_with_proof = BlockHeaderWithProof(header: rlp.encode(header), proof: proof)
-
-content          = SSZ.serialize(block_header_with_proof)
-content_key      = selector + SSZ.serialize(block_number_key)
-```
-
-> **_Note:_** The `BlockHeaderProof` allows to provide headers without a proof (`None`).
-For pre-merge headers, clients SHOULD NOT accept headers without a proof
-as there is the `HistoricalHashesAccumulatorProof` solution available.
-For post-merge headers, there is currently no proof solution and clients MAY
-accept headers without a proof.
 
 ### Algorithms
 
