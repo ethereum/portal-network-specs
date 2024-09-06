@@ -8,7 +8,7 @@ The chain history network is a [Kademlia](https://pdos.csail.mit.edu/~petar/pape
 
 Execution chain history data consists of historical block headers, block bodies (transactions, ommers and withdrawals) and block receipts.
 
-In addition, the chain history network provides individual epoch records for the full range of pre-merge blocks mined before the transition to proof of stake.
+In addition, the chain history network provides block number to historical block header lookups
 
 ### Data
 
@@ -20,7 +20,7 @@ In addition, the chain history network provides individual epoch records for the
     - Ommers
     - Withdrawals
 - Receipts
-- Header epoch records (pre-merge only)
+- Block header indexes
 
 #### Retrieval
 
@@ -29,10 +29,8 @@ The network supports the following mechanisms for data retrieval:
 - Block header by block header hash
 - Block body by block header hash
 - Block receipts by block header hash
-- Header epoch record by epoch record hash
+- Block header by block number
 
-> The presence of the pre-merge header records provides an indirect way to lookup blocks by their number, but is restricted to pre-merge blocks.  Retrieval of blocks by their number for post-merge blocks is not intrinsically supported within this network. 
->
 > This sub-protocol does **not** support retrieval of transactions by hash, only the full set of transactions for a given block. See the "Canonical Transaction Index" sub-protocol of the Portal Network for more information on how the portal network implements lookup of transactions by their individual hashes.
 
 ## Specification
@@ -174,7 +172,7 @@ BlockHeaderWithProof = Container(
 block_header_key = Container(block_hash: Bytes32)
 selector         = 0x00
 
-block_header_with_proof = BlockHeaderWithProof(header: rlp.encode(header)), proof: proof)
+block_header_with_proof = BlockHeaderWithProof(header: rlp.encode(header), proof: proof)
 
 content          = SSZ.serialize(block_header_with_proof)
 content_key      = selector + SSZ.serialize(block_header_key)
@@ -261,16 +259,26 @@ content_key         = selector + SSZ.serialize(receipt_key)
 
 Note: The type-specific receipts encoding might be different for future receipt types, but this content encoding is agnostic to the underlying receipt encodings.
 
-#### Epoch Record
+#### Block Header Indexes
+
 
 ```python
-epoch_record_key = Container(epoch_hash: Bytes32)
-selector              = 0x03
-epoch_hash            = hash_tree_root(epoch_record)
+# Content and content key
 
-content               = SSZ.serialize(epoch_record)
-content_key           = selector + SSZ.serialize(epoch_record_key)
+block_number_key = Container(block_number: uint64)
+selector         = 0x04
+
+block_header_with_proof = BlockHeaderWithProof(header: rlp.encode(header), proof: proof)
+
+content          = SSZ.serialize(block_header_with_proof)
+content_key      = selector + SSZ.serialize(block_number_key)
 ```
+
+> **_Note:_** The `BlockHeaderProof` allows to provide headers without a proof (`None`).
+For pre-merge headers, clients SHOULD NOT accept headers without a proof
+as there is the `HistoricalHashesAccumulatorProof` solution available.
+For post-merge headers, there is currently no proof solution and clients MAY
+accept headers without a proof.
 
 ### Algorithms
 
