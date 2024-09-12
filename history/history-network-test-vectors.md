@@ -72,7 +72,7 @@ Includes both a pre and post Shapella upgrade test vector.
 Following the testing of the encoding and decoding of the keys, we also test the proper derivation
 of the corresponding `content-id`. This is given as both the hex string and corresponding raw U256 integer.
 
-#### Block Header Key
+#### Block Header By Hash Key
 
 ##### Input Parameters
 ```
@@ -114,16 +114,16 @@ content_id = 0xa888f4aafe9109d495ac4d4774a6277c1ada42035e3da5e10a04cc93247c04a4
 content_id: U256 = 76230538398907151249589044529104962263309222250374376758768131420767496438948
 ```
 
-#### Epoch Accumulator Key
+#### Block Header By Number Key
 
 ##### Input Parameters
 ```
-epoch_hash = 0xe242814b90ed3950e13aac7e56ce116540c71b41d1516605aada26c6c07cc491
+block_number = 12345678
 ```
 
 ##### Expected Output
 ```
-content_key = 0x03e242814b90ed3950e13aac7e56ce116540c71b41d1516605aada26c6c07cc491
-content_id = 0x9fb2175e76c6989e0fdac3ee10c40d2a81eb176af32e1c16193e3904fe56896e
-content_id: U256 = 72232402989179419196382321898161638871438419016077939952896528930608027961710
+content_key = 0x034e61bc0000000000
+content_id = 0x2113990747a85ab39785d21342fa5db1f68acc0011605c0c73f68fc331643dcf
+content_id: U256 = 14960950260935695396511307566164035182676768442501235074589175304147024756175
 ```
