@@ -369,9 +369,22 @@ As the `HistoricalHashesAccumulator` only accounts for blocks pre-merge, this pr
 
 #### BlockProofHistoricalRoots
 
-The `BlockProofHistoricalRoots` is an SSZ container which holds two Merkle proofs as specified in the [SSZ Merke proofs specification](https://github.com/ethereum/consensus-specs/blob/dev/ssz/merkle-proofs.md#merkle-multiproofs).
+The `BlockProofHistoricalRoots` is an SSZ container which holds two Merkle proofs as specified in the [SSZ Merke proofs specification](https://github.com/ethereum/consensus-specs/blob/dev/ssz/merkle-proofs.md#merkle-multiproofs):
+- `BeaconBlockProofHistoricalRoots`
+- `ExecutionBlockProof`
 
-The container holds a chain of 2 proofs. This chain of proofs allows for verifying that an EL `BlockHeader` is part of the canonical chain. The only requirement is having access to the beacon chain `historical_roots`.
-The `historical_roots` is a [`BeaconState` field](https://github.com/ethereum/consensus-specs/blob/dev/specs/capella/beacon-chain.md#beaconstate) that is frozen since the Capella fork. The `HistoricalRootsBlockProof` MUST be used to verify blocks from TheMerge/Paris until the Capella fork.
+Additionally the SSZ container holds a `BeaconBlock` root and a slot.
+
+The chain of the two proofs allows for verifying that an EL `BlockHeader` is part of the canonical chain.
+The only requirement is having access to the beacon chain `historical_roots`.
+The `historical_roots` is a [`BeaconState` field](https://github.com/ethereum/consensus-specs/blob/dev/specs/capella/beacon-chain.md#beaconstate) that is frozen since the Capella fork. The `BlockProofHistoricalRoots` MUST be used to verify blocks from TheMerge/Paris until the Capella fork.
 
 The Portal network does not provide a mechanism to acquire the `historical_roots` over the network. Clients are encouraged to solve this however they choose, with the suggestion that they can include a frozen copy of the `historical_roots` within their client code, and provide a mechanism for users to override this value if they choose so.
+
+The first proof, the `BeaconBlockProofHistoricalRoots`, is to prove that the `BeaconBlock` is part of the `historical_roots` and thus part of the canonical chain.
+
+In order to verify this proof, the `BeaconBlock` root from the container is provided as leaf and the matching historical root is provided as root. The matching historical root index can be calculated from the slot that is provided and the index can then be used to lookup the root from the `historical_roots`.
+
+The second proof, the `ExecutionBlockProof`, is to prove that the EL block hash is part of the `BeaconBlock`.
+
+In order to verify this part of the proof, the EL block hash is provided as leaf and the `BeaconBlock` root as root.
