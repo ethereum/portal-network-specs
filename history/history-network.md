@@ -381,6 +381,14 @@ The `historical_roots` is a [`BeaconState` field](https://github.com/ethereum/co
 
 The Portal network does not provide a mechanism to acquire the `historical_roots` over the network. Clients are encouraged to solve this however they choose, with the suggestion that they can include a frozen copy of the `historical_roots` within their client code, and provide a mechanism for users to override this value if they choose so.
 
+The relationship of the beacon chain structures that are used for the `BlockProofHistoricalRoots` can be seen below:
+```mermaid
+flowchart LR
+    BeaconBlock -- contains --> BeaconBlockBody -- contains --> ExecutionPayload -- contains --> block_hash
+    HistoricalBatch -- hash_tree_root--> historical_roots
+    BeaconBlock -- hash_tree_root --> HistoricalBatch
+```
+
 The first proof, the `BeaconBlockProofHistoricalRoots`, is to prove that the `BeaconBlock` is part of the `historical_roots` and thus part of the canonical chain.
 
 In order to verify this proof, the `BeaconBlock` root from the container is provided as leaf and the matching historical root is provided as root. The matching historical root index can be calculated from the slot that is provided and the index can then be used to lookup the root from the `historical_roots`.
@@ -388,3 +396,19 @@ In order to verify this proof, the `BeaconBlock` root from the container is prov
 The second proof, the `ExecutionBlockProof`, is to prove that the EL block hash is part of the `BeaconBlock`.
 
 In order to verify this part of the proof, the EL block hash is provided as leaf and the `BeaconBlock` root as root.
+
+Relationship of proof building can be seen here:
+```mermaid
+flowchart LR
+    BeaconBlock -- build_proof --> ExecutionBlockProof
+    HistoricalBatch -- build_proof --> BeaconBlockProofHistoricalRoots
+```
+
+And the verification path:
+```mermaid
+flowchart LR
+    BeaconBlockProofHistoricalRoots --> Proof1([verify_merkle_multiproof])
+    root(selected historical root) --> Proof1 --> beaconBlockRoot
+    ExecutionBlockProof --> Proof2([verify_merkle_multiproof])
+    beaconBlockRoot --> Proof2 --> block_hash
+```
