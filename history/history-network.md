@@ -168,9 +168,9 @@ BeaconBlockProofHistoricalRoots = Vector[Bytes32, 14]
 # Proof for EL BlockHeader from TheMerge until Capella
 BlockProofHistoricalRoots = Container[
     beaconBlockProof: BeaconBlockProofHistoricalRoots, # Proof that the BeaconBlock is part of the historical_roots and thus part of the canonical chain
-    beaconBlockRoot: Bytes32,
+    beaconBlockRoot: Bytes32, # hash_tree_root of BeaconBlock used to verify the proofs
     executionBlockProof: ExecutionBlockProof, # Proof that EL BlockHash is part of the BeaconBlock
-    slot: Slot
+    slot: Slot # Slot of BeaconBlock, used to calculate the historical_roots index
 ]
 
 BlockHeaderProof = Union[None, BlockProofHistoricalHashesAccumulator, BlockProofHistoricalRoots]
@@ -373,7 +373,7 @@ The `BlockProofHistoricalRoots` is an SSZ container which holds two Merkle proof
 - `BeaconBlockProofHistoricalRoots`
 - `ExecutionBlockProof`
 
-Additionally the SSZ container holds a `BeaconBlock` root and a slot.
+Additionally the SSZ container holds a `BeaconBlock` hash_tree_root and a slot.
 
 The chain of the two proofs allows for verifying that an EL `BlockHeader` is part of the canonical chain.
 The only requirement is having access to the beacon chain `historical_roots`.
