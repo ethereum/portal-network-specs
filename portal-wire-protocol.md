@@ -68,6 +68,39 @@ The transmission of data that is too large to fit a single packet is done using 
 
 > The Portal wire protocol currently implements uTP over the `TALKREQ/TALKRESP` messages.  Future plans are to move to the [sub-protocol data transmission](https://github.com/ethereum/devp2p/issues/229) in order to use a protocol native mechanism for establishing packet streams between clients.
 
+Currently, the standard is to switch to uTP when the payload exceeds 1165 bytes. This may change over time, because it depends on a number of other variables. See an example derivation in rust:
+```rs
+/// The maximum size of a Discv5 packet.
+const MAX_DISCV5_PACKET_SIZE: usize = 1280;
+
+/// The maximum size of a Discv5 talk request payload.
+///
+/// Discv5 talk request overhead:
+///   * masking IV length: 16
+///   * static header (protocol ID || version || flag || nonce || authdata-size) length: 23
+///   * authdata length: 32
+///   * HMAC length: 16
+///   * (max) talk request ID length: 8
+///   * (max assumed) talk request protocol length: 8
+///   * RLP byte array overhead: 6
+const MAX_DISCV5_TALK_REQ_PAYLOAD_SIZE: usize =
+    MAX_DISCV5_PACKET_SIZE - 16 - 23 - 32 - 16 - 8 - 8 - 6;
+
+// NOTE: The wire constant below relies on the following SSZ constants:
+//   * `ssz::BYTES_PER_UNION_SELECTOR`: 1
+//   * `ssz::BYTES_PER_LENGTH_OFFSET`: 4
+
+/// The maximum size of a portal CONTENT payload. At the time of writing, this payload either
+/// corresponds to a `connection_id`, `enrs`, or `content` payload.
+///
+/// Portal wire overhead:
+///   * portal message SSZ union selector
+///   * CONTENT SSZ union selector
+///   * CONTENT SSZ length offset for List `enrs` or `content`
+const MAX_PORTAL_CONTENT_PAYLOAD_SIZE: usize = MAX_DISCV5_TALK_REQ_PAYLOAD_SIZE
+    - (ssz::BYTES_PER_UNION_SELECTOR * 2)
+    - ssz::BYTES_PER_LENGTH_OFFSET;
+```
 
 ## Request - Response Messages
 
