@@ -43,6 +43,17 @@
       }
     }
   },
+  "ContentPairs": {
+    "name": "content_pairs",
+    "required": true,
+    "schema": {
+      "title": "content_pair",
+      "type": "array",
+      "items": {
+            "$ref": "#/components/schemas/ContentPair"
+      }
+    }
+  },   
   "Enr": {
     "name": "enr",
     "required": true,
