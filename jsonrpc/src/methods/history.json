@@ -177,9 +177,9 @@
     "result": {
       "$ref": "#/components/contentDescriptors/LocalContentResult"
     },
-    "errors":{
-      "$ref": "#/components/contentDescriptors/ContentNotFoundError"
-    }
+    "errors":[{
+      "$ref": "#/components/errors/ContentNotFoundError"
+    }]
   },
   {
     "name": "portal_historyGossip",
