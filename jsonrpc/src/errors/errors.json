@@ -1,6 +1,9 @@
 {
   "ContentNotFoundError": {
     "code": -32099,
-    "message": "content not found"
+    "message": "content not found",
+    "data": {
+      "$ref": "#/components/schemas/traceResultObject"
+    }
   }  
 }
