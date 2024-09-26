@@ -184,6 +184,9 @@
     ],
     "result": {
       "$ref": "#/components/contentDescriptors/LocalContentResult"
+    },
+    "errors":{
+      "$ref": "#/components/contentDescriptors/ContentNotFoundError"
     }
   },
   {
