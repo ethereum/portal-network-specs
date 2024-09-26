@@ -99,7 +99,7 @@
   },
   {
     "name": "portal_stateOffer",
-    "summary": "Send an OFFER request with given ContentKey, to the designated peer and wait for a response.",
+    "summary": "Send an OFFER request with given array of Content Pairs (Keys & Values), to the designated peer and wait for a response. `portal_historyOffer` should only accept 1 to 64 content pairs else the client will throw an out of bounds error.",
     "params": [
       {
         "$ref": "#/components/contentDescriptors/Enr"
