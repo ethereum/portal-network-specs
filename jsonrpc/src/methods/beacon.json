@@ -157,7 +157,10 @@
     ],
     "result": {
       "$ref": "#/components/contentDescriptors/TraceRecursiveFindContentResult"
-    }
+    },
+    "errors":[{
+      "$ref": "#/components/errors/ContentNotFoundErrorWithTrace"
+    }]
   },
   {
     "name": "portal_beaconStore",

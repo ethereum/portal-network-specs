@@ -140,6 +140,21 @@
     }
   },
   {
+    "name": "portal_stateTraceRecursiveFindContent",
+    "summary": "Look up a target content key in the network and get tracing data",
+    "params": [
+      {
+        "$ref": "#/components/contentDescriptors/ContentKey"
+      }
+    ],
+    "result": {
+      "$ref": "#/components/contentDescriptors/TraceRecursiveFindContentResult"
+    },
+    "errors":[{
+      "$ref": "#/components/errors/ContentNotFoundErrorWithTrace"
+    }]
+  },
+  {
     "name": "portal_stateStore",
     "summary": "Store state content key with content data",
     "params": [
