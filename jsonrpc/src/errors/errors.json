@@ -4,7 +4,7 @@
     "message": "content not found"
   },
   "ContentNotFoundErrorWithTrace": {
-    "code": -39001,
+    "code": -39002,
     "message": "content not found",
     "data": {
       "$ref": "#/components/schemas/traceResultObject"
