@@ -137,7 +137,10 @@
     ],
     "result": {
       "$ref": "#/components/contentDescriptors/RecursiveFindContentResult"
-    }
+    },
+    "errors":[{
+      "$ref": "#/components/errors/ContentNotFoundError"
+    }]
   },
   {
     "name": "portal_historyTraceRecursiveFindContent",
