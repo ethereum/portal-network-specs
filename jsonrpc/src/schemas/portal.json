@@ -39,20 +39,23 @@
     "type": "string",
     "pattern": "^([1-9][0-9]{0,3}|[1-5][0-9]{4}|6[0-4][0-9]{3}|65[0-4][0-9]{2}|655[0-2][0-9]|6553[0-5])$"
   },
-  "ContentPair": {
-    "title": "content_pair",
-    "type": "object",
-    "properties": {
-      "contentKey": {
+  "ContentItem": {
+    "title": "content_item",
+    "type": "array",
+    "items": [
+      {
         "title": "Content key",
         "description": "The encoded Portal content key",
-        "$ref": "#/components/schemas/hexString"
+        "$ref": "#/components/contentDescriptors/ContentKey"
       },
-      "contentValue": {
+      {
         "title": "Content value",
         "description": "The encoded Portal content value",
-        "$ref": "#/components/schemas/hexString"
+        "$ref": "#/components/contentDescriptors/ContentValue"
       }
-    }
+    ],
+    "minItems": 2,
+    "maxItems": 2,
+    "additionalItems": false
   }
 }

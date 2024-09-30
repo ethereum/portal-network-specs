@@ -43,14 +43,14 @@
       }
     }
   },
-  "ContentPairs": {
-    "name": "content_pairs",
+  "ContentItems": {
+    "name": "content_items",
     "required": true,
     "schema": {
-      "title": "content_pair",
+      "title": "content_item",
       "type": "array",
       "items": {
-            "$ref": "#/components/schemas/ContentPair"
+        "$ref": "#/components/schemas/ContentItem"
       }
     }
   },   
