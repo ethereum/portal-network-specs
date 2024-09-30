@@ -232,6 +232,11 @@ content                  = SSZ.serialize(ephemeral_header_payload)
 content_key              = selector + SSZ.serialize(ephemeral_headers_key)
 ```
 
+The `ephemeral_headers_key` encodes a request for headers anchored to the block
+hash indicated by `ephemeral_headers_key.block_hash`.  The
+`ephemeral_headers_key.ancestor_count` **MUST** be in the inclusive range
+0-255.
+
 The `ephemeral_header_payload` is an SSZ list of RLP encoded block header
 objects.  The this object is subject to the following validity conditions.
 
