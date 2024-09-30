@@ -67,9 +67,6 @@ List of currently supported payloads, by latest to oldest.
 -  [Type 2 History Radius Payload](../ping-payload-extensions/extensions/type-2.md)
 
 
-* The `data_radius` value defines the *distance* from the node's node-id for which other clients may assume the node would be interested in content.
-* The `ephemeral_header_count` value defines the number of *recent* headers that this node stores.  The maximum effective value for this is 8192.
-
 ### Routing Table
 
 The history network uses the standard routing table structure from the Portal Wire Protocol.
@@ -164,7 +161,6 @@ each receipt/transaction and re-rlp-encode it, but only if it is a legacy transa
 # Proof for EL BlockHeader before TheMerge / Paris
 BlockProofHistoricalHashesAccumulator = Vector[Bytes32, 15]
 
-<<<<<<< HEAD
 # Proof that EL block_hash is in BeaconBlock -> BeaconBlockBody -> ExecutionPayload
 ExecutionBlockProof = Vector[Bytes32, 11]
 
@@ -262,6 +258,11 @@ content                  = SSZ.serialize(ephemeral_header_payload)
 content_key              = selector + SSZ.serialize(ephemeral_headers_key)
 ```
 
+The `ephemeral_headers_key` encodes a request for headers anchored to the block
+hash indicated by `ephemeral_headers_key.block_hash`.  The
+`ephemeral_headers_key.ancestor_count` **MUST** be in the inclusive range
+0-255.
+
 The `ephemeral_header_payload` is an SSZ list of RLP encoded block header
 objects.  The this object is subject to the following validity conditions.
 
@@ -269,6 +270,8 @@ objects.  The this object is subject to the following validity conditions.
 * The first element in the list **MUST** be the RLP encoded block header indicated by the `ephemeral_headers_key.block_hash` field from the content key.
 * Each element after the first element in the list **MUST** be the RLP encoded block header indicated by the `header.parent_hash` of the previous item from the list.
 * The list **SHOULD** contain no more than `ephemeral_headers_key.ancestor_count` items.
+
+Ephemeral block headers are not seeded into the network via traditional gossip mechanisms.  Ephemeral block headers are instead expected to be side-loaded from whatever HEAD oracle the portal node is using.  A client that is part of the portal beacon network can pull in headers from that network.
 
 
 #### Block Body
