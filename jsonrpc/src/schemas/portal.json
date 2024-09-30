@@ -46,12 +46,12 @@
       {
         "title": "Content key",
         "description": "The encoded Portal content key",
-        "$ref": "#/components/contentDescriptors/ContentKey"
+        "$ref": "#/components/schemas/hexString"
       },
       {
         "title": "Content value",
         "description": "The encoded Portal content value",
-        "$ref": "#/components/contentDescriptors/ContentValue"
+        "$ref": "#/components/schemas/hexString"
       }
     ],
     "minItems": 2,
