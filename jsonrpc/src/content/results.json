@@ -225,5 +225,12 @@
       "title": "number of peers",
       "type": "number"
     }
+  },
+  "GetContentResult": {
+    "name": "GetContentResult",
+    "description": "Returns the hex encoded content value. If the content is not available, returns \"0x\"",
+    "schema": {
+      "$ref": "#/components/schemas/hexString"
+    }
   }
 }

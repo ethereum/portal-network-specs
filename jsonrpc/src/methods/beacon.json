@@ -200,5 +200,17 @@
     "result": {
       "$ref": "#/components/contentDescriptors/GossipResult"
     }
+  },
+  {
+    "name": "portal_beaconGetContent",
+    "summary": "Get content from the local database if it exists, otherwise look up the target content key in the network.",
+    "params": [
+      {
+        "$ref": "#/components/contentDescriptors/ContentKey"
+      }
+    ],
+    "result": {
+      "$ref": "#/components/contentDescriptors/GetContentResult"
+    }
   }
 ]
