@@ -195,7 +195,7 @@
   },
   {
     "name": "portal_historyGetContent",
-    "summary": "Get content from the local database if it exists, otherwise look up the target content key in the network.",
+    "summary": "Get content from the local database if it exists, otherwise look up the target content key in the network. After fetching from the network the content is validated and stored in the local database before being returned.",
     "params": [
       {
         "$ref": "#/components/contentDescriptors/ContentKey"
