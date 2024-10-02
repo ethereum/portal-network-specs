@@ -99,7 +99,7 @@
   },
   {
     "name": "portal_historyOffer",
-    "summary": "Send an OFFER request with given array of content items (keys & values), to the designated peer and wait for a response. The client MUST return an error if more than 64 content items are provided or less than 1 content items are provided..",
+    "summary": "Send an OFFER request with given array of content items (keys & values), to the designated peer and wait for a response. The client MUST return an error if more than 64 content items are provided or less than 1 content items are provided.",
     "params": [
       {
         "$ref": "#/components/contentDescriptors/Enr"
