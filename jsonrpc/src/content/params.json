@@ -43,6 +43,19 @@
       }
     }
   },
+  "ContentItems": {
+    "name": "content_items",
+    "required": true,
+    "schema": {
+      "title": "content_item",
+      "type": "array",
+      "items": {
+        "$ref": "#/components/schemas/ContentItem"
+      },
+      "minItems": 1,
+      "maxItems": 64
+    }
+  },   
   "Enr": {
     "name": "enr",
     "required": true,
