@@ -125,30 +125,30 @@
     }
   },
   {
-    "name": "portal_stateRecursiveFindContent",
-    "summary": "Look up a target content key in the network",
+    "name": "portal_stateGetContent",
+    "summary": "Get content from the local database if it exists, otherwise look up the target content key in the network. After fetching from the network the content is validated and stored in the local database if storage criteria is met before being returned.",
     "params": [
       {
         "$ref": "#/components/contentDescriptors/ContentKey"
       }
     ],
     "result": {
-      "$ref": "#/components/contentDescriptors/RecursiveFindContentResult"
+      "$ref": "#/components/contentDescriptors/GetContentResult"
     },
     "errors":[{
       "$ref": "#/components/errors/ContentNotFoundError"
     }]
   },
   {
-    "name": "portal_stateTraceRecursiveFindContent",
-    "summary": "Look up a target content key in the network and get tracing data",
+    "name": "portal_stateTraceGetContent",
+    "summary": "Get content as defined in portal_stateGetContent and get additional tracing data",
     "params": [
       {
         "$ref": "#/components/contentDescriptors/ContentKey"
       }
     ],
     "result": {
-      "$ref": "#/components/contentDescriptors/TraceRecursiveFindContentResult"
+      "$ref": "#/components/contentDescriptors/TraceGetContentResult"
     },
     "errors":[{
       "$ref": "#/components/errors/ContentNotFoundErrorWithTrace"
