@@ -155,9 +155,25 @@ each receipt/transaction and re-rlp-encode it, but only if it is a legacy transa
 ```python
 # Content types
 
-HistoricalHashesAccumulatorProof = Vector[Bytes32, 15]
+# Proof for EL BlockHeader before TheMerge / Paris
+BlockProofHistoricalHashesAccumulator = Vector[Bytes32, 15]
 
-BlockHeaderProof = Union[None, HistoricalHashesAccumulatorProof]
+# Proof that EL block_hash is in BeaconBlock -> BeaconBlockBody -> ExecutionPayload
+ExecutionBlockProof = Vector[Bytes32, 11]
+
+# Proof that BeaconBlock root is part of historical_roots and thus canonical
+# From TheMerge until Capella -> Bellatrix fork.
+BeaconBlockProofHistoricalRoots = Vector[Bytes32, 14]
+
+# Proof for EL BlockHeader from TheMerge until Capella
+BlockProofHistoricalRoots = Container[
+    beaconBlockProof: BeaconBlockProofHistoricalRoots, # Proof that the BeaconBlock is part of the historical_roots and thus part of the canonical chain
+    beaconBlockRoot: Bytes32, # hash_tree_root of BeaconBlock used to verify the proofs
+    executionBlockProof: ExecutionBlockProof, # Proof that EL BlockHash is part of the BeaconBlock
+    slot: Slot # Slot of BeaconBlock, used to calculate the historical_roots index
+]
+
+BlockHeaderProof = Union[None, BlockProofHistoricalHashesAccumulator, BlockProofHistoricalRoots]
 
 BlockHeaderWithProof = Container(
   header: ByteList[MAX_HEADER_LENGTH], # RLP encoded header in SSZ ByteList
@@ -167,8 +183,10 @@ BlockHeaderWithProof = Container(
 
 > **_Note:_** The `BlockHeaderProof` allows to provide headers without a proof (`None`).
 For pre-merge headers, clients SHOULD NOT accept headers without a proof
-as there is the `HistoricalHashesAccumulatorProof` solution available.
-For post-merge headers, there is currently no proof solution and clients MAY
+as there is the `BlockProofHistoricalHashesAccumulator` solution available.
+For post-merge until Capella headers, clients SHOULD NOT accept headers without a proof as there is the `BlockProofHistoricalRoots` solution available.
+
+For post Capella headers, there is currently no proof solution and clients SHOULD
 accept headers without a proof.
 
 ##### Block Header by Hash
@@ -330,9 +348,9 @@ The `HistoricalHashesAccumulator` is fully build and frozen when the last block 
 The network provides no mechanism for acquiring the fully build `HistoricalHashesAccumulator`.  Clients are encouraged to solve this however they choose, with the suggestion that they include a frozen copy of the accumulator at the point of TheMerge within their client code, and provide a mechanism for users to override this value if they so choose. The `hash_tree_root` of the `HistoricalHashesAccumulator` is
 defined in [EIP-7643](https://github.com/ethereum/EIPs/blob/master/EIPS/eip-7643.md).
 
-#### HistoricalHashesAccumulatorProof
+#### BlockProofHistoricalHashesAccumulator
 
-The `HistoricalHashesAccumulatorProof` is a Merkle proof as specified in the
+The `BlockProofHistoricalHashesAccumulator` is a Merkle proof as specified in the
 [SSZ Merke proofs specification](https://github.com/ethereum/consensus-specs/blob/dev/ssz/merkle-proofs.md#merkle-multiproofs).
 
 It is a Merkle proof for the `BlockHeader`'s block hash on the relevant
@@ -341,11 +359,56 @@ the `BlockHeader`'s block hash is part of. The `GeneralizedIndex` selected must
 match the leave of the `EpochRecord` merkle tree which holds the
 `BlockHeader`'s block hash.
 
-An `HistoricalHashesAccumulatorProof` for a specific `BlockHeader` can be used to verify that
+An `BlockProofHistoricalHashesAccumulator` for a specific `BlockHeader` can be used to verify that
 this `BlockHeader` is part of the canonical chain. This is done by verifying the
 Merkle proof with the `BlockHeader`'s block hash as leave and the
 `EpochRecord` digest as root. This digest is available in the
 `HistoricalHashesAccumulator`.
 
-As the `HistoricalHashesAccumulator` only accounts for blocks pre-merge, this proof can
-only be used to verify blocks pre-merge.
+As the `HistoricalHashesAccumulator` only accounts for blocks pre-merge, this proof MUST be used to verify blocks pre-merge (pre Paris fork).
+
+#### BlockProofHistoricalRoots
+
+The `BlockProofHistoricalRoots` is an SSZ container which holds two Merkle proofs as specified in the [SSZ Merke proofs specification](https://github.com/ethereum/consensus-specs/blob/dev/ssz/merkle-proofs.md#merkle-multiproofs):
+- `BeaconBlockProofHistoricalRoots`
+- `ExecutionBlockProof`
+
+Additionally the SSZ container holds a `BeaconBlock` hash_tree_root and a slot.
+
+The chain of the two proofs allows for verifying that an EL `BlockHeader` is part of the canonical chain.
+The only requirement is having access to the beacon chain `historical_roots`.
+The `historical_roots` is a [`BeaconState` field](https://github.com/ethereum/consensus-specs/blob/dev/specs/capella/beacon-chain.md#beaconstate) that is frozen since the Capella fork. The `BlockProofHistoricalRoots` MUST be used to verify blocks from TheMerge/Paris until the Capella fork.
+
+The Portal network does not provide a mechanism to acquire the `historical_roots` over the network. Clients are encouraged to solve this however they choose, with the suggestion that they can include a frozen copy of the `historical_roots` within their client code, and provide a mechanism for users to override this value if they choose so.
+
+The relationship of the beacon chain structures that are used for the `BlockProofHistoricalRoots` can be seen below:
+```mermaid
+flowchart LR
+    BeaconBlock -- contains --> BeaconBlockBody -- contains --> ExecutionPayload -- contains --> block_hash
+    HistoricalBatch -- hash_tree_root--> historical_roots
+    BeaconBlock -- hash_tree_root --> HistoricalBatch
+```
+
+The first proof, the `BeaconBlockProofHistoricalRoots`, is to prove that the `BeaconBlock` is part of the `historical_roots` and thus part of the canonical chain.
+
+In order to verify this proof, the `BeaconBlock` root from the container is provided as leaf and the matching historical root is provided as root. The matching historical root index can be calculated from the slot that is provided and the index can then be used to lookup the root from the `historical_roots`.
+
+The second proof, the `ExecutionBlockProof`, is to prove that the EL block hash is part of the `BeaconBlock`.
+
+In order to verify this part of the proof, the EL block hash is provided as leaf and the `BeaconBlock` root as root.
+
+Relationship of proof building can be seen here:
+```mermaid
+flowchart LR
+    BeaconBlock -- build_proof --> ExecutionBlockProof
+    HistoricalBatch -- build_proof --> BeaconBlockProofHistoricalRoots
+```
+
+And the verification path:
+```mermaid
+flowchart LR
+    BeaconBlockProofHistoricalRoots --> Proof1([verify_merkle_multiproof])
+    root(selected historical root) --> Proof1 --> beaconBlockRoot
+    ExecutionBlockProof --> Proof2([verify_merkle_multiproof])
+    beaconBlockRoot --> Proof2 --> block_hash
+```
