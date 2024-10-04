@@ -43,6 +43,19 @@ contentFiles.forEach(file => {
   };
 });
 
+let errors = {};
+let errorBase = "src/errors/"
+let errorFiles = fs.readdirSync(errorBase)
+errorFiles.forEach(file => {
+  console.log(file);
+  let raw = fs.readFileSync(errorBase + file);
+  let parsed = JSON.parse(raw);
+  errors = {
+    ...errors,
+    ...parsed,
+  };
+});
+
 let spec = await parseOpenRPCDocument({
   openrpc: "1.2.4",
   info: {
@@ -57,7 +70,8 @@ let spec = await parseOpenRPCDocument({
   methods: methods,
   components: {
     contentDescriptors: content,
-    schemas: schemas
+    schemas: schemas,
+    errors: errors
   }
 },
     {dereference: false})

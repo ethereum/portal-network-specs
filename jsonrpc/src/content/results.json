@@ -215,7 +215,7 @@
   },
   "LocalContentResult": {
     "name": "LocalContentResult",
-    "description": "Returns the hex encoded content value. If the content is not available, returns \"0x\"",
+    "description": "Returns the hex encoded content value.",
     "schema": {
       "$ref": "#/components/schemas/hexString"
     }

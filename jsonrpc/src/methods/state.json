@@ -134,7 +134,10 @@
     ],
     "result": {
       "$ref": "#/components/contentDescriptors/GetContentResult"
-    }
+    },
+    "errors":[{
+      "$ref": "#/components/errors/ContentNotFoundError"
+    }]
   },
   {
     "name": "portal_stateTraceGetContent",
@@ -146,7 +149,10 @@
     ],
     "result": {
       "$ref": "#/components/contentDescriptors/TraceGetContentResult"
-    }
+    },
+    "errors":[{
+      "$ref": "#/components/errors/ContentNotFoundErrorWithTrace"
+    }]
   },
   {
     "name": "portal_stateStore",
@@ -173,7 +179,10 @@
     ],
     "result": {
       "$ref": "#/components/contentDescriptors/LocalContentResult"
-    }
+    },
+    "errors":[{
+      "$ref": "#/components/errors/ContentNotFoundError"
+    }]
   },
   {
     "name": "portal_stateGossip",
