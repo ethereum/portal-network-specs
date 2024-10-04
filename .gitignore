@@ -1,3 +1,2 @@
-# Specify filepatterns you want git to ignore.
 jsonrpc/openrpc.json
 jsonrpc/node_modules
