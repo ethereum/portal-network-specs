@@ -134,7 +134,10 @@
     ],
     "result": {
       "$ref": "#/components/contentDescriptors/RecursiveFindContentResult"
-    }
+    },
+    "errors":[{
+      "$ref": "#/components/errors/ContentNotFoundError"
+    }]
   },
   {
     "name": "portal_historyTraceRecursiveFindContent",
@@ -146,7 +149,10 @@
     ],
     "result": {
       "$ref": "#/components/contentDescriptors/TraceRecursiveFindContentResult"
-    }
+    },
+    "errors":[{
+      "$ref": "#/components/errors/ContentNotFoundErrorWithTrace"
+    }]
   },
   {
     "name": "portal_historyStore",
@@ -173,7 +179,10 @@
     ],
     "result": {
       "$ref": "#/components/contentDescriptors/LocalContentResult"
-    }
+    },
+    "errors":[{
+      "$ref": "#/components/errors/ContentNotFoundError"
+    }]
   },
   {
     "name": "portal_historyGossip",

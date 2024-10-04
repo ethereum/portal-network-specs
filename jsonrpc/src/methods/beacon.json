@@ -142,7 +142,10 @@
     ],
     "result": {
       "$ref": "#/components/contentDescriptors/RecursiveFindContentResult"
-    }
+    },
+    "errors":[{
+      "$ref": "#/components/errors/ContentNotFoundError"
+    }]
   },
   {
     "name": "portal_beaconTraceRecursiveFindContent",
@@ -154,7 +157,10 @@
     ],
     "result": {
       "$ref": "#/components/contentDescriptors/TraceRecursiveFindContentResult"
-    }
+    },
+    "errors":[{
+      "$ref": "#/components/errors/ContentNotFoundErrorWithTrace"
+    }]
   },
   {
     "name": "portal_beaconStore",
@@ -181,7 +187,10 @@
     ],
     "result": {
       "$ref": "#/components/contentDescriptors/LocalContentResult"
-    }
+    },
+    "errors":[{
+      "$ref": "#/components/errors/ContentNotFoundError"
+    }]
   },
   {
     "name": "portal_beaconGossip",

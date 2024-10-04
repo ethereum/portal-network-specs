@@ -134,7 +134,25 @@
     ],
     "result": {
       "$ref": "#/components/contentDescriptors/RecursiveFindContentResult"
-    }
+    },
+    "errors":[{
+      "$ref": "#/components/errors/ContentNotFoundError"
+    }]
+  },
+  {
+    "name": "portal_stateTraceRecursiveFindContent",
+    "summary": "Look up a target content key in the network and get tracing data",
+    "params": [
+      {
+        "$ref": "#/components/contentDescriptors/ContentKey"
+      }
+    ],
+    "result": {
+      "$ref": "#/components/contentDescriptors/TraceRecursiveFindContentResult"
+    },
+    "errors":[{
+      "$ref": "#/components/errors/ContentNotFoundErrorWithTrace"
+    }]
   },
   {
     "name": "portal_stateStore",
@@ -161,7 +179,10 @@
     ],
     "result": {
       "$ref": "#/components/contentDescriptors/LocalContentResult"
-    }
+    },
+    "errors":[{
+      "$ref": "#/components/errors/ContentNotFoundError"
+    }]
   },
   {
     "name": "portal_stateGossip",
