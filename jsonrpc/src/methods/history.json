@@ -138,7 +138,7 @@
   },
   {
     "name": "portal_historyTraceGetContent",
-    "summary": "Look up a target content as defined in portal_historyGetContent and get tracing data",
+    "summary": "Get content as defined in portal_historyGetContent and get additional tracing data",
     "params": [
       {
         "$ref": "#/components/contentDescriptors/ContentKey"
