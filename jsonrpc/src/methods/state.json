@@ -126,7 +126,7 @@
   },
   {
     "name": "portal_stateGetContent",
-    "summary": "Get content from the local database if it exists, otherwise look up the target content key in the network. After fetching from the network the content is validated and stored in the local database before being returned.",
+    "summary": "Get content from the local database if it exists, otherwise look up the target content key in the network. After fetching from the network the content is validated and stored in the local database if storage criteria is met before being returned.",
     "params": [
       {
         "$ref": "#/components/contentDescriptors/ContentKey"
@@ -134,6 +134,18 @@
     ],
     "result": {
       "$ref": "#/components/contentDescriptors/GetContentResult"
+    }
+  },
+  {
+    "name": "portal_stateTraceGetContent",
+    "summary": "Get content as defined in portal_stateGetContent and get additional tracing data",
+    "params": [
+      {
+        "$ref": "#/components/contentDescriptors/ContentKey"
+      }
+    ],
+    "result": {
+      "$ref": "#/components/contentDescriptors/TraceGetContentResult"
     }
   },
   {
