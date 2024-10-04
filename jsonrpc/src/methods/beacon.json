@@ -133,27 +133,27 @@
     }
   },
   {
-    "name": "portal_beaconRecursiveFindContent",
-    "summary": "Look up a target content key in the network",
+    "name": "portal_beaconGetContent",
+    "summary": "Get content from the local database if it exists, otherwise look up the target content key in the network. After fetching from the network the content is validated and stored in the local database before being returned.",
     "params": [
       {
         "$ref": "#/components/contentDescriptors/ContentKey"
       }
     ],
     "result": {
-      "$ref": "#/components/contentDescriptors/RecursiveFindContentResult"
+      "$ref": "#/components/contentDescriptors/GetContentResult"
     }
   },
   {
-    "name": "portal_beaconTraceRecursiveFindContent",
-    "summary": "Look up a target content key in the network and get tracing data",
+    "name": "portal_beaconTraceGetContent",
+    "summary": "Look up a target content as defined in portal_beaconGetContent and get tracing data",
     "params": [
       {
         "$ref": "#/components/contentDescriptors/ContentKey"
       }
     ],
     "result": {
-      "$ref": "#/components/contentDescriptors/TraceRecursiveFindContentResult"
+      "$ref": "#/components/contentDescriptors/TraceGetContentResult"
     }
   },
   {
@@ -196,18 +196,6 @@
     ],
     "result": {
       "$ref": "#/components/contentDescriptors/GossipResult"
-    }
-  },
-  {
-    "name": "portal_beaconGetContent",
-    "summary": "Get content from the local database if it exists, otherwise look up the target content key in the network. After fetching from the network the content is validated and stored in the local database before being returned.",
-    "params": [
-      {
-        "$ref": "#/components/contentDescriptors/ContentKey"
-      }
-    ],
-    "result": {
-      "$ref": "#/components/contentDescriptors/GetContentResult"
     }
   }
 ]

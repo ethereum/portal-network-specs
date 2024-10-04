@@ -34,7 +34,7 @@
     "schema": {
       "title": "FindContentResult",
       "type": "object",
-      "oneOf" :[
+      "oneOf": [
         {
           "title": "ContentInfo",
           "type": "object",
@@ -58,7 +58,9 @@
           "title": "ENRs",
           "description": "List of ENR records of nodes that are closer than the recipient is to the requested content",
           "type": "object",
-          "required": ["enrs"],
+          "required": [
+            "enrs"
+          ],
           "properties": {
             "enrs": {
               "type": "array",
@@ -164,8 +166,8 @@
       }
     }
   },
-  "RecursiveFindContentResult": {
-    "name": "RecursiveFindContentResult",
+  "GetContentResult": {
+    "name": "GetContentResult",
     "description": "Returns the hex encoded content value and utp transfer flag. If the content is not available, returns \"0x\"",
     "schema": {
       "type": "object",
@@ -185,8 +187,8 @@
       }
     }
   },
-  "TraceRecursiveFindContentResult": {
-    "name": "TraceRecursiveFindContentResult",
+  "TraceGetContentResult": {
+    "name": "TraceGetContentResult",
     "description": "Returns the hex encoded content value and trace data object. If the content is not available, returns \"0x\"",
     "schema": {
       "type": "object",
@@ -224,13 +226,6 @@
     "schema": {
       "title": "number of peers",
       "type": "number"
-    }
-  },
-  "GetContentResult": {
-    "name": "GetContentResult",
-    "description": "Returns the hex encoded content value. If the content is not available, returns \"0x\"",
-    "schema": {
-      "$ref": "#/components/schemas/hexString"
     }
   }
 }
