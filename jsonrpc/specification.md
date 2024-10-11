@@ -1,8 +1,11 @@
 # Portal JSON-RPC specification
 
+The `*` is meant to be a placeholder to substitute different Portal sub-networks `history`, `state`, `beacon`, etc
+
 ## portal_*RoutingTableInfo
 
 ## portal_*AddEnr
+- Adds the Enr to the respective sub-networks routing table
 
 ## portal_*GetEnr
 
