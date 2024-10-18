@@ -143,9 +143,11 @@
     "result": {
       "$ref": "#/components/contentDescriptors/GetContentResult"
     },
-    "errors":[{
-      "$ref": "#/components/errors/ContentNotFoundError"
-    }]
+    "errors": [
+      {
+        "$ref": "#/components/errors/ContentNotFoundError"
+      }
+    ]
   },
   {
     "name": "portal_beaconTraceGetContent",
@@ -158,9 +160,11 @@
     "result": {
       "$ref": "#/components/contentDescriptors/TraceGetContentResult"
     },
-    "errors":[{
-      "$ref": "#/components/errors/ContentNotFoundErrorWithTrace"
-    }]
+    "errors": [
+      {
+        "$ref": "#/components/errors/ContentNotFoundErrorWithTrace"
+      }
+    ]
   },
   {
     "name": "portal_beaconStore",
@@ -188,13 +192,15 @@
     "result": {
       "$ref": "#/components/contentDescriptors/LocalContentResult"
     },
-    "errors":[{
-      "$ref": "#/components/errors/ContentNotFoundError"
-    }]
+    "errors": [
+      {
+        "$ref": "#/components/errors/ContentNotFoundError"
+      }
+    ]
   },
   {
-    "name": "portal_beaconGossip",
-    "summary": "Send the provided content item to interested peers. Clients may choose to send to some or all peers.",
+    "name": "portal_beaconPutContent",
+    "summary": "Validate and store the provided content in the local database if storage criteria is met, then send the content to interested peers. Clients may choose to send to some or all peers.",
     "params": [
       {
         "$ref": "#/components/contentDescriptors/ContentKey"
@@ -204,7 +210,7 @@
       }
     ],
     "result": {
-      "$ref": "#/components/contentDescriptors/GossipResult"
+      "$ref": "#/components/contentDescriptors/PutContentResult"
     }
   }
 ]

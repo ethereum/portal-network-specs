@@ -220,8 +220,8 @@
       "$ref": "#/components/schemas/hexString"
     }
   },
-  "GossipResult": {
-    "name": "gossipResult",
+  "PutContentResult": {
+    "name": "PutContentResult",
     "description": "Returns the number of peers that the content was gossiped to",
     "schema": {
       "title": "number of peers",
