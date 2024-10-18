@@ -185,8 +185,8 @@
     }]
   },
   {
-    "name": "portal_stateGossip",
-    "summary": "Send the provided content item to interested peers. Clients may choose to send to some or all peers.",
+    "name": "portal_statePutContent",
+    "summary": "Validate and store the provided content in the local database if storage criteria is met, then send the content to interested peers. Clients may choose to send to some or all peers.",
     "params": [
       {
         "$ref": "#/components/contentDescriptors/ContentKey"
@@ -196,7 +196,7 @@
       }
     ],
     "result": {
-      "$ref": "#/components/contentDescriptors/GossipResult"
+      "$ref": "#/components/contentDescriptors/PutContentResult"
     }
   }
 ]
