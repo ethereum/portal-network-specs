@@ -126,7 +126,7 @@
   },
   {
     "name": "portal_historyGetContent",
-    "summary": "Get content from the local database if it exists, otherwise look up the target content key in the network. After fetching from the network the content is validated and stored in the local database if storage criteria is met before being returned.",
+    "summary": "Get content from the local database if it exists, otherwise look up the target content key in the network. After fetching from the network the content is validated for correctness and stored in the local database if storage criteria is met before being returned.",
     "params": [
       {
         "$ref": "#/components/contentDescriptors/ContentKey"
@@ -135,9 +135,11 @@
     "result": {
       "$ref": "#/components/contentDescriptors/GetContentResult"
     },
-    "errors":[{
-      "$ref": "#/components/errors/ContentNotFoundError"
-    }]
+    "errors": [
+      {
+        "$ref": "#/components/errors/ContentNotFoundError"
+      }
+    ]
   },
   {
     "name": "portal_historyTraceGetContent",
@@ -150,9 +152,11 @@
     "result": {
       "$ref": "#/components/contentDescriptors/TraceGetContentResult"
     },
-    "errors":[{
-      "$ref": "#/components/errors/ContentNotFoundErrorWithTrace"
-    }]
+    "errors": [
+      {
+        "$ref": "#/components/errors/ContentNotFoundErrorWithTrace"
+      }
+    ]
   },
   {
     "name": "portal_historyStore",
@@ -180,13 +184,15 @@
     "result": {
       "$ref": "#/components/contentDescriptors/LocalContentResult"
     },
-    "errors":[{
-      "$ref": "#/components/errors/ContentNotFoundError"
-    }]
+    "errors": [
+      {
+        "$ref": "#/components/errors/ContentNotFoundError"
+      }
+    ]
   },
   {
     "name": "portal_historyPutContent",
-    "summary": "Validate and store the provided content in the local database if storage criteria is met, then send the content to interested peers. Clients may choose to send to some or all peers.",
+    "summary": "Validate that the content is well formed and store it in the local database if storage criteria is met, then send the content to interested peers. Clients may choose to send to some or all peers.",
     "params": [
       {
         "$ref": "#/components/contentDescriptors/ContentKey"
