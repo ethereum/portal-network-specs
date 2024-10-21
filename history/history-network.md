@@ -173,7 +173,22 @@ BlockProofHistoricalRoots = Container[
     slot: Slot # Slot of BeaconBlock, used to calculate the historical_roots index
 ]
 
-BlockHeaderProof = Union[None, BlockProofHistoricalHashesAccumulator, BlockProofHistoricalRoots]
+# Proof that EL block_hash is in BeaconBlock -> BeaconBlockBody -> ExecutionPayload
+ExecutionBlockProofCapella = List[Bytes32, limit=12]
+
+# Proof that BeaconBlock root is part of historical_summaries and thus canonical
+# For Capella and onwards
+BeaconBlockProofHistoricalSummaries = Vector[Bytes32, 13]
+
+# Proof for EL BlockHeader for Capella and onwards
+BlockProofHistoricalSummaries = Container[
+    beaconBlockProof: BeaconBlockProofHistoricalSummaries, # Proof that the BeaconBlock is part of the historical_summaries and thus part of the canonical chain
+    beaconBlockRoot: Bytes32, # hash_tree_root of BeaconBlock used to verify the proofs
+    executionBlockProof: ExecutionBlockProofCapella, # Proof that EL BlockHash is part of the BeaconBlock
+    slot: Slot # Slot of BeaconBlock, used to calculate the historical_summaries index
+]
+
+BlockHeaderProof = Union[None, BlockProofHistoricalHashesAccumulator, BlockProofHistoricalRoots, BlockProofHistoricalSummaries]
 
 BlockHeaderWithProof = Container(
   header: ByteList[MAX_HEADER_LENGTH], # RLP encoded header in SSZ ByteList
@@ -185,8 +200,8 @@ BlockHeaderWithProof = Container(
 For pre-merge headers, clients SHOULD NOT accept headers without a proof
 as there is the `BlockProofHistoricalHashesAccumulator` solution available.
 For post-merge until Capella headers, clients SHOULD NOT accept headers without a proof as there is the `BlockProofHistoricalRoots` solution available.
-
-For post Capella headers, there is currently no proof solution and clients SHOULD
+For Capella and onwards headers, clients SHOULD NOT accept headers without a proof as there is the `BlockProofHistoricalSummaries` solution available.
+For headers that are not yet part of the last period, clients SHOULD
 accept headers without a proof.
 
 ##### Block Header by Hash
@@ -409,6 +424,52 @@ And the verification path:
 flowchart LR
     BeaconBlockProofHistoricalRoots --> Proof1([verify_merkle_multiproof])
     root(selected historical root) --> Proof1 --> beaconBlockRoot
+    ExecutionBlockProof --> Proof2([verify_merkle_multiproof])
+    beaconBlockRoot --> Proof2 --> block_hash
+```
+
+#### BlockProofHistoricalSummaries
+
+The `BlockProofHistoricalSummaries` is an SSZ container which holds two Merkle proofs as specified in the [SSZ Merke proofs specification](https://github.com/ethereum/consensus-specs/blob/dev/ssz/merkle-proofs.md#merkle-multiproofs):
+- `BeaconBlockProofHistoricalSummaries`
+- `ExecutionBlockProof`
+
+Additionally the SSZ container holds a `BeaconBlock` hash_tree_root and a slot.
+
+This chain of two proofs allows for verifying that an EL `BlockHeader` is part of the canonical chain. The only requirement is having access to the beacon chain `historical_summaries`.
+The `historical_summaries` is a [`BeaconState` field](https://github.com/ethereum/consensus-specs/blob/dev/specs/capella/beacon-chain.md#beaconstate) that was introduced since the Capella fork. It gets updated every period (8192 slots). The `BlockProofHistoricalSummaries` MUST be used to verify blocks from the Capella fork onwards.
+
+The `historical_summaries` can be taken from the CL `BeaconState` (e.g. via [Beacon API](https://ethereum.github.io/beacon-APIs/#/Debug/getStateV2)) or the Portal beacon network can be used to [provide access](./beacon-chain/beacon-network.md#historicalsummaries) to an up to date `historical_summaries` object."
+
+The relationship of the beacon chain structures that are used for the `BlockProofHistoricalSummaries` can be seen below:
+
+```mermaid
+flowchart LR
+    BeaconBlock -- contains --> BeaconBlockBody -- contains --> ExecutionPayload -- contains --> block_hash
+    state.block_roots -- hash_tree_root --> HistoricalSummary --> historical_summaries
+    BeaconBlock -- hash_tree_root --> state.block_roots
+```
+
+The first proof, the `BeaconBlockProofHistoricalSummaries`, is to prove that the `BeaconBlock` is part of the `historical_summaries` and thus part of the canonical chain.
+
+In order to verify this proof, the `BeaconBlock` root from the container is provided as leaf and the matching `HistoricalSummary.block_summary_root` is provided as root. The matching `historical_summaries` index can be calculated from the slot that is provided and the index can then be used to lookup the `HistoricalSummary` from the `historical_summaries`.
+
+The second proof, the `ExecutionBlockProof`, is to prove that the EL block hash is part of the `BeaconBlock`.
+
+In order to verify this part of the proof, the EL block hash is provided as leaf and the `BeaconBlock` root as root.
+
+Relationship of proof building can be seen here:
+```mermaid
+flowchart LR
+    BeaconBlock -- build_proof --> ExecutionBlockProof
+    state.block_roots -- build_proof --> BeaconBlockProofHistoricalSummaries
+```
+
+And the verification path:
+```mermaid
+flowchart LR
+    BeaconBlockProofHistoricalSummaries --> Proof1([verify_merkle_multiproof])
+    HistoricalSummary.block_summary_root --> Proof1 --> beaconBlockRoot
     ExecutionBlockProof --> Proof2([verify_merkle_multiproof])
     beaconBlockRoot --> Proof2 --> block_hash
 ```
