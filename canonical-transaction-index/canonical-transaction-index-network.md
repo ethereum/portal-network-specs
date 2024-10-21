@@ -56,12 +56,7 @@ The canonical transaction index network supports the following protocol messages
 
 #### `Ping.custom_data` & `Pong.custom_data`
 
-In the canonical transaction index network the `custom_payload` field of the `Ping` and `Pong` messages is the serialization of an SSZ Container specified as `custom_data`:
-
-```
-custom_data = Container(data_radius: uint256)
-custom_payload = SSZ.serialize(custom_data)
-```
+In the canonical transaction index network the `custom_payload` field of the `Ping` and `Pong` messages is the serialization of an SSZ Container specified as [Type 4 Ping Custom Payload Extension](../ping-payload-extensions/extensions/type-4.md)
 
 
 ### Routing Table 
