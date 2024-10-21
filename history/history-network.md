@@ -439,7 +439,7 @@ Additionally the SSZ container holds a `BeaconBlock` hash_tree_root and a slot.
 This chain of two proofs allows for verifying that an EL `BlockHeader` is part of the canonical chain. The only requirement is having access to the beacon chain `historical_summaries`.
 The `historical_summaries` is a [`BeaconState` field](https://github.com/ethereum/consensus-specs/blob/dev/specs/capella/beacon-chain.md#beaconstate) that was introduced since the Capella fork. It gets updated every period (8192 slots). The `BlockProofHistoricalSummaries` MUST be used to verify blocks from the Capella fork onwards.
 
-The Portal beacon network [provides access](./beacon-chain/beacon-network.md#historicalsummaries) to an up to date `historical_summaries` object.
+The `historical_summaries` can be taken from the CL `BeaconState` (e.g. via [Beacon API](https://ethereum.github.io/beacon-APIs/#/Debug/getStateV2)) or the Portal beacon network can be used to [provide access](./beacon-chain/beacon-network.md#historicalsummaries) to an up to date `historical_summaries` object."
 
 The relationship of the beacon chain structures that are used for the `BlockProofHistoricalSummaries` can be seen below:
 
