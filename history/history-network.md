@@ -61,7 +61,7 @@ The history network supports the following protocol messages:
 
 #### `Ping.custom_data` & `Pong.custom_data`
 
-In the history network the `custom_payload` field of the `Ping` and `Pong` messages is the serialization of an SSZ Container specified as [Type 1 Ping Custom Payload Extension](../ping-payload-extensions/extensions/type-1.md)
+In the history network the `custom_payload` field of the `Ping` and `Pong` messages is the serialization of an SSZ Container specified as [Type 2 History Radius Payload](../ping-payload-extensions/extensions/type-2.md)
 
 
 ### Routing Table

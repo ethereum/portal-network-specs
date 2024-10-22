@@ -26,7 +26,7 @@ The network uses the PING/PONG/FINDNODES/FOUNDNODES/OFFER/ACCEPT messages from t
 
 The network uses the standard XOR distance function.
 
-In the execution state network the `custom_payload` field of the `Ping` and `Pong` messages is the serialization of an SSZ Container specified as [Type 5 Ping Custom Payload Extension](../ping-payload-extensions/extensions/type-5.md)
+In the execution state network the `custom_payload` field of the `Ping` and `Pong` messages is the serialization of an SSZ Container specified as [Type 1 Basic Radius Payload](../ping-payload-extensions/extensions/type-1.md)
 
 ## Content Keys
 
