@@ -1,14 +1,14 @@
-# Portal State Network Distance
+# History Radius Payload
 
-This payload is only supposed to be used for the state network
+A specialized radius payload for the history network which contains field for how many ephemeral headers the node holds.
 
-## version 1
-
-Ping and Pong payload
+Ping and Pong Payload
 ```python
-StateNetworkDistanceV1 = Container(
-  type: 2,
-  version: 1,
-  payload: Container(data_radius: uint256)
+
+history_radius = SSZ.serialize(Container(data_radius: U256, ephemeral_header_count=U16))
+
+HistoryRadiusPayload = Container(
+  type: 1,
+  payload: history_radius
 )
 ```

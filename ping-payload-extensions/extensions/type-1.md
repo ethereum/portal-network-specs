@@ -1,24 +1,15 @@
-# Portal History Network Distance
+# Basic Radius Payload
 
-This payload is only supposed to be used for the history network
-
-## version 1
+A basic Ping/Pong payload which only contains the nodes radius
 
 Ping and Pong Payload
 ```python
-HistoryNetworkDistanceV1 = Container(
+
+basic_radius = SSZ.serialize(Container(data_radius: U256))
+
+BasicRadiusPayload = Container(
   type: 1,
-  version: 1,
-  payload: Container(data_radius: uint256)
+  payload: basic_radius
 )
 ```
 
-## version 2
-Ping and Pong Payload
-```python
-HistoryNetworkDistanceV2 = Container(
-  type: 1,
-  version: 2,
-  payload: Container(data_radius: uint256, ephemeral_header_count: uint16)
-)
-```

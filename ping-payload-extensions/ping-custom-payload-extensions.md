@@ -12,9 +12,9 @@ Ping Custom Payload Extensions. A versioned type prefixed format where we can up
 
 # Type's
 
-There are 4_294_967_296 unique type ids.
+There are 65536 unique type ids.
 
-Types 0-10_000 and 4_294_957_295-4_294_967_296 are reserved for for future upgrades.
+Types 0-10_000 and 65436-65535 are reserved for for future upgrades.
 
 The rest are first come first serve, but they should still be defined in this repo to avoid overlaps.
 
@@ -26,15 +26,13 @@ All payloads used in the Ping `custom_payload` MUST follow the `Ping Custom Payl
 ## Custom Payload Extensions Format
 
 - **type**: what payload type is it
-- **verison**: what version of the type it is
-- **payload**: a ssz container which contents are specified by the type and version field
+- **payload**: a ssz ByteList of max length 1100 which contents are specified the type field
 
 
 ```python
 CustomPayloadExtensionsFormat = Container(
-  type: Bytes4,
-  version: Bytes4,
-  payload: Container(inner payload is defined by type and version)
+  type: u16,
+  payload: ByteList[max_length=1100]
 )
 ```
 
@@ -53,15 +51,26 @@ Pong payload
 # Max ASCII hex encoded strings length
 MAX_ERROR_BYTE_LENGTH = 300
 
-CustomPayloadExtensionsFormat = Container(
-  type: 4_294_967_295,
-  version: 1,
-  payload: Container(error_code: Bytes4, message: ByteList[MAX_ERROR_BYTE_LENGTH])
+error_payload = SSZ.serialize(Container(error_code: u16, message: ByteList[MAX_ERROR_BYTE_LENGTH]))
+
+ErrorPayload = Container(
+  type: 65535,
+  payload: error_payload
 )
 ```
 
 ### Error Code's
 
-- 0: Extension not supported
-- 1: Requested data not found
-- 2: System error
+#### 0: Extension not supported
+This code should be returned if the extension isn't supported. This error should only be returned if 
+- The extension isn't supported
+- The extension isn't a required extension for specified Portal Network.
+
+#### 1: Requested data not found
+This error code is for if an extension is asking for something and it doesn't exist.
+
+#### 2: Failed to decode payload
+Wasn't able to decode the payload
+
+#### 3: System error
+A critical error happened and the ping can't be processed

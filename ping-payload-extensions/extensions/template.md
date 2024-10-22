@@ -2,24 +2,25 @@
 
 [Description]
 
-## version [Version Number]
-
-[Version Description]
-
 Ping payload
 ```python
+
+[Payload] = SSZ.serialize(Container([Key Value Pairs]))
+
+
 [Container Name] = Container(
   type: [Type Number],
-  version: [Type Version],
-  payload: Container([Payload Description])
+  payload: [Payload]
 )
 ```
 
 Pong payload
 ```python
+
+[Payload] = SSZ.serialize(Container([Key Value Pairs]))
+
 [Container Name] = Container(
   type: [Type Number],
-  version: [Type Version],
-  payload: Container([Payload Description])
+  payload: [Payload]
 )
 ```
