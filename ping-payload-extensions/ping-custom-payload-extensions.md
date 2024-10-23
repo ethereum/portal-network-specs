@@ -88,7 +88,7 @@ It is for Portal implementations which want to see what extensions a peer suppor
 Non-required extension offer a way for Portal implementations to offer extended functionality to its users without requiring every Portal implementing party to agree to a new feature. This allows for a diverse set of use cases to be fulfilled without requiring every implementer implement every extension, or requiring the need to bloat the minimal [Portal-Wire-Protocol](../portal-wire-protocol.md) with new `Message Types`.
 
 ## Does implementing non-standard-extensions require a hardfork?
-No only changing standard extensions requires a hard fork.
+No only changing a sub-networks standard extension requires a hard fork.
 
 
 ## How do sub-network standard extension's work
