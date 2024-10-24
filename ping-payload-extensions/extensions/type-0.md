@@ -1,8 +1,8 @@
 # Capabilities Payload
 
-Any network can only have Portal client can only every have 500 extensions enabled per Portal sub-networks.
+Portal clients can only have max 500 extensions enabled per sub-network.
 
-This payload provides a list of u16's each u16 provide in the list corresponds to an an enabled extension type.
+This payload provides a list of u16's each u16 provide in the list corresponds to an enabled extension type.
 
 Ping and Pong Payload
 ```python
