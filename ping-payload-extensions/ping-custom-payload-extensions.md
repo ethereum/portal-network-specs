@@ -8,7 +8,7 @@ As we get users, deploying breaking changes to mainnet will no longer be an opti
 
 ## The Solution
 
-Ping Custom Payload Extensions. A versioned type prefixed format where we can upgrade endpoints on a new version well giving a window for all Portal implementations to update before deprecating the older version. This will allow clients to implement new functionality without breaking compatibility with the standard specification.
+Ping Payload Extensions. There is a minimal set of `standard extensions` which require a fork hard fork to change. This framework allows Portal clients to implement `non standard extensions` which don't require a hard fork to deploy to the network. A more flexible way to extend the Protocol without bloating the [Portal-Wire-Protocol](../portal-wire-protocol.md)
 
 # Type's
 
@@ -37,7 +37,7 @@ CustomPayloadExtensionsFormat = Container(
 ```
 
 ## Ping vs Pong
-The relationship between Ping and Pong message will be determined by the requirements of the type/version.
+The relationship between Ping and Pong message will be determined by the requirements of the type.
 
 Currently type 1,2,3 are mirrored formats, but there is room for a Ping `custom_payload` to specify details about what it wants to request, then pong handles it.
 
