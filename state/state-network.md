@@ -56,12 +56,7 @@ The execution state network supports the following protocol messages:
 
 #### `Ping.custom_data` & `Pong.custom_data`
 
-In the execution state network the `custom_payload` field of the `Ping` and `Pong` messages is the serialization of an SSZ Container specified as `custom_data`:
-
-```
-custom_data = Container(data_radius: uint256)
-custom_payload = SSZ.serialize(custom_data)
-```
+In the execution state network the `custom_payload` field of the `Ping` and `Pong` messages is the serialization of an SSZ Container specified as [Type 1 Basic Radius Payload](../ping-payload-extensions/extensions/type-1.md)
 
 #### POKE Mechanism
 
