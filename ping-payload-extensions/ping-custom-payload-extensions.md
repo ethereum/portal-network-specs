@@ -1,12 +1,6 @@
 # Ping Custom Payload Extensions
 
-## The problem
-
-Over time we will need to change what is sent over ping/pong `custom_payload`'s to adjust for what is needed in the future.
-Currently the only way to update a `custom_payload` is through breaking changes which break protocol compatible between Portal implementations.
-As we get users, deploying breaking changes to mainnet will no longer be an option as we are aiming for a 100% uptime.
-
-## The Solution
+## Motivation
 
 Ping Payload Extensions. There is a minimal set of `standard extensions` which require a fork hard fork to change. This framework allows Portal clients to implement `non standard extensions` which don't require a hard fork to deploy to the network. A more flexible way to extend the Protocol without bloating the [Portal-Wire-Protocol](../portal-wire-protocol.md)
 
@@ -25,8 +19,8 @@ All payloads used in the Ping `custom_payload` MUST follow the `Ping Custom Payl
 
 ## Custom Payload Extensions Format
 
-- **type**: what payload type is it
-- **payload**: a ssz ByteList of max length 1100 which contents are specified the type field
+- **type**: numeric identifier which tells clients how the `payload` field should be decoded.
+- **payload**: the SSZ encoded extension payload
 
 
 ```python
@@ -39,7 +33,7 @@ CustomPayloadExtensionsFormat = Container(
 ## Ping vs Pong
 The relationship between Ping and Pong message will be determined by the requirements of the type.
 
-Currently type 1,2,3 are mirrored formats, but there is room for a Ping `custom_payload` to specify details about what it wants to request, then pong handles it.
+Currently type 1,2,3 are symmetrical, having the same payload for both request and response.  This symmetry is not required.  Extensions may define separate payloads for Ping and Pong within the same type.
 
 
 ### Error responses
@@ -67,7 +61,7 @@ This code should be returned if the extension isn't supported. This error should
 - The extension isn't a required extension for specified Portal Network.
 
 #### 1: Requested data not found
-This error code is for if an extension is asking for something and it doesn't exist.
+This error code should be used when a client is unable to provide the necessary data for the response.
 
 #### 2: Failed to decode payload
 Wasn't able to decode the payload
