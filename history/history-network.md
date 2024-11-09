@@ -119,7 +119,7 @@ MAX_HEADER_LENGTH = 2**11  # = 2048
 # of the format is unclear to me, I'm leaving more room for expansion, and
 # setting the max at about 2 kilobytes.
 
-MAX_ENCODED_UNCLES_LENGTH = MAX_HEADER_LENGTH * 2**4  # = 2**17 ~= 32k
+MAX_ENCODED_UNCLES_LENGTH = MAX_HEADER_LENGTH * 2**4  # = 2**15 ~= 32k
 # Maximum number of uncles is currently 2. Using 16 leaves some room for the
 # protocol to increase the number of uncles.
 
