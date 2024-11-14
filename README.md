@@ -188,7 +188,7 @@ This network is a pure gossip network and does not implement any form of content
     - Prior Python proof-of-concept: https://github.com/ethereum/ddht/tree/341e84e9163338556cd48dd2fcfda9eedec3eb45
         - This POC should NOT be considered representative of the end goal.  It incorporates mechanisms that aren't likely to be apart of the actual implementation, specifically the "advertisement" system which proved to be a big bottleneck, as well as the SSZ merkle root system which was a workaround for large data transfer which we now intend to solve with uTP.
 - [Beacon Chain Network](./beacon-chain/beacon-network.md)
-- [Canonical Transaction Index Network](./canonical-transaction-index-network.md)
+- [Canonical Transaction Index Network](./canonical-transaction-index/canonical-transaction-index-network.md)
     - Spec is preliminary.
     - Network design borrows heavily from history network
 - [Transaction Gossip Network](./transaction-gossip/transaction-gossip.md)
