@@ -215,7 +215,7 @@ This content type represents block headers *near* the HEAD of the chain.  They a
 
 > Note: The content-id for this data type is not meaningful.
 
-> Note: This message is not valid for Gossip.  Clients **SHOULD** not send or accept gossip messages for this content type.
+> Note: This message is not valid for Gossip (OFFER/ACCEPT).  Clients **SHOULD** not send or accept gossip messages for this content type.
 
 > Note: Clients **SHOULD** implement a mechanism to purge headers older than 8192 blocks from their content databases.
 
