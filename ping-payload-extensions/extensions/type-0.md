@@ -11,7 +11,7 @@ MAX_CAPABILITIES_LENGTH = 500
 
 capabilities = SSZ.serialize(List[u16, MAX_CAPABILITIES_LENGTH])
 
-BasicRadiusPayload = Container(
+CapabilitiesPayload = Container(
   type: 0,
   payload: capabilities
 )

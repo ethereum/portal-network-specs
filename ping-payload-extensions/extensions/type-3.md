@@ -1,6 +1,6 @@
 # Get Client info
 
-This payload is only supposed to be usable from all Networks. This payload allows you to figure out peer's client info. Which will be useful for censuses.
+This payload MUST be available from all sub-networks. This payload allows you to figure out peer's client info. Which will be useful for censuses.
 
 
 ### Type Specifications
