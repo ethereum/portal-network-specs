@@ -75,7 +75,7 @@ type of content:
 - For contract trie nodes the trie node in the `content_for_retrieval` is appended to the parent storage proof and then combined with the account proof and block hash to build the `content_for_offer`.
 - For contract code the code in the `content_for_retrieval` is combined with the account proof and block hash to build the `content_for_offer`.
 
-This POKE mechanism as described above SHOULD be executed after looking up content from the network, whenever the proofs and block hash are available
+This POKE mechanism as described above SHOULD be executed after looking up content from the network, whenever the proofs and block hash are locally available
 to be used to build the `content_for_offer`.
 
 ### Routing Table
