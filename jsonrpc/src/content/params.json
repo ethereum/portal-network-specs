@@ -85,5 +85,27 @@
     "schema": {
       "$ref": "#/components/schemas/DataRadius"
     }
+  },
+  "EnrKeyValuePairs": {
+    "name": "EnrKeyValuePairs",
+    "description": "Key-value pairs for an ENR.",
+    "schema": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "key",
+          "value"
+        ],
+        "properties": {
+          "key": {
+            "$ref": "#/components/schemas/hexString"
+          },
+          "value": {
+            "$ref": "#/components/schemas/hexString"
+          }
+        }
+      }
+    }
   }
 }
