@@ -126,7 +126,7 @@
   },
   {
     "name": "portal_stateGetContent",
-    "summary": "Get content from the local database if it exists, otherwise look up the target content key in the network. After fetching from the network the content is validated and stored in the local database if storage criteria is met before being returned.",
+    "summary": "Get content from the local database if it exists, otherwise look up the target content key in the network. After fetching from the network the content is stored in the local database if storage criteria is met before being returned.",
     "params": [
       {
         "$ref": "#/components/contentDescriptors/ContentKey"
@@ -185,8 +185,8 @@
     }]
   },
   {
-    "name": "portal_stateGossip",
-    "summary": "Send the provided content item to interested peers. Clients may choose to send to some or all peers.",
+    "name": "portal_statePutContent",
+    "summary": "Store the content in the local database if storage criteria is met, then send the content to interested peers using the client's default gossip mechanisms.",
     "params": [
       {
         "$ref": "#/components/contentDescriptors/ContentKey"
@@ -196,7 +196,7 @@
       }
     ],
     "result": {
-      "$ref": "#/components/contentDescriptors/GossipResult"
+      "$ref": "#/components/contentDescriptors/PutContentResult"
     }
   }
 ]
