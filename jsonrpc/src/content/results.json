@@ -222,10 +222,23 @@
   },
   "PutContentResult": {
     "name": "PutContentResult",
-    "description": "Returns the number of peers that the content was gossiped to",
+    "description": "Returns the number of peers that the content was gossiped to and a flag indicating whether the content was stored locally or not.",
     "schema": {
-      "title": "number of peers",
-      "type": "number"
+      "type": "object",
+      "required": [
+        "peerCount",
+        "storedLocally"
+      ],
+      "properties": {
+        "peerCount": {
+          "description": "Indicates how many peers the content was gossiped to.",
+          "type": "number"
+        },
+        "storedLocally": {
+          "description": "Indicates whether the content was stored locally or not.",
+          "type": "boolean"
+        }
+      }
     }
   }
 }

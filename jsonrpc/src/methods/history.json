@@ -192,7 +192,7 @@
   },
   {
     "name": "portal_historyPutContent",
-    "summary": "Store the content in the local database if storage criteria is met, then send the content to interested peers. Clients may choose to send to some or all peers.",
+    "summary": "Store the content in the local database if storage criteria is met, then send the content to interested peers using the client's default gossip mechanisms.",
     "params": [
       {
         "$ref": "#/components/contentDescriptors/ContentKey"
