@@ -76,12 +76,7 @@ The beacon chain network supports the following protocol messages:
 
 #### `Ping.custom_data` & `Pong.custom_data`
 
-In the beacon chain network the `custom_payload` field of the `Ping` and `Pong` messages is the serialization of an SSZ Container specified as `custom_data`:
-
-```python
-custom_data = Container(data_radius: uint256)
-custom_payload = serialize(custom_data)
-```
+In the beacon chain network the `custom_payload` field of the `Ping` and `Pong` messages is the serialization of an SSZ Container specified as [Type 1 Basic Radius Payload](../ping-payload-extensions/extensions/type-1.md)
 
 ### Routing Table
 
