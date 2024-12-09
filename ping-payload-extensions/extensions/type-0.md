@@ -31,6 +31,7 @@ MAX_CAPABILITIES_LENGTH = 400
 
 client_info_and_capabilities = SSZ.serialize(Container(
     client_info: ByteList[MAX_CLIENT_INFO_BYTE_LENGTH]
+    data_radius: U256
     capabilities: List[u16, MAX_CAPABILITIES_LENGTH]
 ))
 
