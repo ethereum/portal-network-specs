@@ -43,12 +43,13 @@ If the ping receiver can't handle the ping for any reason the pong should return
 
 ## Standard extensions
 
-A standard extension is an extension which all nodes on the network can assume all other clients support, without requiring a `Type 0: Client Info, Radius, and Capabilities Payload` to discover what extensions the client supports. 
+A standard extension is an extension which all nodes on the network MUST support. Nodes can send these without requiring a `Type 0: Client Info, Radius, and Capabilities Payload` request to discover what extensions the client supports. 
 
 Changing standard extensions is considered a breaking change.
 
 List of some standard extensions
 - [Type 0: Client Info, Radius, and Capabilities Payload](extensions/type-0.md): useful for finding Client Info, Radius, and ping extensions a client supports
+- [Type 65535: Error Payload](extensions/type-65535.md): this payload can only be used as a response to a ping
 
 # Non standard extensions
 Non standard extensions are extensions in which you can't assume all other clients support, to use a non standard extension it is required that Portal clients first send a [Type 0: Client Info, Radius, and Capabilities Payload](extensions/type-0.md) packet, then upgrade to use their desired non standard extensions.
