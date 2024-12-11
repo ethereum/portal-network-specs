@@ -2,7 +2,7 @@
 
 ## Motivation
 
-Ping Payload Extensions. Messages on Portal are primarily made of ping/pong responses. This framework allows Portal clients to implement `non standard extensions` which don't require a breaking change to deploy to the network. A more flexible way to extend the Protocol without bloating the [Portal-Wire-Protocol](../portal-wire-protocol.md) or requiring every client to agree add a feature a subset of clients want.
+Ping Payload Extensions. Messages on Portal are primarily made of ping/pong responses. This framework allows Portal clients to implement `non standard extensions` which don't require a breaking change to deploy to the network. A more flexible way to extend the Protocol without bloating the core specification [Portal-Wire-Protocol](../portal-wire-protocol.md) or requiring every client to agree to add a feature a subset of clients want.
 
 # Type's
 
@@ -57,7 +57,7 @@ Non standard extensions are extensions in which you can't assume all other clien
 ## What is the [Type 0: Client Info, Radius, and Capabilities Payload](extensions/type-0.md) for
 It is for Portal implementations which want to see what extensions a peer supports. Not all extensions need to be implemented by all parties. So in order for a peer to find if an extension is implemented a [Type 0: Client Info, Radius, and Capabilities Payload](extensions/type-0.md) should be exchanged.
 
-Non-required extension offer a way for Portal implementations to offer extended functionality to its users without requiring every Portal implementing party to agree to a new feature. This allows for a diverse set of use cases to be fulfilled without requiring every implementer implement every extension, or requiring the need to bloat the minimal [Portal-Wire-Protocol](../portal-wire-protocol.md) with new `Message Types`.
+Non-required extension's offer a way for Portal implementations to offer extended functionality to its users without requiring every Portal implementing party to agree to a new feature. This allows for a diverse set of use cases to be fulfilled without requiring every implementer implement every extension, or requiring the need to bloat the minimal [Portal-Wire-Protocol](../portal-wire-protocol.md) with new `Message Types`.
 
 ## How do sub-network standard extension's work
 sub-network standard extension's are fundamental extensions that are required for a Portal sub-network to function. They must be supported by the sub-networks implementations. Changing a standard extension requires a breaking change. 
