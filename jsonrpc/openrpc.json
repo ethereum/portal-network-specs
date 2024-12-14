@@ -1,0 +1,1399 @@
+{
+	"openrpc": "1.2.4",
+	"info": {
+		"title": "Portal Network JSON-RPC Specification",
+		"description": "A specification of the standard interface for Portal Network clients.",
+		"license": {
+			"name": "CC0-1.0",
+			"url": "https://creativecommons.org/publicdomain/zero/1.0/legalcode"
+		},
+		"version": "0.0.1"
+	},
+	"methods": [
+		{
+			"name": "portal_beaconRoutingTableInfo",
+			"summary": "Returns meta information about beacon network routing table.",
+			"params": [],
+			"result": {
+				"$ref": "#/components/contentDescriptors/RoutingTableInfoResult"
+			}
+		},
+		{
+			"name": "portal_beaconAddEnr",
+			"summary": "Write an ethereum node record to the routing table.",
+			"params": [
+				{
+					"$ref": "#/components/contentDescriptors/Enr"
+				}
+			],
+			"result": {
+				"$ref": "#/components/contentDescriptors/AddEnrResult"
+			}
+		},
+		{
+			"name": "portal_beaconGetEnr",
+			"summary": "Fetch from the local node the latest ENR associated with the given NodeId",
+			"params": [
+				{
+					"$ref": "#/components/contentDescriptors/NodeId"
+				}
+			],
+			"result": {
+				"$ref": "#/components/contentDescriptors/GetEnrResult"
+			}
+		},
+		{
+			"name": "portal_beaconDeleteEnr",
+			"summary": "Delete a Node ID from the routing table",
+			"params": [
+				{
+					"$ref": "#/components/contentDescriptors/NodeId"
+				}
+			],
+			"result": {
+				"$ref": "#/components/contentDescriptors/DeleteEnrResult"
+			}
+		},
+		{
+			"name": "portal_beaconLookupEnr",
+			"summary": "Fetch from the DHT the latest ENR associated with the given NodeId",
+			"params": [
+				{
+					"$ref": "#/components/contentDescriptors/NodeId"
+				}
+			],
+			"result": {
+				"$ref": "#/components/contentDescriptors/LookupEnrResult"
+			}
+		},
+		{
+			"name": "portal_beaconPing",
+			"summary": "Send a PING message to the designated node and wait for a PONG response.",
+			"params": [
+				{
+					"$ref": "#/components/contentDescriptors/Enr"
+				}
+			],
+			"result": {
+				"$ref": "#/components/contentDescriptors/PingResult"
+			}
+		},
+		{
+			"name": "portal_beaconFindNodes",
+			"summary": "Send a FINDNODES request for nodes that fall within the given set of distances, to the designated peer and wait for a response.",
+			"params": [
+				{
+					"$ref": "#/components/contentDescriptors/Enr"
+				},
+				{
+					"$ref": "#/components/contentDescriptors/Distances"
+				}
+			],
+			"result": {
+				"$ref": "#/components/contentDescriptors/FindNodeResult"
+			}
+		},
+		{
+			"name": "portal_beaconFindContent",
+			"summary": "Send FINDCONTENT message to get the content with a content key.",
+			"params": [
+				{
+					"$ref": "#/components/contentDescriptors/Enr"
+				},
+				{
+					"$ref": "#/components/contentDescriptors/ContentKey"
+				}
+			],
+			"result": {
+				"$ref": "#/components/contentDescriptors/FindContentResult"
+			}
+		},
+		{
+			"name": "portal_beaconOffer",
+			"summary": "Send an OFFER request with given array of content items (keys & values), to the designated peer and wait for a response. The client MUST return an error if more than 64 content items are provided or less than 1 content items are provided.",
+			"params": [
+				{
+					"$ref": "#/components/contentDescriptors/Enr"
+				},
+				{
+					"$ref": "#/components/contentDescriptors/ContentItems"
+				}
+			],
+			"result": {
+				"$ref": "#/components/contentDescriptors/OfferResult"
+			}
+		},
+		{
+			"name": "portal_beaconOptimisticStateRoot",
+			"summary": "Get latest known optimistic beacon state root.",
+			"params": [],
+			"result": {
+				"$ref": "#/components/contentDescriptors/BeaconOptimisticStateRootResult"
+			}
+		},
+		{
+			"name": "portal_beaconRecursiveFindNodes",
+			"summary": "Look up ENRs closest to the given target, that are members of the beacon network",
+			"params": [
+				{
+					"$ref": "#/components/contentDescriptors/NodeId"
+				}
+			],
+			"result": {
+				"$ref": "#/components/contentDescriptors/RecursiveFindNodesResult"
+			}
+		},
+		{
+			"name": "portal_beaconGetContent",
+			"summary": "Get content from the local database if it exists, otherwise look up the target content key in the network. After fetching from the network the content is stored in the local database if storage criteria is met before being returned.",
+			"params": [
+				{
+					"$ref": "#/components/contentDescriptors/ContentKey"
+				}
+			],
+			"result": {
+				"$ref": "#/components/contentDescriptors/GetContentResult"
+			},
+			"errors": [
+				{
+					"$ref": "#/components/errors/ContentNotFoundError"
+				}
+			]
+		},
+		{
+			"name": "portal_beaconTraceGetContent",
+			"summary": "Get content as defined in portal_beaconGetContent and get additional tracing data",
+			"params": [
+				{
+					"$ref": "#/components/contentDescriptors/ContentKey"
+				}
+			],
+			"result": {
+				"$ref": "#/components/contentDescriptors/TraceGetContentResult"
+			},
+			"errors": [
+				{
+					"$ref": "#/components/errors/ContentNotFoundErrorWithTrace"
+				}
+			]
+		},
+		{
+			"name": "portal_beaconStore",
+			"summary": "Store beacon content key with content data",
+			"params": [
+				{
+					"$ref": "#/components/contentDescriptors/ContentKey"
+				},
+				{
+					"$ref": "#/components/contentDescriptors/ContentValue"
+				}
+			],
+			"result": {
+				"$ref": "#/components/contentDescriptors/StoreResult"
+			}
+		},
+		{
+			"name": "portal_beaconLocalContent",
+			"summary": "Get a content from the local database",
+			"params": [
+				{
+					"$ref": "#/components/contentDescriptors/ContentKey"
+				}
+			],
+			"result": {
+				"$ref": "#/components/contentDescriptors/LocalContentResult"
+			},
+			"errors": [
+				{
+					"$ref": "#/components/errors/ContentNotFoundError"
+				}
+			]
+		},
+		{
+			"name": "portal_beaconPutContent",
+			"summary": "Store the content in the local database if storage criteria is met, then send the content to interested peers using the client's default gossip mechanisms.",
+			"params": [
+				{
+					"$ref": "#/components/contentDescriptors/ContentKey"
+				},
+				{
+					"$ref": "#/components/contentDescriptors/ContentValue"
+				}
+			],
+			"result": {
+				"$ref": "#/components/contentDescriptors/PutContentResult"
+			}
+		},
+		{
+			"name": "discv5_nodeInfo",
+			"summary": "Returns ENR and nodeId information of the local discv5 node.",
+			"params": [],
+			"result": {
+				"name": "nodeInfoResult",
+				"description": "Local node information",
+				"required": true,
+				"schema": {
+					"title": "nodeInfoResults",
+					"description": "ENR and NodeId of the local peer",
+					"type": "object",
+					"required": [
+						"enr",
+						"nodeId"
+					],
+					"properties": {
+						"enr": {
+							"title": "nodeENR",
+							"description": "URL-safe base64 encoded \\\"text\\\" version of the ENR prefixed by \\\"enr:\\\".\"",
+							"$ref": "#/components/schemas/Enr"
+						},
+						"nodeId": {
+							"title": "nodeId",
+							"description": "Hex encoded `NodeId` of an ENR (a 32 byte identifier).",
+							"$ref": "#/components/schemas/bytes32"
+						}
+					}
+				}
+			}
+		},
+		{
+			"name": "discv5_updateNodeInfo",
+			"summary": "Add, update, or remove a key-value pair from the local node record",
+			"params": [
+				{
+					"name": "socketAddr",
+					"required": true,
+					"schema": {
+						"title": "ENR socket address",
+						"$ref": "#/components/schemas/socketAddr"
+					}
+				},
+				{
+					"name": "isTcp",
+					"description": "TCP or UDP socket",
+					"schema": {
+						"type": "boolean"
+					}
+				}
+			],
+			"result": {
+				"name": "nodeInfoResult",
+				"description": "Local node information",
+				"required": true,
+				"schema": {
+					"title": "nodeInfoResults",
+					"description": "ENR and NodeId of the local peer",
+					"type": "object",
+					"required": [
+						"enr",
+						"localNodeId"
+					],
+					"properties": {
+						"enr": {
+							"title": "nodeENR",
+							"description": "URL-safe base64 encoded \\\"text\\\" version of the ENR prefixed by \\\"enr:\\\".\"",
+							"$ref": "#/components/schemas/Enr"
+						},
+						"localNodeId": {
+							"title": "nodeId",
+							"description": "Hex encoded `NodeId` of an ENR (a 32 byte identifier).",
+							"$ref": "#/components/schemas/bytes32"
+						}
+					}
+				}
+			}
+		},
+		{
+			"name": "discv5_routingTableInfo",
+			"summary": "Returns meta information about discv5 routing table.",
+			"params": [],
+			"result": {
+				"$ref": "#/components/contentDescriptors/RoutingTableInfoResult"
+			}
+		},
+		{
+			"name": "discv5_addEnr",
+			"summary": "Write an ethereum node record to the routing table.",
+			"params": [
+				{
+					"$ref": "#/components/contentDescriptors/Enr"
+				}
+			],
+			"result": {
+				"$ref": "#/components/contentDescriptors/AddEnrResult"
+			}
+		},
+		{
+			"name": "discv5_getEnr",
+			"summary": "Fetch from the local node the latest ENR associated with the given NodeId",
+			"params": [
+				{
+					"$ref": "#/components/contentDescriptors/NodeId"
+				}
+			],
+			"result": {
+				"$ref": "#/components/contentDescriptors/GetEnrResult"
+			}
+		},
+		{
+			"name": "discv5_deleteEnr",
+			"summary": "Delete a Node ID from the routing table",
+			"params": [
+				{
+					"$ref": "#/components/contentDescriptors/NodeId"
+				}
+			],
+			"result": {
+				"$ref": "#/components/contentDescriptors/DeleteEnrResult"
+			}
+		},
+		{
+			"name": "discv5_lookupEnr",
+			"summary": "Fetch from the DHT the latest ENR associated with the given NodeId",
+			"params": [
+				{
+					"$ref": "#/components/contentDescriptors/NodeId"
+				}
+			],
+			"result": {
+				"$ref": "#/components/contentDescriptors/LookupEnrResult"
+			}
+		},
+		{
+			"name": "discv5_ping",
+			"summary": "Send a PING message to the designated node and wait for a PONG response.",
+			"params": [
+				{
+					"$ref": "#/components/contentDescriptors/Enr"
+				}
+			],
+			"result": {
+				"name": "pingResult",
+				"description": "Returns PONG response",
+				"schema": {
+					"title": "PONG message",
+					"type": "object",
+					"required": [
+						"enrSeq",
+						"recipientIP",
+						"recipientPort"
+					],
+					"properties": {
+						"enrSeq": {
+							"description": "ENR sequence number of sender",
+							"type": "number"
+						},
+						"recipientIP": {
+							"description": "IP address of the intended recipient",
+							"$ref": "#/components/schemas/ipAddr"
+						},
+						"recipientPort": {
+							"description": "recipient UDP port",
+							"$ref": "#/components/schemas/udpPort"
+						}
+					}
+				}
+			}
+		},
+		{
+			"name": "discv5_findNode",
+			"summary": "Send a FINDNODE request for nodes that fall within the given set of distances, to the designated peer and wait for a response.",
+			"params": [
+				{
+					"$ref": "#/components/contentDescriptors/Enr"
+				},
+				{
+					"$ref": "#/components/contentDescriptors/Distances"
+				}
+			],
+			"result": {
+				"$ref": "#/components/contentDescriptors/FindNodeResult"
+			}
+		},
+		{
+			"name": "discv5_talkReq",
+			"summary": "Send a TALKREQ request with a payload to a given peer and wait for response.",
+			"params": [
+				{
+					"$ref": "#/components/contentDescriptors/Enr"
+				},
+				{
+					"$ref": "#/components/contentDescriptors/ProtocolId"
+				},
+				{
+					"$ref": "#/components/contentDescriptors/TalkReqPayload"
+				}
+			],
+			"result": {
+				"name": "talkResult",
+				"description": "Returns TALKRESP message as hex string",
+				"schema": {
+					"$ref": "#/components/schemas/hexString"
+				}
+			}
+		},
+		{
+			"name": "discv5_recursiveFindNodes",
+			"summary": "Look up ENRs closest to the given target",
+			"params": [
+				{
+					"$ref": "#/components/contentDescriptors/NodeId"
+				}
+			],
+			"result": {
+				"$ref": "#/components/contentDescriptors/RecursiveFindNodesResult"
+			}
+		},
+		{
+			"name": "portal_historyRoutingTableInfo",
+			"summary": "Returns meta information about history network routing table.",
+			"params": [],
+			"result": {
+				"$ref": "#/components/contentDescriptors/RoutingTableInfoResult"
+			}
+		},
+		{
+			"name": "portal_historyAddEnr",
+			"summary": "Write an ethereum node record to the routing table.",
+			"params": [
+				{
+					"$ref": "#/components/contentDescriptors/Enr"
+				}
+			],
+			"result": {
+				"$ref": "#/components/contentDescriptors/AddEnrResult"
+			}
+		},
+		{
+			"name": "portal_historyGetEnr",
+			"summary": "Fetch from the local node the latest ENR associated with the given NodeId",
+			"params": [
+				{
+					"$ref": "#/components/contentDescriptors/NodeId"
+				}
+			],
+			"result": {
+				"$ref": "#/components/contentDescriptors/GetEnrResult"
+			}
+		},
+		{
+			"name": "portal_historyDeleteEnr",
+			"summary": "Delete a Node ID from the routing table",
+			"params": [
+				{
+					"$ref": "#/components/contentDescriptors/NodeId"
+				}
+			],
+			"result": {
+				"$ref": "#/components/contentDescriptors/DeleteEnrResult"
+			}
+		},
+		{
+			"name": "portal_historyLookupEnr",
+			"summary": "Fetch from the DHT the latest ENR associated with the given NodeId",
+			"params": [
+				{
+					"$ref": "#/components/contentDescriptors/NodeId"
+				}
+			],
+			"result": {
+				"$ref": "#/components/contentDescriptors/LookupEnrResult"
+			}
+		},
+		{
+			"name": "portal_historyPing",
+			"summary": "Send a PING message to the designated node and wait for a PONG response.",
+			"params": [
+				{
+					"$ref": "#/components/contentDescriptors/Enr"
+				}
+			],
+			"result": {
+				"$ref": "#/components/contentDescriptors/PingResult"
+			}
+		},
+		{
+			"name": "portal_historyFindNodes",
+			"summary": "Send a FINDNODES request for nodes that fall within the given set of distances, to the designated peer and wait for a response.",
+			"params": [
+				{
+					"$ref": "#/components/contentDescriptors/Enr"
+				},
+				{
+					"$ref": "#/components/contentDescriptors/Distances"
+				}
+			],
+			"result": {
+				"$ref": "#/components/contentDescriptors/FindNodeResult"
+			}
+		},
+		{
+			"name": "portal_historyFindContent",
+			"summary": "Send FINDCONTENT message to get the content with a content key.",
+			"params": [
+				{
+					"$ref": "#/components/contentDescriptors/Enr"
+				},
+				{
+					"$ref": "#/components/contentDescriptors/ContentKey"
+				}
+			],
+			"result": {
+				"$ref": "#/components/contentDescriptors/FindContentResult"
+			}
+		},
+		{
+			"name": "portal_historyOffer",
+			"summary": "Send an OFFER request with given array of content items (keys & values), to the designated peer and wait for a response. The client MUST return an error if more than 64 content items are provided or less than 1 content items are provided.",
+			"params": [
+				{
+					"$ref": "#/components/contentDescriptors/Enr"
+				},
+				{
+					"$ref": "#/components/contentDescriptors/ContentItems"
+				}
+			],
+			"result": {
+				"$ref": "#/components/contentDescriptors/OfferResult"
+			}
+		},
+		{
+			"name": "portal_historyRecursiveFindNodes",
+			"summary": "Look up ENRs closest to the given target, that are members of the history network",
+			"params": [
+				{
+					"$ref": "#/components/contentDescriptors/NodeId"
+				}
+			],
+			"result": {
+				"$ref": "#/components/contentDescriptors/RecursiveFindNodesResult"
+			}
+		},
+		{
+			"name": "portal_historyGetContent",
+			"summary": "Get content from the local database if it exists, otherwise look up the target content key in the network. After fetching from the network the content is stored in the local database if storage criteria is met before being returned.",
+			"params": [
+				{
+					"$ref": "#/components/contentDescriptors/ContentKey"
+				}
+			],
+			"result": {
+				"$ref": "#/components/contentDescriptors/GetContentResult"
+			},
+			"errors": [
+				{
+					"$ref": "#/components/errors/ContentNotFoundError"
+				}
+			]
+		},
+		{
+			"name": "portal_historyTraceGetContent",
+			"summary": "Get content as defined in portal_historyGetContent and get additional tracing data",
+			"params": [
+				{
+					"$ref": "#/components/contentDescriptors/ContentKey"
+				}
+			],
+			"result": {
+				"$ref": "#/components/contentDescriptors/TraceGetContentResult"
+			},
+			"errors": [
+				{
+					"$ref": "#/components/errors/ContentNotFoundErrorWithTrace"
+				}
+			]
+		},
+		{
+			"name": "portal_historyStore",
+			"summary": "Store history content key with content data",
+			"params": [
+				{
+					"$ref": "#/components/contentDescriptors/ContentKey"
+				},
+				{
+					"$ref": "#/components/contentDescriptors/ContentValue"
+				}
+			],
+			"result": {
+				"$ref": "#/components/contentDescriptors/StoreResult"
+			}
+		},
+		{
+			"name": "portal_historyLocalContent",
+			"summary": "Get a content from the local database",
+			"params": [
+				{
+					"$ref": "#/components/contentDescriptors/ContentKey"
+				}
+			],
+			"result": {
+				"$ref": "#/components/contentDescriptors/LocalContentResult"
+			},
+			"errors": [
+				{
+					"$ref": "#/components/errors/ContentNotFoundError"
+				}
+			]
+		},
+		{
+			"name": "portal_historyPutContent",
+			"summary": "Store the content in the local database if storage criteria is met, then send the content to interested peers using the client's default gossip mechanisms.",
+			"params": [
+				{
+					"$ref": "#/components/contentDescriptors/ContentKey"
+				},
+				{
+					"$ref": "#/components/contentDescriptors/ContentValue"
+				}
+			],
+			"result": {
+				"$ref": "#/components/contentDescriptors/PutContentResult"
+			}
+		},
+		{
+			"name": "portal_stateRoutingTableInfo",
+			"summary": "Returns meta information about state network routing table.",
+			"params": [],
+			"result": {
+				"$ref": "#/components/contentDescriptors/RoutingTableInfoResult"
+			}
+		},
+		{
+			"name": "portal_stateAddEnr",
+			"summary": "Write an ethereum node record to the routing table.",
+			"params": [
+				{
+					"$ref": "#/components/contentDescriptors/Enr"
+				}
+			],
+			"result": {
+				"$ref": "#/components/contentDescriptors/AddEnrResult"
+			}
+		},
+		{
+			"name": "portal_stateGetEnr",
+			"summary": "Fetch from the local node the latest ENR associated with the given NodeId",
+			"params": [
+				{
+					"$ref": "#/components/contentDescriptors/NodeId"
+				}
+			],
+			"result": {
+				"$ref": "#/components/contentDescriptors/GetEnrResult"
+			}
+		},
+		{
+			"name": "portal_stateDeleteEnr",
+			"summary": "Delete a Node ID from the routing table",
+			"params": [
+				{
+					"$ref": "#/components/contentDescriptors/NodeId"
+				}
+			],
+			"result": {
+				"$ref": "#/components/contentDescriptors/DeleteEnrResult"
+			}
+		},
+		{
+			"name": "portal_stateLookupEnr",
+			"summary": "Fetch from the DHT the latest ENR associated with the given NodeId",
+			"params": [
+				{
+					"$ref": "#/components/contentDescriptors/NodeId"
+				}
+			],
+			"result": {
+				"$ref": "#/components/contentDescriptors/LookupEnrResult"
+			}
+		},
+		{
+			"name": "portal_statePing",
+			"summary": "Send a PING message to the designated node and wait for a PONG response.",
+			"params": [
+				{
+					"$ref": "#/components/contentDescriptors/Enr"
+				}
+			],
+			"result": {
+				"$ref": "#/components/contentDescriptors/PingResult"
+			}
+		},
+		{
+			"name": "portal_stateFindNodes",
+			"summary": "Send a FINDNODES request for nodes that fall within the given set of distances, to the designated peer and wait for a response.",
+			"params": [
+				{
+					"$ref": "#/components/contentDescriptors/Enr"
+				},
+				{
+					"$ref": "#/components/contentDescriptors/Distances"
+				}
+			],
+			"result": {
+				"$ref": "#/components/contentDescriptors/FindNodeResult"
+			}
+		},
+		{
+			"name": "portal_stateFindContent",
+			"summary": "Send FINDCONTENT message to get the content with a content key.",
+			"params": [
+				{
+					"$ref": "#/components/contentDescriptors/Enr"
+				},
+				{
+					"$ref": "#/components/contentDescriptors/ContentKey"
+				}
+			],
+			"result": {
+				"$ref": "#/components/contentDescriptors/FindContentResult"
+			}
+		},
+		{
+			"name": "portal_stateOffer",
+			"summary": "Send an OFFER request with given array of content items (keys & values), to the designated peer and wait for a response. The client MUST return an error if more than 64 content items are provided or less than 1 content items are provided.",
+			"params": [
+				{
+					"$ref": "#/components/contentDescriptors/Enr"
+				},
+				{
+					"$ref": "#/components/contentDescriptors/ContentItems"
+				}
+			],
+			"result": {
+				"$ref": "#/components/contentDescriptors/OfferResult"
+			}
+		},
+		{
+			"name": "portal_stateRecursiveFindNodes",
+			"summary": "Look up ENRs closest to the given target, that are members of the state network",
+			"params": [
+				{
+					"$ref": "#/components/contentDescriptors/NodeId"
+				}
+			],
+			"result": {
+				"$ref": "#/components/contentDescriptors/RecursiveFindNodesResult"
+			}
+		},
+		{
+			"name": "portal_stateGetContent",
+			"summary": "Get content from the local database if it exists, otherwise look up the target content key in the network. After fetching from the network the content is stored in the local database if storage criteria is met before being returned.",
+			"params": [
+				{
+					"$ref": "#/components/contentDescriptors/ContentKey"
+				}
+			],
+			"result": {
+				"$ref": "#/components/contentDescriptors/GetContentResult"
+			},
+			"errors": [
+				{
+					"$ref": "#/components/errors/ContentNotFoundError"
+				}
+			]
+		},
+		{
+			"name": "portal_stateTraceGetContent",
+			"summary": "Get content as defined in portal_stateGetContent and get additional tracing data",
+			"params": [
+				{
+					"$ref": "#/components/contentDescriptors/ContentKey"
+				}
+			],
+			"result": {
+				"$ref": "#/components/contentDescriptors/TraceGetContentResult"
+			},
+			"errors": [
+				{
+					"$ref": "#/components/errors/ContentNotFoundErrorWithTrace"
+				}
+			]
+		},
+		{
+			"name": "portal_stateStore",
+			"summary": "Store state content key with content data",
+			"params": [
+				{
+					"$ref": "#/components/contentDescriptors/ContentKey"
+				},
+				{
+					"$ref": "#/components/contentDescriptors/ContentValue"
+				}
+			],
+			"result": {
+				"$ref": "#/components/contentDescriptors/StoreResult"
+			}
+		},
+		{
+			"name": "portal_stateLocalContent",
+			"summary": "Get a content from the local database",
+			"params": [
+				{
+					"$ref": "#/components/contentDescriptors/ContentKey"
+				}
+			],
+			"result": {
+				"$ref": "#/components/contentDescriptors/LocalContentResult"
+			},
+			"errors": [
+				{
+					"$ref": "#/components/errors/ContentNotFoundError"
+				}
+			]
+		},
+		{
+			"name": "portal_statePutContent",
+			"summary": "Store the content in the local database if storage criteria is met, then send the content to interested peers using the client's default gossip mechanisms.",
+			"params": [
+				{
+					"$ref": "#/components/contentDescriptors/ContentKey"
+				},
+				{
+					"$ref": "#/components/contentDescriptors/ContentValue"
+				}
+			],
+			"result": {
+				"$ref": "#/components/contentDescriptors/PutContentResult"
+			}
+		}
+	],
+	"components": {
+		"contentDescriptors": {
+			"ContentKey": {
+				"name": "contentKey",
+				"description": "The encoded Portal content key",
+				"required": true,
+				"schema": {
+					"$ref": "#/components/schemas/hexString"
+				}
+			},
+			"ContentValue": {
+				"name": "contentValue",
+				"description": "The encoded Portal content value",
+				"required": true,
+				"schema": {
+					"$ref": "#/components/schemas/hexString"
+				}
+			},
+			"ProtocolId": {
+				"name": "protocolId",
+				"required": true,
+				"description": "The protocol element of discv5 TALKREQ message-data",
+				"schema": {
+					"title": "protocol id",
+					"$ref": "#/components/schemas/hexString"
+				}
+			},
+			"TalkReqPayload": {
+				"name": "talkReqPayload",
+				"required": true,
+				"description": "The request element of discv5 TALKREQ message-data",
+				"schema": {
+					"$ref": "#/components/schemas/hexString"
+				}
+			},
+			"Distances": {
+				"name": "distances",
+				"required": true,
+				"schema": {
+					"title": "distance",
+					"type": "array",
+					"items": {
+						"type": "number"
+					}
+				}
+			},
+			"ContentItems": {
+				"name": "content_items",
+				"required": true,
+				"schema": {
+					"title": "content_item",
+					"type": "array",
+					"items": {
+						"$ref": "#/components/schemas/ContentItem"
+					},
+					"minItems": 1,
+					"maxItems": 64
+				}
+			},
+			"Enr": {
+				"name": "enr",
+				"required": true,
+				"schema": {
+					"title": "Ethereum node record",
+					"$ref": "#/components/schemas/Enr"
+				}
+			},
+			"EnrSeq": {
+				"name": "enrSeq",
+				"schema": {
+					"title": "The ENR sequence number",
+					"type": "number"
+				}
+			},
+			"NodeId": {
+				"name": "nodeId",
+				"required": true,
+				"schema": {
+					"title": "NodeId",
+					"$ref": "#/components/schemas/bytes32"
+				}
+			},
+			"DataRadius": {
+				"name": "dataRadius",
+				"description": "Data radius value",
+				"schema": {
+					"$ref": "#/components/schemas/DataRadius"
+				}
+			},
+			"AddEnrResult": {
+				"name": "addEnrResult",
+				"description": "Returns boolean if the node record has been successfully saved.",
+				"schema": {
+					"type": "boolean"
+				}
+			},
+			"BeaconOptimisticStateRootResult": {
+				"name": "optimisticStateRootResult",
+				"description": "Returns the hex encoded optimistic beacon state root.",
+				"schema": {
+					"title": "Hex encoded optimistic beacon state root",
+					"$ref": "#/components/schemas/bytes32"
+				}
+			},
+			"StoreResult": {
+				"name": "storeResult",
+				"description": "Returns \"true\" upon success",
+				"schema": {
+					"type": "boolean"
+				}
+			},
+			"DeleteEnrResult": {
+				"name": "deleteEnrResult",
+				"description": "Returns boolean upon successful deletion of the node record.",
+				"schema": {
+					"type": "boolean"
+				}
+			},
+			"FindContentResult": {
+				"name": "FindContentResult",
+				"description": "Returns either the requested content, received directly from the CONTENT message or transferred over uTP, or, in case the recipient does not have the content, a list of ENR records of nodes that are closer than the recipient is to the requested content.",
+				"schema": {
+					"title": "FindContentResult",
+					"type": "object",
+					"oneOf": [
+						{
+							"title": "ContentInfo",
+							"type": "object",
+							"required": [
+								"content",
+								"utpTransfer"
+							],
+							"properties": {
+								"content": {
+									"title": "Requested content",
+									"description": "Encoded requested content",
+									"$ref": "#/components/schemas/hexString"
+								},
+								"utpTransfer": {
+									"description": "Indicates whether the content was transferred over a uTP connection or not.",
+									"type": "boolean"
+								}
+							}
+						},
+						{
+							"title": "ENRs",
+							"description": "List of ENR records of nodes that are closer than the recipient is to the requested content",
+							"type": "object",
+							"required": [
+								"enrs"
+							],
+							"properties": {
+								"enrs": {
+									"type": "array",
+									"items": {
+										"$ref": "#/components/schemas/Enr"
+									}
+								}
+							}
+						}
+					]
+				}
+			},
+			"FindNodeResult": {
+				"name": "findNodeResult",
+				"description": "Returns nodes in a given distance",
+				"schema": {
+					"title": "NODES message",
+					"type": "array",
+					"items": {
+						"$ref": "#/components/schemas/Enr"
+					}
+				}
+			},
+			"GetEnrResult": {
+				"name": "getEnrResult",
+				"description": "Returns latest ENR associated with the given node ID.",
+				"schema": {
+					"title": "Ethereum node record",
+					"$ref": "#/components/schemas/Enr"
+				}
+			},
+			"LookupEnrResult": {
+				"name": "lookupEnrResult",
+				"description": "Returns ENR associated with the given node ID",
+				"schema": {
+					"title": "Ethereum node record",
+					"$ref": "#/components/schemas/Enr"
+				}
+			},
+			"OfferResult": {
+				"name": "offerResult",
+				"description": "Returns the content keys bitlist upon successful content transmission or empty bitlist receival",
+				"schema": {
+					"title": "Encoded content keys bitlist",
+					"$ref": "#/components/schemas/hexString"
+				}
+			},
+			"PingResult": {
+				"name": "pingResult",
+				"description": "Returns PONG response",
+				"schema": {
+					"title": "PONG message",
+					"type": "object",
+					"required": [
+						"enrSeq",
+						"dataRadius"
+					],
+					"properties": {
+						"enrSeq": {
+							"description": "ENR sequence number of sender",
+							"type": "number"
+						},
+						"dataRadius": {
+							"description": "Data radius value",
+							"$ref": "#/components/schemas/DataRadius"
+						}
+					}
+				}
+			},
+			"RecursiveFindNodesResult": {
+				"name": "recursiveFindNodesResult",
+				"description": "Up to 16 ENRs of the closest nodes, sorted by distance.",
+				"schema": {
+					"type": "array",
+					"items": {
+						"$ref": "#/components/schemas/Enr"
+					}
+				}
+			},
+			"RoutingTableInfoResult": {
+				"name": "routingTableInfoResult",
+				"description": "history network routing table information",
+				"required": true,
+				"schema": {
+					"title": "routingTableInfoResults",
+					"description": "Routing table details",
+					"type": "object",
+					"required": [
+						"localNodeId",
+						"buckets"
+					],
+					"properties": {
+						"localNodeId": {
+							"title": "nodeId",
+							"description": "The key identifying the local peer that owns the routing table.",
+							"$ref": "#/components/schemas/bytes32"
+						},
+						"buckets": {
+							"title": "kBucketsTable",
+							"description": "Represents a Kademlia routing table.",
+							"$ref": "#/components/schemas/kBuckets"
+						}
+					}
+				}
+			},
+			"GetContentResult": {
+				"name": "GetContentResult",
+				"description": "Returns the hex encoded content value and utp transfer flag. If the content is not available, returns \"0x\"",
+				"schema": {
+					"type": "object",
+					"required": [
+						"content",
+						"utpTransfer"
+					],
+					"properties": {
+						"content": {
+							"description": "Hex encoded content value",
+							"$ref": "#/components/schemas/hexString"
+						},
+						"utpTransfer": {
+							"description": "Indicates whether the content was transferred over a uTP connection or not.",
+							"type": "boolean"
+						}
+					}
+				}
+			},
+			"TraceGetContentResult": {
+				"name": "TraceGetContentResult",
+				"description": "Returns the hex encoded content value and trace data object. If the content is not available, returns \"0x\"",
+				"schema": {
+					"type": "object",
+					"required": [
+						"content",
+						"utpTransfer",
+						"trace"
+					],
+					"properties": {
+						"content": {
+							"description": "Hex encoded content value",
+							"$ref": "#/components/schemas/hexString"
+						},
+						"utpTransfer": {
+							"description": "Indicates whether the content was transferred over a uTP connection or not.",
+							"type": "boolean"
+						},
+						"trace": {
+							"description": "Contains trace data for the request.",
+							"$ref": "#/components/schemas/traceResultObject"
+						}
+					}
+				}
+			},
+			"LocalContentResult": {
+				"name": "LocalContentResult",
+				"description": "Returns the hex encoded content value.",
+				"schema": {
+					"$ref": "#/components/schemas/hexString"
+				}
+			},
+			"PutContentResult": {
+				"name": "PutContentResult",
+				"description": "Returns the number of peers that the content was gossiped to and a flag indicating whether the content was stored locally or not.",
+				"schema": {
+					"type": "object",
+					"required": [
+						"peerCount",
+						"storedLocally"
+					],
+					"properties": {
+						"peerCount": {
+							"description": "Indicates how many peers the content was gossiped to.",
+							"type": "number"
+						},
+						"storedLocally": {
+							"description": "Indicates whether the content was stored locally or not.",
+							"type": "boolean"
+						}
+					}
+				}
+			}
+		},
+		"schemas": {
+			"bytes2": {
+				"title": "2 hex encoded bytes",
+				"type": "string",
+				"pattern": "^0x[0-9a-f]{4}$"
+			},
+			"bytes4": {
+				"title": "4 hex encoded bytes",
+				"type": "string",
+				"pattern": "^0x[0-9a-f]{8}$"
+			},
+			"bytes8": {
+				"title": "8 hex encoded bytes",
+				"type": "string",
+				"pattern": "^0x[0-9a-f]{16}$"
+			},
+			"bytes16": {
+				"title": "16 hex encoded bytes",
+				"type": "string",
+				"pattern": "^0x[0-9a-f]{32}$"
+			},
+			"bytes32": {
+				"title": "32 hex encoded bytes",
+				"type": "string",
+				"pattern": "^0x[0-9a-f]{64}$"
+			},
+			"hexString": {
+				"title": "Hex string",
+				"type": "string",
+				"pattern": "^0x[0-9a-f]$"
+			},
+			"uint": {
+				"title": "hex encoded unsigned integer",
+				"type": "string",
+				"pattern": "^0x[1-9a-f]+[0-9a-f]*$"
+			},
+			"uint256": {
+				"title": "hex encoded 256 bit unsigned integer",
+				"type": "string",
+				"pattern": "^0x([1-9a-f][0-9a-f]{0,63}|0$)"
+			},
+			"kBucket": {
+				"title": "kBucket info",
+				"description": "List of up to 16 hex encoded nodeIds, ordered from least-recently connected to most-recently connected.",
+				"type": "array",
+				"items": {
+					"$ref": "#/components/schemas/bytes32"
+				}
+			},
+			"kBuckets": {
+				"title": "kBuckets",
+				"description": "The buckets comprising the routing table.",
+				"type": "array",
+				"items": {
+					"$ref": "#/components/schemas/kBucket"
+				}
+			},
+			"DataRadius": {
+				"title": "Data radius as a hex encoded uint256",
+				"$ref": "#/components/schemas/uint256"
+			},
+			"Enr": {
+				"title": "Base64 encoded ENR",
+				"type": "string",
+				"pattern": "^enr:[a-zA-Z0-9_:-]{179}$"
+			},
+			"ipAddr": {
+				"title": "IP v4/v6 address",
+				"type": "string",
+				"pattern": "((^\\s*((([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])\\.){3}([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5]))\\s*$)|(^\\s*((([0-9A-Fa-f]{1,4}:){7}([0-9A-Fa-f]{1,4}|:))|(([0-9A-Fa-f]{1,4}:){6}(:[0-9A-Fa-f]{1,4}|((25[0-5]|2[0-4]\\d|1\\d\\d|[1-9]?\\d)(\\.(25[0-5]|2[0-4]\\d|1\\d\\d|[1-9]?\\d)){3})|:))|(([0-9A-Fa-f]{1,4}:){5}(((:[0-9A-Fa-f]{1,4}){1,2})|:((25[0-5]|2[0-4]\\d|1\\d\\d|[1-9]?\\d)(\\.(25[0-5]|2[0-4]\\d|1\\d\\d|[1-9]?\\d)){3})|:))|(([0-9A-Fa-f]{1,4}:){4}(((:[0-9A-Fa-f]{1,4}){1,3})|((:[0-9A-Fa-f]{1,4})?:((25[0-5]|2[0-4]\\d|1\\d\\d|[1-9]?\\d)(\\.(25[0-5]|2[0-4]\\d|1\\d\\d|[1-9]?\\d)){3}))|:))|(([0-9A-Fa-f]{1,4}:){3}(((:[0-9A-Fa-f]{1,4}){1,4})|((:[0-9A-Fa-f]{1,4}){0,2}:((25[0-5]|2[0-4]\\d|1\\d\\d|[1-9]?\\d)(\\.(25[0-5]|2[0-4]\\d|1\\d\\d|[1-9]?\\d)){3}))|:))|(([0-9A-Fa-f]{1,4}:){2}(((:[0-9A-Fa-f]{1,4}){1,5})|((:[0-9A-Fa-f]{1,4}){0,3}:((25[0-5]|2[0-4]\\d|1\\d\\d|[1-9]?\\d)(\\.(25[0-5]|2[0-4]\\d|1\\d\\d|[1-9]?\\d)){3}))|:))|(([0-9A-Fa-f]{1,4}:){1}(((:[0-9A-Fa-f]{1,4}){1,6})|((:[0-9A-Fa-f]{1,4}){0,4}:((25[0-5]|2[0-4]\\d|1\\d\\d|[1-9]?\\d)(\\.(25[0-5]|2[0-4]\\d|1\\d\\d|[1-9]?\\d)){3}))|:))|(:(((:[0-9A-Fa-f]{1,4}){1,7})|((:[0-9A-Fa-f]{1,4}){0,5}:((25[0-5]|2[0-4]\\d|1\\d\\d|[1-9]?\\d)(\\.(25[0-5]|2[0-4]\\d|1\\d\\d|[1-9]?\\d)){3}))|:)))(%.+)?\\s*$))"
+			},
+			"socketAddr": {
+				"title": "ENR socket address",
+				"type": "string",
+				"pattern": "/([0-9]{1,3}(?:\\.[0-9]{1,3}){3}|(?=[^\\/]{1,254}(?![^\\/]))(?:(?=[a-zA-Z0-9-]{1,63}\\.)(?:xn--+)?[a-zA-Z0-9]+(?:-[a-zA-Z0-9]+)*\\.)+[a-zA-Z]{2,63}):([0-9]{1,5})$"
+			},
+			"udpPort": {
+				"title": "UDP port number",
+				"type": "string",
+				"pattern": "^([1-9][0-9]{0,3}|[1-5][0-9]{4}|6[0-4][0-9]{3}|65[0-4][0-9]{2}|655[0-2][0-9]|6553[0-5])$"
+			},
+			"ContentItem": {
+				"title": "content_item",
+				"type": "array",
+				"items": [
+					{
+						"title": "Content key",
+						"description": "The encoded Portal content key",
+						"$ref": "#/components/schemas/hexString"
+					},
+					{
+						"title": "Content value",
+						"description": "The encoded Portal content value",
+						"$ref": "#/components/schemas/hexString"
+					}
+				],
+				"minItems": 2,
+				"maxItems": 2,
+				"additionalItems": false
+			},
+			"traceResultObject": {
+				"title": "traceResultObject",
+				"description": "Trace data for the result of tracing content request.",
+				"type": "object",
+				"required": [
+					"origin",
+					"targetId",
+					"responses",
+					"metadata",
+					"startedAtMs"
+				],
+				"properties": {
+					"origin": {
+						"description": "Local Node ID",
+						"$ref": "#/components/schemas/uint256"
+					},
+					"targetId": {
+						"description": "Target content ID",
+						"$ref": "#/components/schemas/uint256"
+					},
+					"receivedFrom": {
+						"description": "Node ID from which the content was received.",
+						"$ref": "#/components/schemas/uint256"
+					},
+					"responses": {
+						"$ref": "#/components/schemas/traceResultResponses"
+					},
+					"metadata": {
+						"$ref": "#/components/schemas/traceResultMetadata"
+					},
+					"startedAtMs": {
+						"type": "integer",
+						"minimum": 0,
+						"description": "Timestamp of the beginning of this request in milliseconds."
+					},
+					"cancelled": {
+						"description": "List of node IDs requests to which were sent but cancelled due to receiving content from somewhere else, before receiving response from those nodes.",
+						"$ref": "#/components/schemas/listOfNodeIds"
+					}
+				}
+			},
+			"listOfNodeIds": {
+				"title": "listOfNodeIds",
+				"description": "Contains list of nodes IDs.",
+				"type": "array",
+				"items": {
+					"$ref": "#/components/schemas/uint256"
+				}
+			},
+			"traceResultResponses": {
+				"title": "traceResultResponses",
+				"description": "Contains a map of remote node IDs with the node IDs each node responded with. For the node ID that is in the `receivedFrom` field, `respondedWith` MUST be empty array.",
+				"type": "object",
+				"additionalProperties": {
+					"$ref": "#/components/schemas/traceResultResponseItem"
+				}
+			},
+			"traceResultResponseItem": {
+				"title": "traceResultResponseItem",
+				"description": "Contains the node's response, including the duration of the request.",
+				"type": "object",
+				"properties": {
+					"durationsMs": {
+						"description": "Time it took from the beginning of the lookup(JSON-RPC request) up to receiving this response.",
+						"type": "integer",
+						"minimum": 0
+					},
+					"respondedWith": {
+						"$ref": "#/components/schemas/listOfNodeIds"
+					}
+				}
+			},
+			"traceResultMetadata": {
+				"title": "traceResultMetadata",
+				"description": "Contains a map from node ID to the metadata object for that node.",
+				"type": "object",
+				"additionalProperties": {
+					"$ref": "#/components/schemas/traceResultMetadataObject"
+				}
+			},
+			"traceResultMetadataObject": {
+				"title": "traceResultMetadataObject",
+				"description": "Contains metadata for each node ID mentioned in the trace response.",
+				"type": "object",
+				"properties": {
+					"enr": {
+						"$ref": "#/components/schemas/Enr"
+					},
+					"distance": {
+						"$ref": "#/components/schemas/uint256"
+					}
+				}
+			}
+		},
+		"errors": {
+			"ContentNotFoundError": {
+				"code": -39001,
+				"message": "content not found"
+			},
+			"ContentNotFoundErrorWithTrace": {
+				"code": -39002,
+				"message": "content not found",
+				"data": {
+					"$ref": "#/components/schemas/traceResultObject"
+				}
+			}
+		}
+	}
+}
