@@ -61,12 +61,15 @@ The history network supports the following protocol messages:
 
 #### `Ping.custom_data` & `Pong.custom_data`
 
-In the history network the `custom_payload` field of the `Ping` and `Pong` messages is the serialization of an SSZ Container specified as `custom_data`:
+In the history network the `custom_payload` field of the `Ping` and `Pong` messages. The first packet between another client MUST be [Type 0: Client Info, Radius, and Capabilities Payload](../ping-payload-extensions/extensions/type-0.md). Then upgraded to the latest payload supported by both of the clients.
 
-```python
-custom_data = Container(data_radius: uint256)
-custom_payload = SSZ.serialize(custom_data)
-```
+List of currently supported payloads, by latest to oldest.
+-  [Type 2 History Radius Payload](../ping-payload-extensions/extensions/type-2.md)
+
+
+
+
+
 
 ### Routing Table
 
