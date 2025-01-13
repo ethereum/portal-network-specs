@@ -235,7 +235,7 @@ content_key      = selector + SSZ.serialize(block_number_key)
 
 ##### Ephemeral Block Headers
 
-This content type represents block headers *near* the HEAD of the chain.  They are provable by tracing through the chain of `header.parent_hash` values.  All nodes in the network are assumed to store some amount of this content.  The `Ping.custom_data` and `Pong.custom_data` fields can be used to learn the number of recent headers that a client makes available.
+This content type represents block headers *near* the HEAD of the chain.  They are provable by tracing through the chain of `header.parent_hash` values.  All nodes in the network are assumed to store some amount of this content.  The `Ping.custom_data` and `Pong.custom_data` fields can be used to learn the number of recent headers that a client makes available.  It is recommended that clients store the full window of 8192 blocks of this data.
 
 > Note: The history network does not provide a mechanism for knowing the HEAD of the chain. Clients to this network **MUST** have an external oracle for this information.  The Portal Beacon Network is able to provide this information.
 
