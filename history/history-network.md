@@ -202,7 +202,7 @@ BlockHeaderWithProof = Container(
 * For pre-merge headers, clients SHOULD only accept headers with `BlockProofHistoricalHashesAccumulator` proofs.
 * For post-merge until Capella headers, clients SHOULD only accept headers with `BlockProofHistoricalRoots` proofs.
 * For Capella and onwards headers, clients SHOULD only accept headers with `BlockProofHistoricalSummaries` proofs.
-* For headers that are not yet part of the last period, clients SHOULD NOT accept offers for these headers because their proofs are not stable and will change once they transition beyong the period boundary.  See *Ephemeral Block Headers* for how to handle headers from the last period.
+* For headers that are not yet part of the last period, clients SHOULD NOT accept offers for these headers because their proofs are not stable and will change once they transition beyond the period boundary.  See *Ephemeral Block Headers* for how to handle headers from the last period.
 
 ##### Block Header by Hash
 
