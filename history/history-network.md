@@ -67,10 +67,6 @@ List of currently supported payloads, by latest to oldest.
 -  [Type 2 History Radius Payload](../ping-payload-extensions/extensions/type-2.md)
 
 
-
-
-
-
 ### Routing Table
 
 The history network uses the standard routing table structure from the Portal Wire Protocol.
@@ -82,7 +78,7 @@ The history network uses the standard routing table structure from the Portal Wi
 The history network includes one additional piece of node state that should be tracked.  Nodes must track the `data_radius` from the Ping and Pong messages for other nodes in the network.  This value is a 256 bit integer and represents the data that a node is "interested" in.  We define the following function to determine whether node in the network should be interested in a piece of content.
 
 ```python
-interested(node, content) = distance(node.id, content.id) <= node.radius
+interested(node, content) = distance(node.id, content.id) <= node.data_radius
 ```
 
 A node is expected to maintain `radius` information for each node in its local node table. A node's `radius` value may fluctuate as the contents of its local key-value store change.
@@ -138,6 +134,10 @@ WITHDRAWAL_LENGTH = 64
 
 SHANGHAI_TIMESTAMP = 1681338455
 # Number sourced from EIP-4895
+
+MAX_EPHEMERAL_HEADER_PAYLOAD = 256
+# The maximum number of ephemeral headers that can be requested or transferred
+# in a single request.
 ```
 
 #### Encoding Content Values for Validation
@@ -191,7 +191,7 @@ BlockProofHistoricalSummaries = Container[
     slot: Slot # Slot of BeaconBlock, used to calculate the historical_summaries index
 ]
 
-BlockHeaderProof = Union[None, BlockProofHistoricalHashesAccumulator, BlockProofHistoricalRoots, BlockProofHistoricalSummaries]
+BlockHeaderProof = Union[BlockProofHistoricalHashesAccumulator, BlockProofHistoricalRoots, BlockProofHistoricalSummaries]
 
 BlockHeaderWithProof = Container(
   header: ByteList[MAX_HEADER_LENGTH], # RLP encoded header in SSZ ByteList
@@ -199,13 +199,10 @@ BlockHeaderWithProof = Container(
 )
 ```
 
-> **_Note:_** The `BlockHeaderProof` allows to provide headers without a proof (`None`).
-For pre-merge headers, clients SHOULD NOT accept headers without a proof
-as there is the `BlockProofHistoricalHashesAccumulator` solution available.
-For post-merge until Capella headers, clients SHOULD NOT accept headers without a proof as there is the `BlockProofHistoricalRoots` solution available.
-For Capella and onwards headers, clients SHOULD NOT accept headers without a proof as there is the `BlockProofHistoricalSummaries` solution available.
-For headers that are not yet part of the last period, clients SHOULD
-accept headers without a proof.
+* For pre-merge headers, clients SHOULD only accept headers with `BlockProofHistoricalHashesAccumulator` proofs.
+* For post-merge until Capella headers, clients SHOULD only accept headers with `BlockProofHistoricalRoots` proofs.
+* For Capella and onwards headers, clients SHOULD only accept headers with `BlockProofHistoricalSummaries` proofs.
+* For headers that are not yet part of the last period, clients SHOULD NOT accept offers for these headers because their proofs are not stable and will change once they transition beyond the period boundary.  See *Ephemeral Block Headers* for how to handle headers from the last period.
 
 ##### Block Header by Hash
 
@@ -235,6 +232,47 @@ block_header_with_proof = BlockHeaderWithProof(header: rlp.encode(header), proof
 content          = SSZ.serialize(block_header_with_proof)
 content_key      = selector + SSZ.serialize(block_number_key)
 ```
+
+##### Ephemeral Block Headers
+
+This content type represents block headers *near* the HEAD of the chain.  They are provable by tracing through the chain of `header.parent_hash` values.  All nodes in the network are assumed to store some amount of this content.  The `Ping.custom_data` and `Pong.custom_data` fields can be used to learn the number of recent headers that a client makes available.  It is recommended that clients store the full window of 8192 blocks of this data.
+
+> Note: The history network does not provide a mechanism for knowing the HEAD of the chain. Clients to this network **MUST** have an external oracle for this information.  The Portal Beacon Network is able to provide this information.
+
+> Note: The content-id for this data type is not meaningful.
+
+> Note: This message is not valid for Gossip.  Clients **SHOULD** not send or accept gossip messages for this content type.
+
+> Note: Clients **SHOULD** implement a mechanism to purge headers older than 8192 blocks from their content databases.
+
+```python
+# Content and content key
+
+ephemeral_headers_key = Container(block_hash: Bytes32, ancestor_count: uint8)
+selector                 = 0x04
+
+BlockHeader              = ByteList[MAX_HEADER_LENGTH]
+ephemeral_header_payload = List(BlockHeader, limit=MAX_EPHEMERAL_HEADER_PAYLOAD)
+
+content                  = SSZ.serialize(ephemeral_header_payload)
+content_key              = selector + SSZ.serialize(ephemeral_headers_key)
+```
+
+The `ephemeral_headers_key` encodes a request for headers anchored to the block
+hash indicated by `ephemeral_headers_key.block_hash`.  The
+`ephemeral_headers_key.ancestor_count` **MUST** be in the inclusive range
+0-255.
+
+The `ephemeral_header_payload` is an SSZ list of RLP encoded block header
+objects.  This object is subject to the following validity conditions.
+
+* The list **MAY** be empty which signals that the responding node was unable to fulfill the request.
+* The first element in the list **MUST** be the RLP encoded block header indicated by the `ephemeral_headers_key.block_hash` field from the content key.
+* Each element after the first element in the list **MUST** be the RLP encoded block header indicated by the `header.parent_hash` of the previous item from the list.
+* The list **SHOULD** contain no more than `ephemeral_headers_key.ancestor_count` items.
+
+Ephemeral block headers are not seeded into the network via traditional gossip mechanisms.  Ephemeral block headers are instead expected to be side-loaded from whatever HEAD oracle the portal node is using.  A client that is part of the portal beacon network can pull in headers from that network.
+
 
 #### Block Body
 
