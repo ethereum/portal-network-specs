@@ -264,7 +264,7 @@ hash indicated by `ephemeral_headers_key.block_hash`.  The
 0-255.
 
 The `ephemeral_header_payload` is an SSZ list of RLP encoded block header
-objects.  The this object is subject to the following validity conditions.
+objects.  This object is subject to the following validity conditions.
 
 * The list **MAY** be empty which signals that the responding node was unable to fulfill the request.
 * The first element in the list **MUST** be the RLP encoded block header indicated by the `ephemeral_headers_key.block_hash` field from the content key.
