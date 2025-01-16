@@ -14,3 +14,30 @@ Ping/Pong Message = Container(
 )
 ```
 
+## Test Vectors
+
+### Protocol Message to ssz encoded ping
+
+#### Input Parameters
+```
+enr_seq = 1
+data_radius = 2^256 - 2 # Maximum value - 1
+```
+
+#### Expected Output
+```
+message = 0x00010000000000000001000e000000feffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+```
+
+### Protocol Message to ssz encoded pong
+
+#### Input Parameters
+```
+enr_seq = 1
+data_radius = 2^256 - 2 # Maximum value - 1
+```
+
+#### Expected Output
+```
+message = 0x01010000000000000001000e000000feffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+```
