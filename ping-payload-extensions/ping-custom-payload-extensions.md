@@ -15,20 +15,11 @@ The rest are first come first serve, but they should still be defined in this re
 
 ## Requirements
 
-All payloads used in the Ping `custom_payload` MUST follow the `Ping Custom Payload Extensions` format.
+All `Ping` and `Pong` messages have a `payload_type` and `payload` field:
 
-## Custom Payload Extensions Format
-
-- **type**: numeric identifier which tells clients how the `payload` field should be decoded.
+- **payload_type**: numeric identifier which tells clients how the `payload` field should be decoded.
 - **payload**: the SSZ encoded extension payload
 
-
-```python
-CustomPayloadExtensionsFormat = Container(
-  type: u16,
-  payload: ByteList[max_length=1100]
-)
-```
 
 ## Ping vs Pong
 The relationship between Ping and Pong message will be determined by the requirements of the type.

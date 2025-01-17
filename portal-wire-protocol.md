@@ -99,11 +99,12 @@ Request message to check if a node is reachable, communicate basic information a
 
 ```
 selector     = 0x00
-ping         = Container(enr_seq: uint64, custom_payload: ByteList[2048])
+ping         = Container(enr_seq: uint64, payload_type: uint16, payload: ByteList[1100])
 ```
 
 - `enr_seq`: The node's current sequence number of their ENR record.
-- `custom_payload`: Custom payload specified per the network.
+- `payload_type`: Custom payload type identifier as defined in [Ping Custom Payload Extensions](./ping-payload-extensions/ping-custom-payload-extensions.md).
+- `payload`: Custom SSZ payload as defined in [Ping Custom Payload Extensions](./ping-payload-extensions/ping-custom-payload-extensions.md).
 
 #### Pong (0x01)
 
@@ -111,11 +112,12 @@ Response message to Ping(0x00)
 
 ```
 selector     = 0x01
-pong         = Container(enr_seq: uint64, custom_payload: ByteList[2048])
+pong         = Container(enr_seq: uint64, payload_type: uint16, payload: ByteList[1100])
 ```
 
 - `enr_seq`: The node's current sequence number of their ENR record.
-- `custom_payload`: Custom payload specified per the network.
+- `payload_type`: Custom payload type identifier as defined in [Ping Custom Payload Extensions](./ping-payload-extensions/ping-custom-payload-extensions.md).
+- `payload`: Custom SSZ payload as defined in [Ping Custom Payload Extensions](./ping-payload-extensions/ping-custom-payload-extensions.md).
 
 #### Find Nodes (0x02)
 
