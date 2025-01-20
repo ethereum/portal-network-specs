@@ -7,7 +7,8 @@ Ping and Pong Payload
 
 basic_radius = SSZ.serialize(Container(data_radius: U256))
 
-BasicRadiusPayload = Container(
+Ping/Pong Message = Container(
+  enr_seq: uint64,    
   type: 1,
   payload: basic_radius
 )

@@ -8,8 +8,9 @@ Ping payload
 [Payload] = SSZ.serialize(Container([Key Value Pairs]))
 
 
-[Container Name] = Container(
-  type: [Type Number],
+Ping Message = Container(
+  enr_seq: uint64,
+  payload_type: [Type Number],
   payload: [Payload]
 )
 ```
@@ -19,8 +20,9 @@ Pong payload
 
 [Payload] = SSZ.serialize(Container([Key Value Pairs]))
 
-[Container Name] = Container(
-  type: [Type Number],
+Pong Message = Container(
+  enr_seq: uint64,
+  payload_type: [Type Number],
   payload: [Payload]
 )
 ```

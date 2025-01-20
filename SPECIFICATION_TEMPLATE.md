@@ -54,7 +54,7 @@ as "Retrieval of block headers by their hash"
 
 <!-- The list of message types from the portal wire protocol that are supported by this network -->
 
-#### `Ping.custom_data` & `Pong.custom_data`
+#### `Ping.payload` & `Pong.payload`
 
 <!-- If the PING/PONG messages are used by this protocol they should be specified here -->
 

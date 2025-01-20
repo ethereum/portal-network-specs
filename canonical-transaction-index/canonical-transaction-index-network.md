@@ -54,9 +54,9 @@ The canonical transaction index network supports the following protocol messages
 - `Offer` - `Accept`
 
 
-#### `Ping.custom_data` & `Pong.custom_data`
+#### `Ping.payload` & `Pong.payload`
 
-In the canonical transaction index network the `custom_payload` field of the `Ping` and `Pong` messages. The first packet between another client MUST be [Type 0: Client Info, Radius, and Capabilities Payload](../ping-payload-extensions/extensions/type-0.md). Then upgraded to the latest payload supported by both of the clients.
+In the canonical transaction index network the `payload` field of the `Ping` and `Pong` messages. The first packet between another client MUST be [Type 0: Client Info, Radius, and Capabilities Payload](../ping-payload-extensions/extensions/type-0.md). Then upgraded to the latest payload supported by both of the clients.
 
 List of currently supported payloads, by latest to oldest.
 -  [Type 1 Basic Radius Payload](../ping-payload-extensions/extensions/type-1.md)
