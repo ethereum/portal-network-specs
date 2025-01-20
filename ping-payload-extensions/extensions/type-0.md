@@ -1,7 +1,7 @@
 # Client Info and Capabilities Payload
 
 ## Client Info 
-Client info are ASCII hex encoded strings.
+Client info are UTF-8 hex encoded strings.
 
 Client info strings consist of 4 parts
 - client name (e.x. `trin`,`fluffy`)
@@ -42,3 +42,64 @@ Ping/Pong Message = Container(
 )
 ```
 
+## Test Vectors
+
+### Protocol Message to ssz encoded ping: case 1 with client info
+
+#### Input Parameters
+```
+enr_seq = 1
+data_radius = 2^256 - 2 # Maximum value - 1
+client_info = "trin/v0.1.1-b61fdc5c/linux-x86_64/rustc1.81.0"
+capabilities = [0, 1, 65535]
+```
+
+#### Expected Output
+```
+message = 0x00010000000000000000000e00000028000000feffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff550000007472696e2f76302e312e312d62363166646335632f6c696e75782d7838365f36342f7275737463312e38312e3000000100ffff
+```
+
+### Protocol Message to ssz encoded ping: case 2 without client info
+
+#### Input Parameters
+```
+enr_seq = 1
+data_radius = 2^256 - 2 # Maximum value - 1
+client_info = ""
+capabilities = [0, 1, 65535]
+```
+
+#### Expected Output
+```
+message = 0x00010000000000000000000e00000028000000feffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff2800000000000100ffff
+```
+
+### Protocol Message to ssz encoded pong: case 1 with client info
+
+#### Input Parameters
+```
+enr_seq = 1
+data_radius = 2^256 - 2 # Maximum value - 1
+client_info = "trin/v0.1.1-b61fdc5c/linux-x86_64/rustc1.81.0"
+capabilities = [0, 1, 65535]
+```
+
+#### Expected Output
+```
+message = 0x01010000000000000000000e00000028000000feffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff550000007472696e2f76302e312e312d62363166646335632f6c696e75782d7838365f36342f7275737463312e38312e3000000100ffff
+```
+
+### Protocol Message to ssz encoded pong: case 2 without client info
+
+#### Input Parameters
+```
+enr_seq = 1
+data_radius = 2^256 - 2 # Maximum value - 1
+client_info = ""
+capabilities = [0, 1, 65535]
+```
+
+#### Expected Output
+```
+message = 0x01010000000000000000000e00000028000000feffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff2800000000000100ffff
+```

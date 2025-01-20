@@ -9,33 +9,9 @@ This section provides test vectors for the individual protocol messages defined
 in the [Portal wire protocol](./portal-wire-protocol.md). These test vectors can
 primarily verify the SSZ encoding and decoding of each protocol message.
 
-### Ping Request
+### Ping Request and Pong Response
 
-#### Input Parameters
-```
-enr_seq = 1
-data_radius = 2^256 - 2 # Maximum value - 1
-custom_payload = serialize(Container(data_radius))
-```
-
-#### Expected Output
-```
-message = 0x0001000000000000000c000000feffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
-```
-
-### Pong Response
-
-#### Input Parameters
-```
-enr_seq = 1
-data_radius = (2^256 - 1) / 2 # Maximum value / 2
-custom_payload = serialize(Container(data_radius))
-```
-
-#### Expected Output
-```
-message = 0x0101000000000000000c000000ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff7f
-```
+These test vectors are located in the specifications for each [ping extension type](./ping-payload-extensions/extensions/)
 
 ### Find Nodes Request
 
