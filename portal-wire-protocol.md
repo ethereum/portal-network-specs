@@ -95,7 +95,7 @@ The transmission of `content` data that is too large to fit a single packet is d
 
 #### Ping (0x00)
 
-Request message to check if a node is reachable, communicate basic information about our node, and request basic information about the recipient node.  Additionally sub-protocol can define a schema for the `custom_payload` field to exchange additional information.
+Request message to check if a node is reachable, communicate basic information about our node, and request basic information about the recipient node.  Additionally sub-protocol can define a schema for the `payload` field to exchange additional information.
 
 ```
 selector     = 0x00
@@ -325,7 +325,7 @@ port       := UDP port number
 
 ### Protocol Specific Node State
 
-Sub protocols may define additional node state information which should be tracked in the node state database.  This information will typically be transmitted in the `Ping.custom_data` and `Pong.custom_data` fields.
+Sub protocols may define additional node state information which should be tracked in the node state database.  This information will typically be transmitted in the `Ping.payload` and `Pong.payload` fields.
 
 
 ## Algorithms

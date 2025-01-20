@@ -59,9 +59,9 @@ The history network supports the following protocol messages:
 - `Find Content` - `Found Content`
 - `Offer` - `Accept`
 
-#### `Ping.custom_data` & `Pong.custom_data`
+#### `Ping.payload` & `Pong.payload`
 
-In the history network the `custom_payload` field of the `Ping` and `Pong` messages. The first packet between another client MUST be [Type 0: Client Info, Radius, and Capabilities Payload](../ping-payload-extensions/extensions/type-0.md). Then upgraded to the latest payload supported by both of the clients.
+In the history network the `payload` field of the `Ping` and `Pong` messages. The first packet between another client MUST be [Type 0: Client Info, Radius, and Capabilities Payload](../ping-payload-extensions/extensions/type-0.md). Then upgraded to the latest payload supported by both of the clients.
 
 List of currently supported payloads, by latest to oldest.
 -  [Type 2 History Radius Payload](../ping-payload-extensions/extensions/type-2.md)

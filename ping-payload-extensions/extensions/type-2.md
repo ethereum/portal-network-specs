@@ -7,7 +7,8 @@ Ping and Pong Payload
 
 history_radius = SSZ.serialize(Container(data_radius: U256, ephemeral_header_count=U16))
 
-HistoryRadiusPayload = Container(
+Ping/Pong Message = Container(
+  enr_seq: uint64,    
   type: 2,
   payload: history_radius
 )

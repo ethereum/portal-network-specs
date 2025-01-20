@@ -35,7 +35,8 @@ client_info_and_capabilities = SSZ.serialize(Container(
     capabilities: List[u16, MAX_CAPABILITIES_LENGTH]
 ))
 
-CapabilitiesPayload = Container(
+Ping/Pong Message = Container(
+  enr_seq: uint64,
   type: 0,
   payload: client_info_and_capabilities
 )
