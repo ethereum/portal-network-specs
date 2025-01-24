@@ -138,6 +138,9 @@ SHANGHAI_TIMESTAMP = 1681338455
 MAX_EPHEMERAL_HEADER_PAYLOAD = 256
 # The maximum number of ephemeral headers that can be requested or transferred
 # in a single request.
+
+MAX_HEADER_PROOF_LENGTH = 1024
+# Maximum length for header proof. This maximum works for the current 3 types of proof.
 ```
 
 #### Encoding Content Values for Validation
@@ -191,13 +194,13 @@ BlockProofHistoricalSummaries = Container[
     slot: Slot # Slot of BeaconBlock, used to calculate the historical_summaries index
 ]
 
-BlockHeaderProof = Union[BlockProofHistoricalHashesAccumulator, BlockProofHistoricalRoots, BlockProofHistoricalSummaries]
-
 BlockHeaderWithProof = Container(
   header: ByteList[MAX_HEADER_LENGTH], # RLP encoded header in SSZ ByteList
-  proof: BlockHeaderProof
+  proof: ByteList[MAX_HEADER_PROOF_LENGTH], # SSZ encoded proof
 )
 ```
+
+The `BlockHeaderWithProof` contains the RLP encoded block header and an SSZ encoded proof for that header. The proof MUST be of the type `BlockProofHistoricalHashesAccumulator` `BlockProofHistoricalRoots`, `BlockProofHistoricalSummaries` depending on the hardfork, see the definitions above. The block header `timestamp` field can be used to select to which type to decode the proof.
 
 * For pre-merge headers, clients SHOULD only accept headers with `BlockProofHistoricalHashesAccumulator` proofs.
 * For post-merge until Capella headers, clients SHOULD only accept headers with `BlockProofHistoricalRoots` proofs.
