@@ -14,6 +14,14 @@
       "$ref": "#/components/schemas/bytes32"
     }
   },
+  "BeaconFinalizedStateRootResult": {
+    "name": "finalizedStateRootResult",
+    "description": "Returns the hex encoded finalized beacon state root.",
+    "schema": {
+      "title": "Hex encoded finalized beacon state root",
+      "$ref": "#/components/schemas/bytes32"
+    }
+  },
   "StoreResult": {
     "name": "storeResult",
     "description": "Returns \"true\" upon success",
