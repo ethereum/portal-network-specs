@@ -9,5 +9,9 @@
     "data": {
       "$ref": "#/components/schemas/traceResultObject"
     }
-  }    
+  },
+  "BeaconClientNotInitializedError": {
+    "code": -39003,
+    "message": "beacon client not initialized"
+  }
 }
