@@ -118,7 +118,25 @@
     "params": [],
     "result": {
       "$ref": "#/components/contentDescriptors/BeaconOptimisticStateRootResult"
-    }
+    },
+    "errors": [
+      {
+        "$ref": "#/components/errors/BeaconClientNotInitializedError"
+      }
+    ]
+  },
+  {
+    "name": "portal_beaconFinalizedStateRoot",
+    "summary": "Get latest known finalized beacon state root.",
+    "params": [],
+    "result": {
+      "$ref": "#/components/contentDescriptors/BeaconFinalizedStateRootResult"
+    },
+    "errors": [
+      {
+        "$ref": "#/components/errors/BeaconClientNotInitializedError"
+      }
+    ]
   },
   {
     "name": "portal_beaconRecursiveFindNodes",

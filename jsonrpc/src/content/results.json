@@ -8,9 +8,17 @@
   },
   "BeaconOptimisticStateRootResult": {
     "name": "optimisticStateRootResult",
-    "description": "Returns the hex encoded optimistic beacon state root.",
+    "description": "Returns the hex encoded optimistic beacon state root. If the beacon client is not synced, return the error.",
     "schema": {
       "title": "Hex encoded optimistic beacon state root",
+      "$ref": "#/components/schemas/bytes32"
+    }
+  },
+  "BeaconFinalizedStateRootResult": {
+    "name": "finalizedStateRootResult",
+    "description": "Returns the hex encoded finalized beacon state root. If the beacon client is not synced, return the error.",
+    "schema": {
+      "title": "Hex encoded finalized beacon state root",
       "$ref": "#/components/schemas/bytes32"
     }
   },
