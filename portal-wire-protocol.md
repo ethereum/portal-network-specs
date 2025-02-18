@@ -85,11 +85,11 @@ message = Union[ping, pong, find_nodes, nodes, find_content, content, offer, acc
 serialized_message = SSZ.serialize(message)
 ```
 
-The `serialized_message` is the payload passed to the `request` field of the `TALKREQ` message or the `reponse` field of the `TALKRESP` message.
+The `serialized_message` is the payload passed to the `request` field of the `TALKREQ` message or the `response` field of the `TALKRESP` message.
 
 The type values for the `Union` are the SSZ Containers specified per message type.
 
-The transmission of `content` data that is too large to fit a single packet is done over [uTP](./discv5-utp.md).
+The transmission of `content` data that is too large to fit a single packet is done over [uTP](./utp/discv5-utp.md).
 
 ### Message Types
 
@@ -361,7 +361,7 @@ To find a piece of content for `content-id`, a node performs a content lookup vi
 
 ### Storing Content
 
-The concept of content storage is only applicable to sub-protocols that implement persistant storage of data.
+The concept of content storage is only applicable to sub-protocols that implement persistent storage of data.
 
 Content will get stored by a node when:
 - the node receives the content through the `Offer` - `Accept` message flow and the content falls within the node's radius
@@ -376,7 +376,7 @@ We use the term *neighborhood gossip* to refer to the process through which cont
 The process works as follows:
 
 - A DHT node is offered and receives a piece of content that it is interested in.
-- This DHT node checks their routing table for `k` nearby DHT nodes that should also be interested in the content. Those `k` nodes **SHOULD** not include the node that originally provided aformentioned content.
+- This DHT node checks their routing table for `k` nearby DHT nodes that should also be interested in the content. Those `k` nodes **SHOULD** not include the node that originally provided aforementioned content.
 - If the DHT node finds `n` or more DHT nodes interested it selects `n` of these nodes and offers the content to them.
 - If the DHT node finds less than `n` DHT nodes interested, it launches a node lookup with target `content-id` and it
 offers the content to maximum `n` of the newly discovered nodes.
