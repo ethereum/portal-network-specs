@@ -13,5 +13,20 @@
   "BeaconClientNotInitializedError": {
     "code": -39003,
     "message": "beacon client not initialized"
-  }
+  },
+  "PayloadTypeNotSupportedError": {
+    "code": -39004,
+    "message": "Payload type not supported",
+    "data": {
+      "reason": {
+        "type": "string",
+        "description": "Indicates whether the payload type is unsupported by the subnetwork or the client.",
+        "enum": ["subnetwork", "client"]
+      }
+    }
+  },
+  "FailedToDecodePayloadError": {
+    "code": -39005,
+    "message": "Failed to decode payload"
+  }  
 }

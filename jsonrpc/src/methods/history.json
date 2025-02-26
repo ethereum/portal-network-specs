@@ -57,15 +57,83 @@
   },
   {
     "name": "portal_historyPing",
-    "summary": "Send a PING message to the designated node and wait for a PONG response.",
+    "summary": "Send a PING message to the designated node and wait for a PONG response. By default, the client will send a capabilities extension payload.",
     "params": [
-      {
-        "$ref": "#/components/contentDescriptors/Enr"
-      }
-    ],
+        {
+          "$ref": "#/components/contentDescriptors/Enr"
+        },
+        {
+          "$ref": "#/components/contentDescriptors/PingPayload"
+        }
+      ],
     "result": {
-      "$ref": "#/components/contentDescriptors/PingResult"
-    }
+        "$ref": "#/components/contentDescriptors/PingResult"
+    },
+    "errors": [
+        {
+        "$ref": "#/components/errors/PayloadTypeNotSupportedError"
+        },
+        {
+        "$ref": "#/components/errors/FailedToDecodePayloadError"
+        }
+    ],
+    "examples": [
+        {
+            "name": "Only specifying the ENR",
+            "description": "A successful PING request and response using only specifying the ENR.",
+            "params": [
+              {
+                "name": "enr",
+                "value": "enr:-IS4QIa7W1_Yvvl5OJ2Pp3Gp1dJ3..."
+              }
+            ],
+            "result": {
+              "name": "pingResult",
+              "value": {
+                "enrSeq": 1,
+                "payloadType": 0,
+                "payload": {
+                  "clientInfo": "trin/v0.1.1-b61fdc5c/linux-x86_64/rustc1.81.0",
+                  "dataRadius": "0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff",
+                  "capabilities": [0, 1, 65535]
+                }
+              }
+            }
+        },
+        {
+          "name": "ClientInfoAndCapabilities Example",
+          "description": "A successful PING request and response using the ClientInfoAndCapabilities payload.",
+          "params": [
+            {
+              "name": "enr",
+              "value": "enr:-IS4QIa7W1_Yvvl5OJ2Pp3Gp1dJ3..."
+            },
+            {
+              "name": "pingPayload",
+              "value": {
+                "payloadType": 0,
+                "payload": {
+                  "clientInfo": "trin/v0.1.1-b61fdc5c/linux-x86_64/rustc1.81.0",
+                  "dataRadius": "0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff",
+                  "capabilities": [0, 1, 65535]
+                }
+              }
+            }
+          ],
+          "result": {
+            "name": "pingResult",
+            "value": {
+              "enrSeq": 1,
+              "payloadType": 0,
+              "payload": {
+                "clientInfo": "trin/v0.1.1-b61fdc5c/linux-x86_64/rustc1.81.0",
+                "dataRadius": "0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff",
+                "capabilities": [0, 1, 65535]
+              }
+            }
+          }
+        }
+      ] 
   },
   {
     "name": "portal_historyFindNodes",

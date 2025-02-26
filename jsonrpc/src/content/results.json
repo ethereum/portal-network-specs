@@ -116,6 +116,33 @@
       "$ref": "#/components/schemas/hexString"
     }
   },
+  "PingPayload": {
+    "name": "pingPayload",
+    "description": "PING request, check documentation for supported payloads which differ between subnetworks",
+    "schema": {
+      "title": "PING message",
+      "type": "object",
+      "required": [
+        "payloadType",
+        "payload"
+      ],
+      "properties": {
+        "payloadType": {
+          "description": "Numeric identifier which tells clients how the payload field should be decoded",
+          "type": "number"
+        },
+        "payload": {
+          "description": "The JSON encoded extension payload. These are examples of possible payloads, check the documentation for which payloads are support.",
+          "oneOf": [
+            { "$ref": "#/components/schemas/ClientInfoAndCapabilities" },
+            { "$ref": "#/components/schemas/BasicRadius" },
+            { "$ref": "#/components/schemas/HistoryRadius" },
+            { "$ref": "#/components/schemas/UnknownPayload" }
+          ]
+        }
+      }
+    }
+  },
   "PingResult": {
     "name": "pingResult",
     "description": "Returns PONG response",
@@ -124,16 +151,25 @@
       "type": "object",
       "required": [
         "enrSeq",
-        "dataRadius"
+        "payload"
       ],
       "properties": {
         "enrSeq": {
           "description": "ENR sequence number of sender",
           "type": "number"
         },
-        "dataRadius": {
-          "description": "Data radius value",
-          "$ref": "#/components/schemas/DataRadius"
+        "payloadType": {
+            "description": "numeric identifier which tells clients how the payload field should be decoded",
+            "type": "number"
+        },
+        "payload": {
+            "description":  "The JSON encoded extension payload. These are examples of possible payloads, check the documentation for which payloads are support.",
+            "oneOf": [
+                { "$ref": "#/components/schemas/ClientInfoAndCapabilities" },
+                { "$ref": "#/components/schemas/BasicRadius" },
+                { "$ref": "#/components/schemas/HistoryRadius" },
+                { "$ref": "#/components/schemas/UnknownPayload" }
+              ]
         }
       }
     }
