@@ -85,5 +85,27 @@
     "schema": {
       "$ref": "#/components/schemas/DataRadius"
     }
-  }
+  },
+  "PayloadType": {
+    "name": "payloadType",
+    "description": "The type of payload. If the payloadType is specified without a payload, the client will generate the default payload for that payloadType.",
+    "schema": {
+        "description": "Numeric identifier which tells clients how the payload field should be decoded",
+        "type": "number"
+    }
+  },
+  "Payload": {
+    "name": "payload",
+    "description": "The JSON encoded extension payload. Requires the payload_type to be specified.",
+    "schema": {
+        "description": "The JSON encoded extension payload.",
+        "type": "object",
+        "oneOf": [
+            { "$ref": "#/components/schemas/ClientInfoAndCapabilities" },
+            { "$ref": "#/components/schemas/BasicRadius" },
+            { "$ref": "#/components/schemas/HistoryRadius" },
+            { "$ref": "#/components/schemas/UnknownPayload" }
+        ]
+    }
+  }  
 }
