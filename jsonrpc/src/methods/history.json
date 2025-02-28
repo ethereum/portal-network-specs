@@ -78,6 +78,9 @@
         },
         {
         "$ref": "#/components/errors/FailedToDecodePayloadError"
+        },
+        {
+        "$ref": "#/components/errors/PayloadTypeRequiredError"
         }
     ],
     "examples": [

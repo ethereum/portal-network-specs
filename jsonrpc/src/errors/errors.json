@@ -28,5 +28,9 @@
   "FailedToDecodePayloadError": {
     "code": -39005,
     "message": "Failed to decode payload"
-  }  
+  },
+  "PayloadTypeRequiredError": {
+    "code": -39006,
+    "message": "Payload type is required if payload is specified"
+  }
 }
