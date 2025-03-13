@@ -232,7 +232,7 @@ Signals interest in receiving the offered data from the corresponding Offer mess
 
 ```
 selector     = 0x07
-accept       = Container(connection_id: Bytes2, content_keys: ByteList[limit=64]
+accept       = Container(connection_id: Bytes2, content_keys: ByteList[limit=64])
 ```
 
 - `connection_id`: Connection ID to set up a uTP stream to transmit the requested data.
