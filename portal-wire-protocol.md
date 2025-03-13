@@ -239,12 +239,13 @@ accept       = Container(connection_id: Bytes2, content_keys: ByteList[limit=64]
     - ConnectionID values **SHOULD** be randomly generated.
 - `content_keys`: Signals which content keys are desired.
     - A byte-list corresponding to the offered keys with the byte in the positions of the desired keys set to `1`.
-      - 0: Generic decline, send if there is no specific decline case
+      - 0: Generic decline, catch all if their is no specified case
       - 1: Accept the Content
       - 2: Declined, already store content
       - 3: Declined, inbound content transfer already in progress
       - 4: Declined, due to rate limited
       - 5: Declined, content not within nodes radius
+      - 6..=256: Unspecified decline, this shouldn't be used, but if it is received should just be treated the same as any other decline
 
 Upon *sending* this message, the requesting node **SHOULD** *listen* for an incoming uTP stream with the generated `connection_id`.
 
