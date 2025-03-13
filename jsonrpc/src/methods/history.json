@@ -74,13 +74,16 @@
     },
     "errors": [
         {
-        "$ref": "#/components/errors/PayloadTypeNotSupportedError"
+            "$ref": "#/components/errors/PayloadTypeNotSupportedError"
         },
         {
-        "$ref": "#/components/errors/FailedToDecodePayloadError"
+            "$ref": "#/components/errors/FailedToDecodePayloadError"
         },
         {
-        "$ref": "#/components/errors/PayloadTypeRequiredError"
+            "$ref": "#/components/errors/PayloadTypeRequiredError"
+        },
+        {
+            "$ref": "#/components/errors/UserSpecifiedPayloadBlockedByClientError"
         }
     ],
     "examples": [
