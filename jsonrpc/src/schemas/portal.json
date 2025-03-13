@@ -57,5 +57,59 @@
     "minItems": 2,
     "maxItems": 2,
     "additionalItems": false
+  },
+  "ClientInfoAndCapabilities": {
+    "title": "ClientInfoAndCapabilities",
+    "type": "object",
+    "properties": {
+      "clientInfo": {
+        "type": "string",
+        "description": "UTF-8 hex encoded client information"
+      },
+      "dataRadius": {
+        "type": "string",
+        "description": "U256 representing data radius"
+      },
+      "capabilities": {
+        "type": "array",
+        "items": {
+          "type": "number"
+        },
+        "description": "List of u16 values representing enabled extensions"
+      }
+    },
+    "additionalProperties": false
+  },
+  "BasicRadius": {
+    "title": "BasicRadius",
+    "type": "object",
+    "properties": {
+      "dataRadius": {
+        "type": "string",
+        "description": "U256 representing data radius"
+      }
+    },
+    "additionalProperties": false
+  },
+  "HistoryRadius": {
+    "title": "HistoryRadius",
+    "type": "object",
+    "properties": {
+      "dataRadius": {
+        "type": "string",
+        "description": "U256 representing data radius"
+      },
+      "ephemeralHeaderCount": {
+        "type": "number",
+        "description": "U16 representing number of ephemeral headers held"
+      }
+    },
+    "additionalProperties": false
+  },
+  "UnknownPayload": {
+    "title": "UnknownPayload",
+    "description": "A placeholder for unknown or future payload types",
+    "type": "object",
+    "additionalProperties": true
   }
 }

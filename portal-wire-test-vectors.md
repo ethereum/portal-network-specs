@@ -11,7 +11,7 @@ primarily verify the SSZ encoding and decoding of each protocol message.
 
 ### Ping Request and Pong Response
 
-These test vectors are located in the specifications for each [ping extension type](./ping-payload-extensions/extensions/)
+These test vectors are located in the specifications for each [ping extension type](./ping-extensions/extensions/)
 
 ### Find Nodes Request
 

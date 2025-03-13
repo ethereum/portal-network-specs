@@ -76,10 +76,10 @@ The beacon chain network supports the following protocol messages:
 
 #### `Ping.payload` & `Pong.payload`
 
-In the beacon chain network the `payload` field of the `Ping` and `Pong` messages. The first packet between another client MUST be [Type 0: Client Info, Radius, and Capabilities Payload](../ping-payload-extensions/extensions/type-0.md). Then upgraded to the latest payload supported by both of the clients.
+In the beacon chain network the `payload` field of the `Ping` and `Pong` messages. The first packet between another client MUST be [Type 0: Client Info, Radius, and Capabilities Payload](../ping-extensions/extensions/type-0.md). Then upgraded to the latest payload supported by both of the clients.
 
 List of currently supported payloads, by latest to oldest.
--  [Type 1 Basic Radius Payload](../ping-payload-extensions/extensions/type-1.md)
+-  [Type 1 Basic Radius Payload](../ping-extensions/extensions/type-1.md)
 
 ### Routing Table
 
