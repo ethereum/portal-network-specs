@@ -110,9 +110,9 @@
   },
   "OfferResult": {
     "name": "offerResult",
-    "description": "Returns the content keys bitlist upon successful content transmission or empty bitlist receival",
+    "description": "Returns the content keys bytelist upon successful content transmission or empty bytelist receival",
     "schema": {
-      "title": "Encoded content keys bitlist",
+      "title": "Encoded content keys bytelist",
       "$ref": "#/components/schemas/hexString"
     }
   },
