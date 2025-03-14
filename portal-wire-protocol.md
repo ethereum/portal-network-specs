@@ -232,20 +232,20 @@ Signals interest in receiving the offered data from the corresponding Offer mess
 
 ```
 selector     = 0x07
-accept       = Container(connection_id: Bytes2, content_keys: ByteList[limit=64])
+accept       = Container(connection_id: Bytes2, content_keys: ByteList[64])
 ```
 
 - `connection_id`: Connection ID to set up a uTP stream to transmit the requested data.
     - ConnectionID values **SHOULD** be randomly generated.
 - `content_keys`: Signals which content keys are desired.
     - A byte-list corresponding to the offered keys with the byte in the positions of the desired keys set to `1`.
-      - 0: Generic decline, catch all if their is no specified case
-      - 1: Accept the Content
-      - 2: Declined, already store content
-      - 3: Declined, inbound content transfer already in progress
+      - 0: Accept the content
+      - 1: Generic decline, catch all if their is no specified case
+      - 2: Declined, content already stored
+      - 3: Declined, content not within node's radius
       - 4: Declined, due to rate limited
-      - 5: Declined, content not within nodes radius
-      - 6..=256: Unspecified decline, this shouldn't be used, but if it is received should just be treated the same as any other decline
+      - 5: Declined, inbound content transfer already in progress
+      - 6 to 256: Unspecified decline, this shouldn't be used, but if it is received should just be treated the same as any other decline
 
 Upon *sending* this message, the requesting node **SHOULD** *listen* for an incoming uTP stream with the generated `connection_id`.
 
