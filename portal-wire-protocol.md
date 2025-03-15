@@ -243,8 +243,8 @@ accept       = Container(connection_id: Bytes2, content_keys: ByteList[64])
       - 1: Generic decline, catch all if their is no specified case
       - 2: Declined, content already stored
       - 3: Declined, content not within node's radius
-      - 4: Declined, total concurrent uTP transfer limit reached
-      - 5: Declined, the total inbound rate limit for accepting this specific content_id has been reached
+      - 4: Declined, rate limit reached. Node can't handle anymore connections
+      - 5: Declined, inbound rate limit reached for accepting a specific content_id, used to protect against thundering herds
       - 6 to 255: Unspecified decline, this shouldn't be used, but if it is received should just be treated the same as any other decline
 
 Upon *sending* this message, the requesting node **SHOULD** *listen* for an incoming uTP stream with the generated `connection_id`.
