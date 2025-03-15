@@ -110,9 +110,9 @@
   },
   "OfferResult": {
     "name": "offerResult",
-    "description": "Returns the content keys bitlist upon successful content transmission or empty bitlist receival",
+    "description": "Returns the accepted content keys bytelist upon successful content transmission or no transmission in case of empty bytelist receival. Return error on response or transmission errors.",
     "schema": {
-      "title": "Encoded content keys bitlist",
+      "title": "Encoded content keys bytelist",
       "$ref": "#/components/schemas/hexString"
     }
   },
