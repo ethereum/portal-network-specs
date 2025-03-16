@@ -1,0 +1,30 @@
+name: JSON Format Check
+
+on:
+  push:
+    paths:
+      - "jsonrpc/**/*.json"
+  pull_request:
+    paths:
+      - "jsonrpc/**/*.json"
+
+jobs:
+  check-json-format:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: "npm"
+          cache-dependency-path: jsonrpc/package-lock.json
+
+      - name: Install dependencies
+        working-directory: jsonrpc
+        run: npm ci
+
+      - name: Check JSON formatting
+        working-directory: jsonrpc
+        run: npm run check-format
