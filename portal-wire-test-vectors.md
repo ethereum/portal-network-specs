@@ -125,10 +125,10 @@ message = 0x060400000004000000010203
 #### Input Parameters
 ```
 connection_id = [0x01, 0x02]
-content_keys = [1, 0, 2, 3, 4, 5, 0, 0] # 8 byte bytelist
+content_keys = [0, 1, 2, 3, 4, 5, 1, 1] # 8 byte bytelist
 ```
 
 #### Expected Output
 ```
-message = 0x070102060000000100020304050000
+message = 0x070102060000000001020304050101
 ```
