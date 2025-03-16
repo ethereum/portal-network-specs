@@ -209,10 +209,7 @@
             "$ref": "#/components/contentDescriptors/Enr"
         },
         {
-            "$ref": "#/components/contentDescriptors/PayloadType"
-        },
-        {
-            "$ref": "#/components/contentDescriptors/Payload"
+          "$ref": "#/components/contentDescriptors/ContentItems"
         }
     ],
     "result": {
