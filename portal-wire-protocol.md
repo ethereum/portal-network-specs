@@ -232,13 +232,20 @@ Signals interest in receiving the offered data from the corresponding Offer mess
 
 ```
 selector     = 0x07
-accept       = Container(connection_id: Bytes2, content_keys: BitList[limit=64]]
+accept       = Container(connection_id: Bytes2, content_keys: ByteList[64])
 ```
 
 - `connection_id`: Connection ID to set up a uTP stream to transmit the requested data.
     - ConnectionID values **SHOULD** be randomly generated.
 - `content_keys`: Signals which content keys are desired.
-    - A bit-list corresponding to the offered keys with the bits in the positions of the desired keys set to `1`.
+    - A byte-list corresponding to the offered keys with the byte in the positions of the desired keys set to `0`.
+      - 0: Accept the content
+      - 1: Generic decline, catch all if their is no specified case
+      - 2: Declined, content already stored
+      - 3: Declined, content not within node's radius
+      - 4: Declined, rate limit reached. Node can't handle anymore connections
+      - 5: Declined, inbound rate limit reached for accepting a specific content_id, used to protect against thundering herds
+      - 6 to 255: Unspecified decline, this shouldn't be used, but if it is received should just be treated the same as any other decline
 
 Upon *sending* this message, the requesting node **SHOULD** *listen* for an incoming uTP stream with the generated `connection_id`.
 
@@ -382,6 +389,8 @@ The process works as follows:
 offers the content to maximum `n` of the newly discovered nodes.
 
 The process above should quickly saturate the area of the DHT where the content is located and naturally terminate as more nodes become aware of the content.
+
+The node can use ACCEPT codes received in past responses to make more efficient choices on which neighbors to gossip to.
 
 ### POKE Mechanism
 
