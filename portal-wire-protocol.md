@@ -390,6 +390,9 @@ offers the content to maximum `n` of the newly discovered nodes.
 
 The process above should quickly saturate the area of the DHT where the content is located and naturally terminate as more nodes become aware of the content.
 
+The node can use ACCEPT codes received in past responses to make more efficient choices on which neighbors to gossip to.
+
+
 ### POKE Mechanism
 
 When a node in the network is doing a content lookup, it will practically perform a recursive find using the `FindContent` and `Content` messages.
