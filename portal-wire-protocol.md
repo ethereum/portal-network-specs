@@ -10,6 +10,16 @@ Sub-protocol using the wire protocol **MAY** choose to exclude certain message t
 
 Unsupported messages **SHOULD** receive a `TALKRESP` message with an empty payload.
 
+## Protocol Version
+
+The portal wire protocol is versioned using whole number versins.  The current version is `1`.
+
+Support for protocol versions is signaled through the ENR record under the key `pv`.  The value should be a serialized SSZ object with the schema `List[uint8, limit=8]` whos value are the list of supported protocol versions.
+
+Clients should communicate with each other using the highest mutually supported protocol version.  Exchange of ENR records for negotiating protocol version is done using the base DiscoverV5 protocol.
+
+Changes to the protocol that increment the version number should be recorded in the [Changelog](./protocol-version-changelog.md)
+
 ## Protocol identifiers
 
 All protocol identifiers consist of two bytes. The first byte is "`P`" (`0x50`), to indicate "the Portal network", the second byte is a specific network identifier.
