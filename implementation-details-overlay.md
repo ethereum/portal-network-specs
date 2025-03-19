@@ -22,7 +22,7 @@ The ability to send a TALKREQ with a specific `request_id` and receive the corre
 
 # B - Portal Wire Protocol Messages
 
-Support for the message types that are part of the [portal wire protocol](./portal-wire-protocol)
+Support for the message types that are part of the [portal wire protocol](./portal-wire-protocol.md)
 
 ## B.1 - PING & PONG
 

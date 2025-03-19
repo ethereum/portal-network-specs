@@ -67,7 +67,7 @@ As `content_for_retrieval` is different from `content_for_offer` the POKE mechan
 the proof/s that are contained in the `content_for_offer` payload. These proofs are usually available when walking down the trie during content
 lookups such as during an `eth_getBalance` JSON-RPC call implemented in the state network.
 
-The [POKE Mechanism](../portal-wire-protocol#poke-mechanism) for the state network requires building a `content_for_offer` by combining the `content_for_retrieval` with the parent proof/s and block hash. This is implemented differently for each
+The [POKE Mechanism](../portal-wire-protocol.md#poke-mechanism) for the state network requires building a `content_for_offer` by combining the `content_for_retrieval` with the parent proof/s and block hash. This is implemented differently for each
 type of content:
 - For account trie nodes the trie node in the `content_for_retrieval` is appended to the parent account proof and then combined with the block hash to build the `content_for_offer`.
 - For contract trie nodes the trie node in the `content_for_retrieval` is appended to the parent storage proof and then combined with the account proof and block hash to build the `content_for_offer`.
