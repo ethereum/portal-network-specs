@@ -15,11 +15,11 @@ The transaction gossip network is designed with the following requirements.
 
 ## Wire Protocol
 
-The [Portal wire protocol](./portal-wire-protocol.md) is used as wire protocol for the transaction gossip network.
+The [Portal wire protocol](../portal-wire-protocol.md) is used as wire protocol for the transaction gossip network.
 
-As specified in the [Protocol identifiers](./portal-wire-protocol.md#protocol-identifiers) section of the Portal wire protocol, the `protocol` field in the `TALKREQ` message **MUST** contain the value of `0x500C`.
+As specified in the [Protocol identifiers](../portal-wire-protocol.md#protocol-identifiers) section of the Portal wire protocol, the `protocol` field in the `TALKREQ` message **MUST** contain the value of `0x500C`.
 
-The network uses the PING/PONG/FINDNODES/FOUNDNODES/OFFER/ACCEPT messages from the [Portal Wire Protocol](./portal-wire-protocol.md).
+The network uses the PING/PONG/FINDNODES/FOUNDNODES/OFFER/ACCEPT messages from the [Portal Wire Protocol](../portal-wire-protocol.md).
 
 
 ### Distance Function

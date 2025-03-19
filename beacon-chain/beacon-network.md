@@ -59,11 +59,11 @@ The beacon chain network uses the SHA256 Content ID derivation function from the
 
 ### Wire Protocol
 
-The [Portal wire protocol](./portal-wire-protocol.md) is used as the wire protocol for the Beacon Chain Light Client network.
+The [Portal wire protocol](../portal-wire-protocol.md) is used as the wire protocol for the Beacon Chain Light Client network.
 
 #### Protocol Identifier
 
-As specified in the [Protocol identifiers](./portal-wire-protocol.md#protocol-identifiers) section of the Portal wire protocol, the `protocol` field in the `TALKREQ` message **MUST** contain the value of `0x501A`.
+As specified in the [Protocol identifiers](../portal-wire-protocol.md#protocol-identifiers) section of the Portal wire protocol, the `protocol` field in the `TALKREQ` message **MUST** contain the value of `0x501A`.
 
 #### Supported Messages Types
 

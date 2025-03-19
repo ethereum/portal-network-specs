@@ -4,7 +4,7 @@ This document is the specification for the sub-protocol that supports on-demand 
 
 ## Overview
 
-The execution state network is a [Kademlia](https://pdos.csail.mit.edu/~petar/papers/maymounkov-kademlia-lncs.pdf) DHT that uses the [Portal Wire Protocol](./portal-wire-protocol.md) to establish an overlay network on top of the [Discovery v5](https://github.com/ethereum/devp2p/blob/master/discv5/discv5-wire.md) protocol.
+The execution state network is a [Kademlia](https://pdos.csail.mit.edu/~petar/papers/maymounkov-kademlia-lncs.pdf) DHT that uses the [Portal Wire Protocol](../portal-wire-protocol.md) to establish an overlay network on top of the [Discovery v5](https://github.com/ethereum/devp2p/blob/master/discv5/discv5-wire.md) protocol.
 
 State data from the execution chain consists of all account data from the main storage trie, all contract storage data from all of the individual contract storage tries, and the individual bytecodes for all contracts across all historical state roots.  This is traditionally referred to as an "archive node".
 
@@ -43,7 +43,7 @@ The state network uses the SHA256 Content ID derivation function from the portal
 
 #### Protocol Identifier
 
-As specified in the [Protocol identifiers](./portal-wire-protocol.md#protocol-identifiers) section of the Portal wire protocol, the `protocol` field in the `TALKREQ` message **MUST** contain the value of `0x500A`.
+As specified in the [Protocol identifiers](../portal-wire-protocol.md#protocol-identifiers) section of the Portal wire protocol, the `protocol` field in the `TALKREQ` message **MUST** contain the value of `0x500A`.
 
 #### Supported Message Types
 
@@ -67,7 +67,7 @@ As `content_for_retrieval` is different from `content_for_offer` the POKE mechan
 the proof/s that are contained in the `content_for_offer` payload. These proofs are usually available when walking down the trie during content
 lookups such as during an `eth_getBalance` JSON-RPC call implemented in the state network.
 
-The [POKE Mechanism](./portal-wire-protocol#poke-mechanism) for the state network requires building a `content_for_offer` by combining the `content_for_retrieval` with the parent proof/s and block hash. This is implemented differently for each
+The [POKE Mechanism](../portal-wire-protocol#poke-mechanism) for the state network requires building a `content_for_offer` by combining the `content_for_retrieval` with the parent proof/s and block hash. This is implemented differently for each
 type of content:
 - For account trie nodes the trie node in the `content_for_retrieval` is appended to the parent account proof and then combined with the block hash to build the `content_for_offer`.
 - For contract trie nodes the trie node in the `content_for_retrieval` is appended to the parent storage proof and then combined with the account proof and block hash to build the `content_for_offer`.

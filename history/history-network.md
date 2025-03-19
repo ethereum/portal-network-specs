@@ -4,7 +4,7 @@ This document is the specification for the sub-protocol that supports on-demand 
 
 ## Overview
 
-The chain history network is a [Kademlia](https://pdos.csail.mit.edu/~petar/papers/maymounkov-kademlia-lncs.pdf) DHT that uses the [Portal Wire Protocol](./portal-wire-protocol.md) to establish an overlay network on top of the [Discovery v5](https://github.com/ethereum/devp2p/blob/master/discv5/discv5-wire.md) protocol.
+The chain history network is a [Kademlia](https://pdos.csail.mit.edu/~petar/papers/maymounkov-kademlia-lncs.pdf) DHT that uses the [Portal Wire Protocol](../portal-wire-protocol.md) to establish an overlay network on top of the [Discovery v5](https://github.com/ethereum/devp2p/blob/master/discv5/discv5-wire.md) protocol.
 
 Execution chain history data consists of historical block headers, block bodies (transactions, ommers and withdrawals) and block receipts.
 
@@ -44,11 +44,11 @@ The history network uses the SHA256 Content ID derivation function from the port
 
 ### Wire Protocol
 
-The [Portal wire protocol](./portal-wire-protocol.md) is used as wire protocol for the history network.
+The [Portal wire protocol](../portal-wire-protocol.md) is used as wire protocol for the history network.
 
 #### Protocol Identifier
 
-As specified in the [Protocol identifiers](./portal-wire-protocol.md#protocol-identifiers) section of the Portal wire protocol, the `protocol` field in the `TALKREQ` message **MUST** contain the value of `0x500B`.
+As specified in the [Protocol identifiers](../portal-wire-protocol.md#protocol-identifiers) section of the Portal wire protocol, the `protocol` field in the `TALKREQ` message **MUST** contain the value of `0x500B`.
 
 #### Supported Message Types
 
@@ -483,7 +483,7 @@ Additionally the SSZ container holds a `BeaconBlock` hash_tree_root and a slot.
 This chain of two proofs allows for verifying that an EL `BlockHeader` is part of the canonical chain. The only requirement is having access to the beacon chain `historical_summaries`.
 The `historical_summaries` is a [`BeaconState` field](https://github.com/ethereum/consensus-specs/blob/dev/specs/capella/beacon-chain.md#beaconstate) that was introduced since the Capella fork. It gets updated every period (8192 slots). The `BlockProofHistoricalSummaries` MUST be used to verify blocks from the Capella fork onwards.
 
-The `historical_summaries` can be taken from the CL `BeaconState` (e.g. via [Beacon API](https://ethereum.github.io/beacon-APIs/#/Debug/getStateV2)) or the Portal beacon network can be used to [provide access](./beacon-chain/beacon-network.md#historicalsummaries) to an up to date `historical_summaries` object."
+The `historical_summaries` can be taken from the CL `BeaconState` (e.g. via [Beacon API](https://ethereum.github.io/beacon-APIs/#/Debug/getStateV2)) or the Portal beacon network can be used to [provide access](../beacon-chain/beacon-network.md#historicalsummaries) to an up to date `historical_summaries` object."
 
 The relationship of the beacon chain structures that are used for the `BlockProofHistoricalSummaries` can be seen below:
 
