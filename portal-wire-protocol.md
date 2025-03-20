@@ -12,7 +12,7 @@ Unsupported messages **SHOULD** receive a `TALKRESP` message with an empty paylo
 
 ## Protocol Version
 
-The portal wire protocol is versioned using unsigned integers.  The current version is `1`.
+The portal wire protocol is versioned using unsigned integers.  The current version is `2`.
 
 Support for protocol versions is signaled through the ENR record under the key `pv`.  The value should be a serialized SSZ object with the schema `List[uint8, limit=8]` whos value are the list of supported protocol versions.
 
