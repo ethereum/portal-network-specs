@@ -12,9 +12,9 @@ Unsupported messages **SHOULD** receive a `TALKRESP` message with an empty paylo
 
 ## Protocol Version
 
-The portal wire protocol is versioned using unsigned integers.  The current version is `2`.
+The portal wire protocol is versioned using unsigned integers.  The current version is `1`.
 
-Support for protocol versions is signaled through the ENR record under the key `pv`.  The value should be a serialized SSZ object with the schema `List[uint8, limit=8]` whos value are the list of supported protocol versions.  If this field is missing from the ENR it should be assumed that the client only supports version `1` of the protocol.
+Support for protocol versions is signaled through the ENR record under the key `pv`.  The value should be a serialized SSZ object with the schema `List[uint8, limit=8]` whos value are the list of supported protocol versions.  If this field is missing from the ENR it should be assumed that the client only supports version `0` of the protocol.
 
 Clients should communicate with each other using the highest mutually supported protocol version.  Exchange of ENR records for negotiating protocol version is done using the base DiscoverV5 protocol.
 
