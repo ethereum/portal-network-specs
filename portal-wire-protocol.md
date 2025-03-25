@@ -223,6 +223,22 @@ selector = 0x02
 ssz-type = List[ByteList[2048], 32]
 ```
 
+
+##### Content encoding for uTP transfer
+
+In the case that the content item is send over uTP, it MUST be prefixed with a variable length unsigned integer (varint). The varint MUST hold the size, in bytes, of the consecutive content item.
+
+The varint encoding used is Unsigned LEB128.
+The maximum size allowed for this application is limited to `uint32`.
+
+The content item itself MUST be encoded as is defined for each specific network and content type.
+
+The encoded data of the content item to be send over the stream can be formalized as:
+
+```py
+encoded_data = varint(len(content)) + content
+```
+
 #### Offer (0x06)
 
 Request message to offer a set of `content_keys` that this node has `content` available for.
