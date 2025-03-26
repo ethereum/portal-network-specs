@@ -149,13 +149,22 @@ HISTORICAL_ROOTS_LIMIT = 2**24  # = 16,777,216
 #### ForkDigest
 4-byte fork digest for the current beacon chain version and ``genesis_validators_root``.
 
+#### ExecutionHeader
+The Execution Header is derived from the respective slots execution payload. The Execution Header is encoded in rlp.
+
+```python
+ExecutionHeader = rlp.encode(header)
+```
+
 #### LightClientBootstrap
 
 ```python
 light_client_bootstrap_key = Container(block_hash: Bytes32)
 selector                   = 0x10
 
-content                    = ForkDigest + SSZ.serialize(LightlientBootstrap)
+bootstrap_with_header = Container(light_client_bootstrap: LightClientBootstrap, header: ExecutionHeader)
+
+content                    = ForkDigest + SSZ.serialize(bootstrap_with_header)
 content_key                = selector + SSZ.serialize(light_client_bootstrap_key)
 ```
 
@@ -165,7 +174,9 @@ content_key                = selector + SSZ.serialize(light_client_bootstrap_key
 light_client_update_keys   = Container(start_period: uint64, count: uint64)
 selector                   = 0x11
 
-content                    = List(ForkDigest + LightClientUpdate, limit=MAX_REQUEST_LIGHT_CLIENT_UPDATES)
+update_with_header = Container(light_client_update: LightClientUpdate, header: ExecutionHeader)
+
+content                    = List(ForkDigest + update_with_header, limit=MAX_REQUEST_LIGHT_CLIENT_UPDATES)
 content_key                = selector + SSZ.serialize(light_client_update_keys)
 ```
 
@@ -178,7 +189,9 @@ the requested range it MUST NOT reply any content.
 light_client_finality_update_key  = Container(finalized_slot: uint64)
 selector                          = 0x12
 
-content                           = ForkDigest + SSZ.serialize(light_client_finality_update)
+finality_update_with_header = Container(light_client_finality_update: LightClientFinalityUpdate, header: ExecutionHeader)
+
+content                           = ForkDigest + SSZ.serialize(finality_update_with_header)
 content_key                       = selector + SSZ.serialize(light_client_finality_update_key)
 ```
 
@@ -197,7 +210,9 @@ are potentially finalized.
 light_client_optimistic_update_key   = Container(optimistic_slot: uint64)
 selector                             = 0x13
 
-content                              = ForkDigest + SSZ.serialize(light_client_optimistic_update)
+optimistic_update_with_header = Container(light_client_optimistic_update: LightClientOptimisticUpdate, header: ExecutionHeader)
+
+content                              = ForkDigest + SSZ.serialize(optimistic_update_with_header)
 content_key                          = selector + SSZ.serialize(light_client_optimistic_update_key)
 ```
 
@@ -265,3 +280,11 @@ Once a node is light client synced, it can verify a new `LightClientUpdate` and 
 ##### LightClientFinalityUpdate & LightClientOptimisticUpdate
 
 Validating `LightClientFinalityUpdate` and `LightClientOptimisticUpdate` follows the gossip domain(gossipsub) [consensus specs](https://github.com/ethereum/consensus-specs/blob/dev/specs/altair/light-client/p2p-interface.md#the-gossip-domain-gossipsub).
+
+##### ExecutionHeader
+
+Validating the `ExecutionHeader` is done by comparing if `keccak256(ExecutionHeader) ==  ExecutionPayloadHeader.block_hash` are the same hash.
+
+`ExecutionPayloadHeader` is contained in all the payloads `ExecutionHeader` is included in.
+
+
