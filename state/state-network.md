@@ -291,6 +291,15 @@ This type MUST be used when content retrieved from another node via FINDCONTENT/
 content_for_retrieval  := Container(code: ByteList(32768))
 ```
 
+### Validation
+
+Every `content_for_offer` type contains `block_hash`, representing the block that the `TrieProof`
+is anchored to.
+
+Nodes MUST obtain block header using `block_hash` field (e.g. using
+[History sub-protocol](../history/history-network.md)), verify that they are cannonical and
+finalized (e.g. using [Beacon sub-protocol](../beacon-chain/beacon-network.md)), and validate trie
+proofs against header's `state_root` field.
 
 ## Gossip
 
