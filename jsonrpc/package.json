@@ -6,7 +6,9 @@
   "type": "module",
   "scripts": {
     "build": "node scripts/build.js",
-    "lint": "node scripts/build.js && node scripts/validate.js"
+    "lint": "node scripts/build.js && node scripts/validate.js",
+    "format": "prettier --write \"src/**/*.json\"",
+    "check-format": "prettier --check \"src/**/*.json\""
   },
   "repository": {
     "type": "git",
@@ -20,5 +22,8 @@
   "homepage": "https://github.com/ethereum/portal-network-specs#readme",
   "dependencies": {
     "@open-rpc/schema-utils-js": "^1.15.0"
+  },
+  "devDependencies": {
+    "prettier": "^3.2.5"
   }
 }
