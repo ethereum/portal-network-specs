@@ -224,7 +224,7 @@ ssz-type = List[ByteList[2048], 32]
 ```
 
 
-##### Content encoding for uTP transfer
+##### Length prefixing for uTP transfers
 
 In the case that the content item is send over uTP, it MUST be prefixed with a variable length unsigned integer (varint). The varint MUST hold the size, in bytes, of the consecutive content item.
 
