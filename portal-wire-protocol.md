@@ -236,7 +236,7 @@ The content item itself MUST be encoded as is defined for each specific network 
 The encoded data of the content item to be send over the stream can be formalized as:
 
 ```py
-encoded_data = varint(len(content)) + content
+utp_payload = varint(len(content)) + content
 ```
 
 #### Offer (0x06)
