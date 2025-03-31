@@ -238,7 +238,7 @@ content_key      = selector + SSZ.serialize(block_number_key)
 
 ##### Ephemeral Block Headers
 
-This content type represents block headers *near* the HEAD of the chain. They are provable by tracing through the chain of `header.parent_hash` values. All nodes in the network are assumed to store some amount of this content. The `Ping.custom_data` and `Pong.custom_data` fields can be used to learn the number of recent headers that a client makes available. It is recommended that clients store the full window of 8192 blocks of this data.
+This content type represents block headers *near* the HEAD of the chain. They are provable by tracing through the chain of `header.parent_hash` values. All nodes in the network are assumed to store some amount of this content. The `Ping.custom_data` and `Pong.custom_data` fields can be used to learn the number of recent headers that a client makes available. It is recommended that clients store the full window of 8192 blocks of this data. The nodes radius isn't used for ephemeral block headers.
 
 > Note: The history network does not provide a mechanism for knowing the HEAD of the chain. Clients to this network **MUST** have an external oracle for this information. The Portal Beacon Network is able to provide this information.
 
@@ -276,7 +276,7 @@ objects. This object is subject to the following validity conditions.
 * Each element after the first element in the list **MUST** be the RLP encoded block header indicated by the `header.parent_hash` of the previous item from the list.
 * The list **SHOULD** contain no more than `ephemeral_headers_key.ancestor_count` items.
 
-Ephemeral block headers are seeded into the network through bridges. Since ephemeral block headers are at the head of the chain, bridges should monitor if re-orgs occur. If a re-org occurs a bridge **SHOULD** `Offer` the block headers between previous tip of the chain to the new re-org'ed tip as seen through the view of `LightClientUpdates`. A bridge **SHOULD** `Offer` this missing block range in one message if possible or batch offer ranges from the HEAD down until the gap of headers left from the re-org is filled.
+Ephemeral block headers are seeded into the network through bridges. Since ephemeral block headers are at the head of the chain, bridges should monitor if re-orgs occur. If a re-org occurs a bridge **SHOULD** `Offer` the block headers between previous tip of the chain to the new re-org'ed tip as seen through the view of `LightClientUpdates`. A bridge **SHOULD** `Offer` this missing block range in one request if possible or batch offer ranges from the HEAD down until the gap of headers left from the re-org is filled. Headers **MUST** be ordered in chronological in the `Offer` request.
 
 
 #### Block Body
