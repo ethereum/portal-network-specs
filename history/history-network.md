@@ -236,11 +236,11 @@ content          = SSZ.serialize(block_header_with_proof)
 content_key      = selector + SSZ.serialize(block_number_key)
 ```
 
-##### Ephemeral Block Headers
+#### Ephemeral Block Headers
 
 This content type represents block headers *near* the HEAD of the chain. They are provable by tracing through the chain of `header.parent_hash` values. All nodes in the network are assumed to store some amount of this content. The `Ping.custom_data` and `Pong.custom_data` fields can be used to learn the number of recent headers that a client makes available. It is recommended that clients store the full window of 8192 blocks of this data. The nodes radius isn't used for ephemeral block headers.
 
-> Note: The history network does not provide a mechanism for knowing the HEAD of the chain. Clients to this network **MUST** have an external oracle for this information. The Portal Beacon Network is able to provide this information.
+> Note: The history network does not provide a mechanism for knowing the HEAD of the chain. Clients to this network **MUST** use an external oracle for this information. The Portal Beacon Network is able to provide this information.
 
 > Note: The content-id for this data type is not meaningful.
 
@@ -250,33 +250,65 @@ This content type represents block headers *near* the HEAD of the chain. They ar
 
 > Note: Clients **SHOULD** implement a mechanism to purge headers older than 8192 blocks from their content databases.
 
+##### Ephemeral Headers by `Find Content`
+
 ```python
 # Content and content key
 
-ephemeral_headers_key = Container(block_hash: Bytes32, ancestor_count: uint8)
+find_content_ephemeral_headers_key = Container(block_hash: Bytes32, ancestor_count: uint8)
 selector                 = 0x04
 
 BlockHeader              = ByteList[MAX_HEADER_LENGTH]
 ephemeral_header_payload = List(BlockHeader, limit=MAX_EPHEMERAL_HEADER_PAYLOAD)
 
 content                  = SSZ.serialize(ephemeral_header_payload)
-content_key              = selector + SSZ.serialize(ephemeral_headers_key)
+content_key              = selector + SSZ.serialize(find_content_ephemeral_headers_key)
 ```
 
-The `ephemeral_headers_key` encodes a request for headers anchored to the block
-hash indicated by `ephemeral_headers_key.block_hash`. The
-`ephemeral_headers_key.ancestor_count` **MUST** be in the inclusive range
+The `find_content_ephemeral_headers_key` encodes a request for headers anchored to the block
+hash indicated by `find_content_ephemeral_headers_key.block_hash`. The
+`find_content_ephemeral_headers_key.ancestor_count` **MUST** be in the inclusive range
 0-255.
 
 The `ephemeral_header_payload` is an SSZ list of RLP encoded block header
 objects. This object is subject to the following validity conditions.
 
+* This content type **MUST** only be used for `Find Content` requests
 * The list **MAY** be empty which signals that the responding node was unable to fulfill the request.
-* The first element in the list **MUST** be the RLP encoded block header indicated by the `ephemeral_headers_key.block_hash` field from the content key.
+* The first element in the list **MUST** be the RLP encoded block header indicated by the `find_content_ephemeral_headers_key.block_hash` field from the content key.
 * Each element after the first element in the list **MUST** be the RLP encoded block header indicated by the `header.parent_hash` of the previous item from the list.
-* The list **SHOULD** contain no more than `ephemeral_headers_key.ancestor_count` items.
+* The list **SHOULD** contain no more than `find_content_ephemeral_headers_key.ancestor_count` items.
 
-Ephemeral block headers are seeded into the network through bridges. Since ephemeral block headers are at the head of the chain, bridges should monitor if re-orgs occur. If a re-org occurs a bridge **SHOULD** `Offer` the block headers between previous tip of the chain to the new re-org'ed tip as seen through the view of `LightClientUpdates`. A bridge **SHOULD** `Offer` this missing block range in one request if possible or batch offer ranges from the HEAD down until the gap of headers left from the re-org is filled. Headers **MUST** be ordered in chronological in the `Offer` request.
+##### Ephemeral Header by `Offer`
+
+```python
+# Content and content key
+
+offer_ephemeral_header_key = Container(block_hash: Bytes32)
+selector                 = 0x05
+
+OfferEphemeralHeader = Container(
+  header: ByteList[MAX_HEADER_LENGTH], # RLP encoded header in SSZ ByteList
+)
+offer_ephemeral_header = OfferEphemeralHeader(header: rlp.encode(header))
+
+content          = SSZ.serialize(offer_ephemeral_header)
+content_key      = selector + SSZ.serialize(offer_ephemeral_header_key)
+```
+
+* This content type **MUST** only be used for `Offer` requests
+* Headers offered to the client **MUST** be in a strictly consecutive ascending order by `block_number`
+* When offered ephemeral headers, clients should scan the list for a `block_hash` anchored via the external oracle. All headers preceding the anchored header in the list **MUST** be treated as its direct ancestors in order of decreasing height.
+* When processing accepted headers, if the requested range cannot be validated by walking backward through the header's `parent_hash`'s, clients MAY penalize or descore the peer.
+* The anchored `block_hash`'s corresponding header can be validated via `keccak256(rlp.encode(header)) == block_hash`
+* The ancestors can be validated by recursively walking backwards and verifying `keccak256(rlp.encode(parent_header)) == current_header.parent_hash`
+
+
+##### Ephemeral Header Bridges
+
+Ephemeral block headers are seeded into the network through bridges. Since ephemeral block headers are at the head of the chain, bridges should monitor if re-orgs occur. 
+* If a re-org occurs a bridge **SHOULD** `Offer` the block headers between previous tip of the chain to the new re-org'ed tip as seen through the view of `LightClientUpdates`.
+* A bridge **SHOULD** `Offer` this missing block range in one request if possible or batch offer ranges from the HEAD down until the gap of headers left from the re-org is filled.
 
 
 #### Block Body
