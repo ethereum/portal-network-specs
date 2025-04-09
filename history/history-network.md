@@ -55,8 +55,8 @@ As specified in the [Protocol identifiers](../portal-wire-protocol.md#protocol-i
 The history network supports the following protocol messages:
 
 - `Ping` - `Pong`
-- `Find Nodes` - `Nodes`
-- `Find Content` - `Found Content`
+- `FindNodes` - `Nodes`
+- `FindContent` - `FoundContent`
 - `Offer` - `Accept`
 
 #### `Ping.payload` & `Pong.payload`
@@ -250,7 +250,7 @@ This content type represents block headers *near* the HEAD of the chain. They ar
 
 > Note: Clients **SHOULD** implement a mechanism to purge headers older than 8192 blocks from their content databases.
 
-##### Ephemeral Headers by `Find Content`
+##### Ephemeral Headers by `FindContent`
 
 ```python
 # Content and content key
@@ -273,11 +273,11 @@ hash indicated by `find_content_ephemeral_headers_key.block_hash`. The
 The `ephemeral_header_payload` is an SSZ list of RLP encoded block header
 objects. This object is subject to the following validity conditions.
 
-* This content type **MUST** only be used for `Find Content` requests
+* This content type **MUST** only be used for `FindContent` requests
 * The list **MAY** be empty which signals that the responding node was unable to fulfill the request.
 * The first element in the list **MUST** be the RLP encoded block header indicated by the `find_content_ephemeral_headers_key.block_hash` field from the content key.
 * Each element after the first element in the list **MUST** be the RLP encoded block header indicated by the `header.parent_hash` of the previous item from the list.
-* The list **SHOULD** contain no more than `find_content_ephemeral_headers_key.ancestor_count` items.
+* The list **SHOULD** contain no more than `find_content_ephemeral_headers_key.ancestor_count + 1` items.
 
 ##### Ephemeral Header by `Offer`
 
@@ -304,7 +304,7 @@ content_key      = selector + SSZ.serialize(offer_ephemeral_header_key)
 * The ancestors can be validated by recursively walking backwards and verifying `keccak256(rlp.encode(parent_header)) == current_header.parent_hash`
 
 
-##### Ephemeral Header Bridges
+##### Ephemeral Header Offer Logic
 
 Ephemeral block headers are seeded into the network through bridges. Since ephemeral block headers are at the head of the chain, bridges should monitor if re-orgs occur. 
 * If a re-org occurs a bridge **SHOULD** `Offer` the block headers between previous tip of the chain to the new re-org'ed tip as seen through the view of `LightClientUpdates`.
