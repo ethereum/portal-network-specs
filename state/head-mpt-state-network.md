@@ -36,8 +36,8 @@ latest 256 blocks:
 
 - Block trie-diffs
 - Account trie
-- All contract bytecode
-- All contract storage tries
+- All contract bytecode (planned but not implemented)
+- All contract storage tries (planned but not implemented)
 
 #### Types
 
