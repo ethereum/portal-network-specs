@@ -297,19 +297,26 @@ content_key      = selector + SSZ.serialize(offer_ephemeral_header_key)
 ```
 
 * This content type **MUST** only be used for `Offer` requests
-* Headers offered to the client **MUST** be in a strictly consecutive ascending order by `block_number`
-* When offered ephemeral headers, clients should scan the list for a `block_hash` anchored via the external oracle. All headers preceding the anchored header in the list **MUST** be treated as its direct ancestors in order of decreasing height.
+
+###### Ephemeral Header Offer Logic
+
+Ephemeral block headers are seeded into the network through bridges. Since ephemeral block headers are at the head of the chain, bridges should monitor if re-orgs occur. 
+
+An `Offer` message containing ephemeral headers **MUST**
+* Only contain content keys for ephemeral headers
+* Ephemeral header content keys offered to the client **MUST** be in a strictly consecutive ascending order by `block_number`
+* An `Offer` message can only contain up to 31 ephemeral header content keys
+* Contain content keys from the latest tip as specified by `LightClientUpdates` to the common ancestor block if a re-org occurred. So normally this would be 1 header, unless a re-org occurred where multiple would be included. An additional `8` header's content keys, should be included in the `Offer` message as padding.
+* If bridges detect a re-org depth is larger then 31 content keys, additional `Offer` messages containing the rest of the chain should be sent by the bridge in 10 second intervals of the initial `Offer` message
+
+Details for clients
+* When offered ephemeral headers, clients should scan the content keys for a `block_hash` anchored via the external oracle. All headers preceding the anchored header in the content keys list **MUST** be treated as its direct ancestors in order of decreasing height.
+* The client accepting an Offer **MUST** neighborhood gossip the headers from index 0 of the content keys list to the accepted anchored header, even if the client only accepts a subset of the respective range.
+
+Validation Logic
 * When processing accepted headers, if the requested range cannot be validated by walking backward through the header's `parent_hash`'s, clients MAY penalize or descore the peer.
 * The anchored `block_hash`'s corresponding header can be validated via `keccak256(rlp.encode(header)) == block_hash`
 * The ancestors can be validated by recursively walking backwards and verifying `keccak256(rlp.encode(parent_header)) == current_header.parent_hash`
-
-
-##### Ephemeral Header Offer Logic
-
-Ephemeral block headers are seeded into the network through bridges. Since ephemeral block headers are at the head of the chain, bridges should monitor if re-orgs occur. 
-* If a re-org occurs a bridge **SHOULD** `Offer` the block headers between previous tip of the chain to the new re-org'ed tip as seen through the view of `LightClientUpdates`.
-* A bridge **SHOULD** `Offer` this missing block range in one request if possible or batch offer ranges from the HEAD down until the gap of headers left from the re-org is filled.
-
 
 #### Block Body
 
