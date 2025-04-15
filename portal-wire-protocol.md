@@ -271,7 +271,7 @@ accept       = Container(connection_id: Bytes2, content_keys: ByteList[64])
       - 3: Declined, content not within node's radius
       - 4: Declined, rate limit reached. Node can't handle anymore connections
       - 5: Declined, inbound rate limit reached for accepting a specific content_id, used to protect against thundering herds
-      - 6: Declined, offered ephemeral header content key is beyond anchored header
+      - 6: Declined, content key not verifiable
       - 7 to 255: Unspecified decline, this shouldn't be used, but if it is received should just be treated the same as any other decline
 
 Upon *sending* this message, the requesting node **SHOULD** *listen* for an incoming uTP stream with the generated `connection_id`.

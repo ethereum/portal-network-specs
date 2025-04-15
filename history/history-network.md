@@ -304,10 +304,11 @@ Ephemeral block headers are seeded into the network through bridges. Since ephem
 
 An `Offer` message containing ephemeral headers **MUST**
 * Only contain content keys for ephemeral headers
-* Ephemeral header content keys offered to the client **MUST** be in a strictly consecutive ascending order by `block_number`
+* Ephemeral header content keys offered to the client **MUST** be in a strictly consecutive descending order by `block_number`
 * An `Offer` message can only contain up to 31 ephemeral header content keys
-* Contain content keys from the latest tip as specified by `LightClientUpdates` to the common ancestor block if a re-org occurred. So normally this would be 1 header, unless a re-org occurred where multiple would be included. An additional `8` header's content keys, should be included in the `Offer` message as padding.
-* If bridges detect a re-org depth is larger then 31 content keys, additional `Offer` messages containing the rest of the chain should be sent by the bridge in 10 second intervals of the initial `Offer` message
+
+Bridges **MUST** send `Offer` messages that
+* Contain content keys from the latest tip as specified by `LightClientUpdates` to the common ancestor block if a re-org occurred. So normally this would be 1 header, unless a re-org occurred where multiple would be included. An additional `8` header's content keys, MUST be included in the `Offer` message as padding. If bridges detect a re-org + padding depth is larger then 31 content keys, additional `Offer` messages containing the rest of the chain should be sent by the bridge in 10 second intervals of the initial `Offer` message
 
 Details for clients
 * When offered ephemeral headers, clients should scan the content keys for a `block_hash` anchored via the external oracle. All headers preceding the anchored header in the content keys list **MUST** be treated as its direct ancestors in order of decreasing height.
