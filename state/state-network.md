@@ -50,8 +50,8 @@ As specified in the [Protocol identifiers](../portal-wire-protocol.md#protocol-i
 The execution state network supports the following protocol messages:
 
 - `Ping` - `Pong`
-- `Find Nodes` - `Nodes`
-- `Find Content` - `Found Content`
+- `FindNodes` - `Nodes`
+- `FindContent` - `FoundContent`
 - `Offer` - `Accept`
 
 #### `Ping.payload` & `Pong.payload`

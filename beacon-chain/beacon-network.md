@@ -70,8 +70,8 @@ As specified in the [Protocol identifiers](../portal-wire-protocol.md#protocol-i
 The beacon chain network supports the following protocol messages:
 
 - `Ping` - `Pong`
-- `Find Nodes` - `Nodes`
-- `Find Content` - `Found Content`
+- `FindNodes` - `Nodes`
+- `FindContent` - `FoundContent`
 - `Offer` - `Accept`
 
 #### `Ping.payload` & `Pong.payload`
@@ -155,7 +155,7 @@ HISTORICAL_ROOTS_LIMIT = 2**24  # = 16,777,216
 light_client_bootstrap_key = Container(block_hash: Bytes32)
 selector                   = 0x10
 
-content                    = ForkDigest + SSZ.serialize(LightlientBootstrap)
+content                    = ForkDigest + SSZ.serialize(LightClientBootstrap)
 content_key                = selector + SSZ.serialize(light_client_bootstrap_key)
 ```
 

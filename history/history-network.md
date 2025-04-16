@@ -55,8 +55,8 @@ As specified in the [Protocol identifiers](../portal-wire-protocol.md#protocol-i
 The history network supports the following protocol messages:
 
 - `Ping` - `Pong`
-- `Find Nodes` - `Nodes`
-- `Find Content` - `Found Content`
+- `FindNodes` - `Nodes`
+- `FindContent` - `FoundContent`
 - `Offer` - `Accept`
 
 #### `Ping.payload` & `Pong.payload`
@@ -75,7 +75,7 @@ The history network uses the standard routing table structure from the Portal Wi
 
 #### Data Radius
 
-The history network includes one additional piece of node state that should be tracked.  Nodes must track the `data_radius` from the Ping and Pong messages for other nodes in the network.  This value is a 256 bit integer and represents the data that a node is "interested" in.  We define the following function to determine whether node in the network should be interested in a piece of content.
+The history network includes one additional piece of node state that should be tracked. Nodes must track the `data_radius` from the Ping and Pong messages for other nodes in the network. This value is a 256 bit integer and represents the data that a node is "interested" in. We define the following function to determine whether node in the network should be interested in a piece of content.
 
 ```python
 interested(node, content) = distance(node.id, content.id) <= node.data_radius
@@ -205,7 +205,7 @@ The `BlockHeaderWithProof` contains the RLP encoded block header and an SSZ enco
 * For pre-merge headers, clients SHOULD only accept headers with `BlockProofHistoricalHashesAccumulator` proofs.
 * For post-merge until Capella headers, clients SHOULD only accept headers with `BlockProofHistoricalRoots` proofs.
 * For Capella and onwards headers, clients SHOULD only accept headers with `BlockProofHistoricalSummaries` proofs.
-* For headers that are not yet part of the last period, clients SHOULD NOT accept offers for these headers because their proofs are not stable and will change once they transition beyond the period boundary.  See *Ephemeral Block Headers* for how to handle headers from the last period.
+* For headers that are not yet part of the last period, clients SHOULD accept offers for these headers if the client can prove that the headers are a valid child of the HEAD `block_hash` provided by their external oracle. See *Ephemeral Block Headers* for how to handle headers from the last period.
 
 ##### Block Header by Hash
 
@@ -236,46 +236,88 @@ content          = SSZ.serialize(block_header_with_proof)
 content_key      = selector + SSZ.serialize(block_number_key)
 ```
 
-##### Ephemeral Block Headers
+#### Ephemeral Block Headers
 
-This content type represents block headers *near* the HEAD of the chain.  They are provable by tracing through the chain of `header.parent_hash` values.  All nodes in the network are assumed to store some amount of this content.  The `Ping.custom_data` and `Pong.custom_data` fields can be used to learn the number of recent headers that a client makes available.  It is recommended that clients store the full window of 8192 blocks of this data.
+This content type represents block headers *near* the HEAD of the chain. They are provable by tracing through the chain of `header.parent_hash` values. All nodes in the network are assumed to store some amount of this content. The `Ping.custom_data` and `Pong.custom_data` fields can be used to learn the number of recent headers that a client makes available. It is recommended that clients store the full window of 8192 blocks of this data. The nodes radius isn't used for ephemeral block headers.
 
-> Note: The history network does not provide a mechanism for knowing the HEAD of the chain. Clients to this network **MUST** have an external oracle for this information.  The Portal Beacon Network is able to provide this information.
+> Note: The history network does not provide a mechanism for knowing the HEAD of the chain. Clients to this network **MUST** use an external oracle for this information. The Portal Beacon Network is able to provide this information.
 
 > Note: The content-id for this data type is not meaningful.
 
-> Note: This message is not valid for Gossip.  Clients **SHOULD** not send or accept gossip messages for this content type.
+> Note: Clients **SHOULD** avoid requesting missing headers from the last 64 block non-finalized window if their external oracle has updated the tip of the chain in a way that invalidates previously valid headers, as it is expected that valid updates are already being propagated to fill this discrepancy. Since all other Portal clients relying on the Portal Beacon Network would have the same view of the network, if implementations did try to find this content, it would end up being a DOS vector.
+
+> Note: When the external oracle updates the tip of the chain causing previously valid headers to be invalidated, the client **SHOULD** not prune any non-finalized ephemeral headers until the node can rebuild a valid chain from latest finalized header to the HEAD of the chain.
 
 > Note: Clients **SHOULD** implement a mechanism to purge headers older than 8192 blocks from their content databases.
+
+##### Ephemeral Headers by `FindContent`
 
 ```python
 # Content and content key
 
-ephemeral_headers_key = Container(block_hash: Bytes32, ancestor_count: uint8)
+find_content_ephemeral_headers_key = Container(block_hash: Bytes32, ancestor_count: uint8)
 selector                 = 0x04
 
 BlockHeader              = ByteList[MAX_HEADER_LENGTH]
 ephemeral_header_payload = List(BlockHeader, limit=MAX_EPHEMERAL_HEADER_PAYLOAD)
 
 content                  = SSZ.serialize(ephemeral_header_payload)
-content_key              = selector + SSZ.serialize(ephemeral_headers_key)
+content_key              = selector + SSZ.serialize(find_content_ephemeral_headers_key)
 ```
 
-The `ephemeral_headers_key` encodes a request for headers anchored to the block
-hash indicated by `ephemeral_headers_key.block_hash`.  The
-`ephemeral_headers_key.ancestor_count` **MUST** be in the inclusive range
+The `find_content_ephemeral_headers_key` encodes a request for headers anchored to the block
+hash indicated by `find_content_ephemeral_headers_key.block_hash`. The
+`find_content_ephemeral_headers_key.ancestor_count` **MUST** be in the inclusive range
 0-255.
 
 The `ephemeral_header_payload` is an SSZ list of RLP encoded block header
-objects.  This object is subject to the following validity conditions.
+objects. This object is subject to the following validity conditions.
 
+* This content type **MUST** only be used for `FindContent` requests
 * The list **MAY** be empty which signals that the responding node was unable to fulfill the request.
-* The first element in the list **MUST** be the RLP encoded block header indicated by the `ephemeral_headers_key.block_hash` field from the content key.
+* The first element in the list **MUST** be the RLP encoded block header indicated by the `find_content_ephemeral_headers_key.block_hash` field from the content key.
 * Each element after the first element in the list **MUST** be the RLP encoded block header indicated by the `header.parent_hash` of the previous item from the list.
-* The list **SHOULD** contain no more than `ephemeral_headers_key.ancestor_count` items.
+* The list **SHOULD** contain no more than `find_content_ephemeral_headers_key.ancestor_count + 1` items.
 
-Ephemeral block headers are not seeded into the network via traditional gossip mechanisms.  Ephemeral block headers are instead expected to be side-loaded from whatever HEAD oracle the portal node is using.  A client that is part of the portal beacon network can pull in headers from that network.
+##### Ephemeral Header by `Offer`
 
+```python
+# Content and content key
+
+offer_ephemeral_header_key = Container(block_hash: Bytes32)
+selector                 = 0x05
+
+OfferEphemeralHeader = Container(
+  header: ByteList[MAX_HEADER_LENGTH], # RLP encoded header in SSZ ByteList
+)
+offer_ephemeral_header = OfferEphemeralHeader(header: rlp.encode(header))
+
+content          = SSZ.serialize(offer_ephemeral_header)
+content_key      = selector + SSZ.serialize(offer_ephemeral_header_key)
+```
+
+* This content type **MUST** only be used for `Offer` requests
+
+###### Ephemeral Header Offer Logic
+
+Ephemeral block headers are seeded into the network through bridges. Since ephemeral block headers are at the head of the chain, bridges should monitor if re-orgs occur. 
+
+An `Offer` message containing ephemeral headers **MUST**
+* Only contain content keys for ephemeral headers
+* Ephemeral header content keys offered to the client **MUST** be in a strictly consecutive descending order by `block_number`
+* An `Offer` message can only contain up to 31 ephemeral header content keys
+
+Bridges **MUST** send `Offer` messages that
+* Contain content keys from the latest tip as specified by `LightClientUpdates` to the common ancestor block if a re-org occurred. So normally this would be 1 header, unless a re-org occurred where multiple would be included. An additional `8` header's content keys, MUST be included in the `Offer` message as padding. If bridges detect a re-org + padding depth is larger then 31 content keys, additional `Offer` messages containing the rest of the chain should be sent by the bridge in 10 second intervals of the initial `Offer` message
+
+Details for clients
+* When offered ephemeral headers, clients should scan the content keys for a `block_hash` anchored via the external oracle. All headers preceding the anchored header in the content keys list **MUST** be treated as its direct ancestors in order of decreasing height.
+* The client accepting an Offer **MUST** neighborhood gossip the headers from index 0 of the content keys list to the accepted anchored header, even if the client only accepts a subset of the respective range.
+
+Validation Logic
+* When processing accepted headers, if the requested range cannot be validated by walking backward through the header's `parent_hash`'s, clients MAY penalize or descore the peer.
+* The anchored `block_hash`'s corresponding header can be validated via `keccak256(rlp.encode(header)) == block_hash`
+* The ancestors can be validated by recursively walking backwards and verifying `keccak256(rlp.encode(parent_header)) == current_header.parent_hash`
 
 #### Block Body
 
@@ -356,7 +398,7 @@ Note: The type-specific receipts encoding might be different for future receipt 
 
 #### The "Historical Hashes Accumulator"
 
-The "Historical Hashes Accumulator" is based on the [double-batched merkle log accumulator](https://ethresear.ch/t/double-batched-merkle-log-accumulator/571) that is currently used in the beacon chain.  This data structure is designed to allow nodes in the network to "forget" the deeper history of the chain, while still being able to reliably receive historical headers with a proof that the received header is indeed from the canonical chain (as opposed to an uncle mined at the same block height).  This data structure is only used for pre-merge blocks.
+The "Historical Hashes Accumulator" is based on the [double-batched merkle log accumulator](https://ethresear.ch/t/double-batched-merkle-log-accumulator/571) that is currently used in the beacon chain. This data structure is designed to allow nodes in the network to "forget" the deeper history of the chain, while still being able to reliably receive historical headers with a proof that the received header is indeed from the canonical chain (as opposed to an uncle mined at the same block height). This data structure is only used for pre-merge blocks.
 
 The accumulator is defined as an [SSZ](https://ssz.dev/) data structure with the following schema:
 
