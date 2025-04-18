@@ -113,8 +113,8 @@ ping         = Container(enr_seq: uint64, payload_type: uint16, payload: ByteLis
 ```
 
 - `enr_seq`: The node's current sequence number of their ENR record.
-- `payload_type`: Custom payload type identifier as defined in [Ping Custom Payload Extensions](./ping-extensions/ping-custom-payload-extensions.md).
-- `payload`: Custom SSZ payload as defined in [Ping Custom Payload Extensions](./ping-extensions/ping-custom-payload-extensions.md).
+- `payload_type`: Custom payload type identifier as defined in [Ping Custom Payload Extensions](./ping-extensions/README.md).
+- `payload`: Custom SSZ payload as defined in [Ping Custom Payload Extensions](./ping-extensions/README.md).
 
 #### Pong (0x01)
 
@@ -126,8 +126,8 @@ pong         = Container(enr_seq: uint64, payload_type: uint16, payload: ByteLis
 ```
 
 - `enr_seq`: The node's current sequence number of their ENR record.
-- `payload_type`: Custom payload type identifier as defined in [Ping Custom Payload Extensions](./ping-extensions/ping-custom-payload-extensions.md).
-- `payload`: Custom SSZ payload as defined in [Ping Custom Payload Extensions](./ping-extensions/ping-custom-payload-extensions.md).
+- `payload_type`: Custom payload type identifier as defined in [Ping Custom Payload Extensions](./ping-extensions/README.md).
+- `payload`: Custom SSZ payload as defined in [Ping Custom Payload Extensions](./ping-extensions/README.md).
 
 #### Find Nodes (0x02)
 
