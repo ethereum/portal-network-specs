@@ -312,7 +312,7 @@ Bridges **MUST** send `Offer` messages that
 
 Details for clients
 * When offered ephemeral headers, clients should scan the content keys for a `block_hash` anchored via the external oracle. All headers preceding the anchored header in the content keys list **MUST** be treated as its direct ancestors in order of decreasing height.
-* The client accepting an Offer **MUST** neighborhood gossip the headers from index 0 of the content keys list to the accepted anchored header, even if the client only accepts a subset of the respective range.
+* The client accepting an Offer **MUST** neighborhood gossip the headers from the accepted anchored header to the end of the content keys list, even if the client only accepts a subset of the respective range.
 
 Validation Logic
 * When processing accepted headers, if the requested range cannot be validated by walking backward through the header's `parent_hash`'s, clients MAY penalize or descore the peer.
