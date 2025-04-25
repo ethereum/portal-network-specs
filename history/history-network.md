@@ -164,33 +164,41 @@ each receipt/transaction and re-rlp-encode it, but only if it is a legacy transa
 # Proof for EL BlockHeader before TheMerge / Paris
 BlockProofHistoricalHashesAccumulator = Vector[Bytes32, 15]
 
-# Proof that EL block_hash is in BeaconBlock -> BeaconBlockBody -> ExecutionPayload
-ExecutionBlockProof = Vector[Bytes32, 11]
+# Proof that EL block_hash is in BeaconBlock -> BeaconBlockBody -> ExecutionPayload for Bellatrix until Deneb (exclusive)
+ExecutionBlockProofBellatrix = Vector[Bytes32, 11]
+
+# Proof that EL block_hash is in BeaconBlock -> BeaconBlockBody -> ExecutionPayload for Deneb and onwards
+ExecutionBlockProofDeneb = Vector[Bytes32, 12]
 
 # Proof that BeaconBlock root is part of historical_roots and thus canonical
-# From TheMerge until Capella -> Bellatrix fork.
+# From TheMerge until Capella (exclusive)
 BeaconBlockProofHistoricalRoots = Vector[Bytes32, 14]
 
-# Proof for EL BlockHeader from TheMerge until Capella
+# Proof for EL BlockHeader from TheMerge until Capella (exclusive)
 BlockProofHistoricalRoots = Container[
     beaconBlockProof: BeaconBlockProofHistoricalRoots, # Proof that the BeaconBlock is part of the historical_roots and thus part of the canonical chain
     beaconBlockRoot: Bytes32, # hash_tree_root of BeaconBlock used to verify the proofs
-    executionBlockProof: ExecutionBlockProof, # Proof that EL BlockHash is part of the BeaconBlock
+    executionBlockProof: ExecutionBlockProofBellatrix, # Proof that EL BlockHash is part of the BeaconBlock
     slot: Slot # Slot of BeaconBlock, used to calculate the historical_roots index
 ]
-
-# Proof that EL block_hash is in BeaconBlock -> BeaconBlockBody -> ExecutionPayload
-ExecutionBlockProofCapella = List[Bytes32, limit=12]
 
 # Proof that BeaconBlock root is part of historical_summaries and thus canonical
 # For Capella and onwards
 BeaconBlockProofHistoricalSummaries = Vector[Bytes32, 13]
 
-# Proof for EL BlockHeader for Capella and onwards
-BlockProofHistoricalSummaries = Container[
+# Proof for EL BlockHeader for Capella
+BlockProofHistoricalSummariesCapella = Container[
     beaconBlockProof: BeaconBlockProofHistoricalSummaries, # Proof that the BeaconBlock is part of the historical_summaries and thus part of the canonical chain
     beaconBlockRoot: Bytes32, # hash_tree_root of BeaconBlock used to verify the proofs
-    executionBlockProof: ExecutionBlockProofCapella, # Proof that EL BlockHash is part of the BeaconBlock
+    executionBlockProof: ExecutionBlockProofBellatrix, # Proof that EL BlockHash is part of the BeaconBlock
+    slot: Slot # Slot of BeaconBlock, used to calculate the historical_summaries index
+]
+
+# Proof for EL BlockHeader for Deneb and onwards
+BlockProofHistoricalSummariesDeneb = Container[
+    beaconBlockProof: BeaconBlockProofHistoricalSummaries, # Proof that the BeaconBlock is part of the historical_summaries and thus part of the canonical chain
+    beaconBlockRoot: Bytes32, # hash_tree_root of BeaconBlock used to verify the proofs
+    executionBlockProof: ExecutionBlockProofDeneb, # Proof that EL BlockHash is part of the BeaconBlock
     slot: Slot # Slot of BeaconBlock, used to calculate the historical_summaries index
 ]
 
