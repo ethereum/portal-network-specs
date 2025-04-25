@@ -412,8 +412,7 @@ The process works as follows:
 - A DHT node is offered and receives a piece of content that it is interested in.
 - This DHT node checks their routing table for `k` nearby DHT nodes that should also be interested in the content. Those `k` nodes **SHOULD** not include the node that originally provided aforementioned content.
 - If the DHT node finds `n` or more DHT nodes interested it selects `n` of these nodes and offers the content to them.
-- If the DHT node finds less than `n` DHT nodes interested, it launches a node lookup with target `content-id` and it
-offers the content to maximum `n` of the newly discovered nodes.
+- If fewer than `n` interested nodes are found, it offers the content to as many of them as possible.
 
 The process above should quickly saturate the area of the DHT where the content is located and naturally terminate as more nodes become aware of the content.
 

@@ -322,7 +322,7 @@
   },
   {
     "name": "portal_beaconPutContent",
-    "summary": "Store the content in the local database if storage criteria is met, then send the content to interested peers using the client's default gossip mechanisms.",
+    "summary": "Store the content in the local database if storage criteria is met, then send the content to `n` interested peers using the client's default gossip mechanisms. If fewer than `n` interested nodes are found in the local DHT, the client launches a node lookup with target `content-id` and it offers the content to maximum `n` of the newly discovered nodes.",
     "params": [
       {
         "$ref": "#/components/contentDescriptors/ContentKey"
