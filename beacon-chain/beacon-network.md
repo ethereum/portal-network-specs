@@ -214,15 +214,32 @@ and then use that slot as a starting point for retrieving the most recent update
 Latest `HistoricalSummariesWithProof` object is stored in the network every epoch, even though the `historical_summaries` only updates every period (8192 slots). This is done to have an up to date proof every epoch, which makes it easier to verify the `historical_summaries` when starting the beacon light client sync.
 
 ```python
-HistoricalSummariesProof = Vector[Bytes32, 5]
+HISTORICAL_SUMMARIES_GINDEX_CAPELLA* = get_generalized_index(capella.BeaconState, 'historical_summaries') # = 59
+HISTORICAL_SUMMARIES_GINDEX_ELECTRA* = get_generalized_index(BeaconState, 'historical_summaries') # = 91
 
-historical_summaries_with_proof = HistoricalSummariesWithProof(
+HistoricalSummariesProofCapella = Vector[Bytes32, floorlog2(HISTORICAL_SUMMARIES_GINDEX_CAPELLA)]
+HistoricalSummariesProofElectra = Vector[Bytes32, floorlog2(HISTORICAL_SUMMARIES_GINDEX_ELECTRA)]
+
+# HistoricalSummary object is defined in consensus specs:
+# https://github.com/ethereum/consensus-specs/blob/dev/specs/capella/beacon-chain.md#historicalsummary.
+
+HistoricalSummariesWithProofCapella = Container(
     epoch: uint64,
-    # HistoricalSummary object is defined in consensus specs:
-    # https://github.com/ethereum/consensus-specs/blob/dev/specs/capella/beacon-chain.md#historicalsummary.
     historical_summaries: List(HistoricalSummary, limit=HISTORICAL_ROOTS_LIMIT),
-    proof: HistoricalSummariesProof
+    proof: HistoricalSummariesProofCapella
 )
+
+HistoricalSummariesWithProofElectra = Container(
+    epoch: uint64,
+    historical_summaries: List(HistoricalSummary, limit=HISTORICAL_ROOTS_LIMIT),
+    proof: HistoricalSummariesProofElectra
+)
+
+# For Capella + Deneb:
+historical_summaries_with_proof = HistoricalSummariesWithProofCapella(...)
+
+# For Electra and onwards:
+historical_summaries_with_proof = HistoricalSummariesWithProofElectra(...)
 
 historical_summaries_key   = Container(epoch: uint64)
 selector                   = 0x14
