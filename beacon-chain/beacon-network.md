@@ -217,32 +217,18 @@ Latest `HistoricalSummariesWithProof` object is stored in the network every epoc
 
 # Definition of generalized index (gindex):
 # https://github.com/ethereum/consensus-specs/blob/d8cfdf2626c1219a40048f8fa3dd103ae8c0b040/ssz/merkle-proofs.md#generalized-merkle-tree-index
-HISTORICAL_SUMMARIES_GINDEX_CAPELLA* = get_generalized_index(capella.BeaconState, 'historical_summaries') # = 59
 HISTORICAL_SUMMARIES_GINDEX_ELECTRA* = get_generalized_index(BeaconState, 'historical_summaries') # = 91
 
-HistoricalSummariesProofCapella = Vector[Bytes32, floorlog2(HISTORICAL_SUMMARIES_GINDEX_CAPELLA)]
 HistoricalSummariesProof = Vector[Bytes32, floorlog2(HISTORICAL_SUMMARIES_GINDEX_ELECTRA)]
 
-# HistoricalSummary object is defined in consensus specs:
-# https://github.com/ethereum/consensus-specs/blob/dev/specs/capella/beacon-chain.md#historicalsummary.
-
-HistoricalSummariesWithProofCapella = Container(
+# For Electra and onwards:
+historical_summaries_with_proof = Container(
     epoch: uint64,
-    historical_summaries: List(HistoricalSummary, limit=HISTORICAL_ROOTS_LIMIT),
-    proof: HistoricalSummariesProofCapella
-)
-
-HistoricalSummariesWithProof = Container(
-    epoch: uint64,
+    # HistoricalSummary object is defined in consensus specs:
+    # https://github.com/ethereum/consensus-specs/blob/dev/specs/capella/beacon-chain.md#historicalsummary.
     historical_summaries: List(HistoricalSummary, limit=HISTORICAL_ROOTS_LIMIT),
     proof: HistoricalSummariesProof
 )
-
-# For Capella + Deneb (to be deprecated after the Electra fork):
-historical_summaries_with_proof = HistoricalSummariesWithProofCapella(...)
-
-# For Electra and onwards:
-historical_summaries_with_proof = HistoricalSummariesWithProof(...)
 
 historical_summaries_key   = Container(epoch: uint64)
 selector                   = 0x14
