@@ -55,4 +55,4 @@ data.json valid
 
 [playground]: https://playground.open-rpc.org/?schemaUrl=https://raw.githubusercontent.com/ethereum/portal-network-specs/assembled-spec/jsonrpc/openrpc.json&uiSchema%5BappBar%5D%5Bui:splitView%5D=false&uiSchema%5BappBar%5D%5Bui:input%5D=false&uiSchema%5BappBar%5D%5Bui:examplesDropdown%5D=false
 [openrpc]: https://open-rpc.org
-[validator]: https://open-rpc.github.io/schema-utils-js/globals.html#validateopenrpcdocument
+[validator]: https://open-rpc.github.io/schema-utils-js/functions/validateOpenRPCDocument.html
