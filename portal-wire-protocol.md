@@ -49,6 +49,17 @@ Currently defined `angelfood` protocol identifiers:
 - `0x504E`: Execution Verkle State Network (planned but not implemented)
 - `0x504F`: Execution Transaction Gossip Network (planned but not implemented)
 
+### Sepolia identifiers (testnet)
+
+Currently defined `sepolia` protocol identifiers:
+
+- `0x505A`: Execution State Network
+- `0x505B`: Execution History Network
+- `0x505C`: Beacon Chain Network
+- `0x505D`: Execution Canonical Transaction Index Network (planned but not implemented)
+- `0x505E`: Execution Verkle State Network (planned but not implemented)
+- `0x505F`: Execution Transaction Gossip Network (planned but not implemented)
+
 ## Nodes and Node IDs
 
 Nodes in the portal network are represented by their [EIP-778 Ethereum Node Record (ENR)](https://github.com/ethereum/EIPs/blob/master/EIPS/eip-778.md) from the Discovery v5 network. A node's `node-id` is derived according to the node's identity scheme, which is specified in the node's ENR. A node's `node-id` represents its address in the DHT.  Node IDs are interchangeable between 32 byte identifiers and 256 bit integers.
