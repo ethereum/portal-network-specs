@@ -315,8 +315,13 @@ An `Offer` message containing ephemeral headers **MUST**
 * Ephemeral header content keys offered to the client **MUST** be in a strictly consecutive descending order by `block_number`
 * An `Offer` message can only contain up to 31 ephemeral header content keys
 
-Bridges **MUST** send `Offer` messages that
-* Contain content keys from the latest tip as specified by `LightClientUpdates` to the common ancestor block if a re-org occurred. So normally this would be 1 header, unless a re-org occurred where multiple would be included. An additional `8` header's content keys, MUST be included in the `Offer` message as padding. If bridges detect a re-org + padding depth is larger then 31 content keys, additional `Offer` messages containing the rest of the chain should be sent by the bridge in 10 second intervals of the initial `Offer` message
+Bridges **MUST** send `Offer` messages that contain content keys of three conceptual categories: new, re-org, and padding
+* New headers are defined by the latest tip as specified by `LightClientUpdates`, which have not been broadcast before
+* If a re-org occurred, then the headers back to the common ancestor block from a previous offer are included
+* An additional `8` header's content keys, MUST be included in the `Offer` message as padding
+* Often, bridge updates will inclued 1 new header, 0 re-org headers, and 8 padding headers
+* If bridges detect a re-org, and padding depth is larger then 31 content keys, additional `Offer` messages containing the rest of the chain should be sent by the bridge in 10 second intervals of the initial `Offer` message, until the common ancestor is reached
+* These categories are only conceptual. The series of header keys offered are concatenated and not identified as belonging to any category.
 
 Details for clients
 * When offered ephemeral headers, clients should scan the content keys for a `block_hash` anchored via the external oracle. All headers preceding the anchored header in the content keys list **MUST** be treated as its direct ancestors in order of decreasing height.
