@@ -320,7 +320,7 @@ Bridges **MUST** send `Offer` messages that contain content keys of three concep
 * If a re-org occurred, then the headers back to the common ancestor block from a previous offer are included
 * An additional `8` header's content keys, MUST be included in the `Offer` message as padding
 * Often, bridge updates will inclued 1 new header, 0 re-org headers, and 8 padding headers
-* If bridges detect a re-org, and padding depth is larger then 31 content keys, additional `Offer` messages containing the rest of the chain should be sent by the bridge in 10 second intervals of the initial `Offer` message, until the common ancestor is reached
+* If there are more than 31 content keys to offer, additional `Offer` messages containing the rest of the chain should be sent by the bridge in 10 second intervals of the initial `Offer` message
 * These categories are only conceptual. The series of header keys offered are concatenated and not identified as belonging to any category.
 
 Details for clients
