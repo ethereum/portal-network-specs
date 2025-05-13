@@ -240,7 +240,7 @@ content_key                = selector + SSZ.serialize(historical_summaries_key)
 > A node SHOULD return the latest `HistoricalSummariesWithProof` object it has in response to a `FindContent` request.
 > If a node cannot provide the requested or newer `HistoricalSummariesWithProof` object, it MUST NOT reply with any content.
 > A node MUST only store and gossip a `HistoricalSummariesWithProof` after it is verified with a finalized `BeaconState` root.
-> A bridge MUST only gossip a new `HistoricalSummariesWithProof` when it is part of a finalized `BeaconState`.
+> A bridge MUST only gossip a new `HistoricalSummariesWithProof` when it is part of a finalized `BeaconState`. On finalization, a bridge MUST gossip the `LightClientFinalityUpdate` before the `HistoricalSummariesWithProof` in order for receiving nodes to be able to verify the latter.
 
 ### Algorithms
 
