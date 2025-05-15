@@ -316,7 +316,9 @@ An `Offer` message containing ephemeral headers **MUST**
 * An `Offer` message can only contain up to 31 ephemeral header content keys
 
 Bridges **MUST** send `Offer` messages that
-* Contain content keys from the latest tip as specified by `LightClientUpdates` to the common ancestor block if a re-org occurred. So normally this would be 1 header, unless a re-org occurred where multiple would be included. An additional `8` header's content keys, MUST be included in the `Offer` message as padding. If bridges detect a re-org + padding depth is larger then 31 content keys, additional `Offer` messages containing the rest of the chain should be sent by the bridge in 10 second intervals of the initial `Offer` message
+* Contain content keys for the latest header as specified by `LightClientUpdates`, headers corresponding to the re-org depth since the last broadcast, and 8 additional headers which serve as padding
+* A common case would be 1 new header, 0 re-org headers, and 8 headers for padding
+* If there are more than 31 content keys to offer, additional `Offer` messages containing the rest of the series should be sent by the bridge in 10 second intervals of the initial `Offer` message
 
 Details for clients
 * When offered ephemeral headers, clients should scan the content keys for a `block_hash` anchored via the external oracle. All headers preceding the anchored header in the content keys list **MUST** be treated as its direct ancestors in order of decreasing height.
