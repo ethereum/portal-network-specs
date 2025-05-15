@@ -28,7 +28,8 @@ All protocol identifiers consist of two bytes. The first byte is "`P`" (`0x50`),
 
 Currently defined mainnet protocol identifiers:
 
-- Inclusive range of `0x5000` - `0x5009`: Reserved for future networks or network upgrades
+- Inclusive range of `0x5000` - `0x5008`: Reserved for future networks or network upgrades
+- `0x5009`: Execution Head-MPT State Network
 - `0x500A`: Execution State Network
 - `0x500B`: Execution History Network
 - `0x500C`: Beacon Chain Network
@@ -42,6 +43,7 @@ Currently defined mainnet protocol identifiers:
 
 Currently defined `angelfood` protocol identifiers:
 
+- `0x5049`: Execution Head-MPT State Network
 - `0x504A`: Execution State Network
 - `0x504B`: Execution History Network
 - `0x504C`: Beacon Chain Network
