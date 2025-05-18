@@ -169,8 +169,9 @@ content                    = List(ForkDigest + LightClientUpdate, limit=MAX_REQU
 content_key                = selector + SSZ.serialize(light_client_update_keys)
 ```
 
-> If a node cannot provide one of the `LightClientUpdate` objects in the
-the requested range it MUST NOT reply any content.
+> A node should respond with as many `LightClientUpdate` that they have at the beginning of the
+requested range, without exceeding the requested `count`. The elements must be in consecutive
+order, starting with `LightClientUpdate` that corresponds to the `start_period`.
 
 #### LightClientFinalityUpdate
 
@@ -182,14 +183,17 @@ content                           = ForkDigest + SSZ.serialize(light_client_fina
 content_key                       = selector + SSZ.serialize(light_client_finality_update_key)
 ```
 
-> The `LightClientFinalityUpdate` objects are ephemeral and only the latest is
-of use to the node. The content key requires the `finalized_slot` to be provided
-so that this object can be more efficiently gossiped. Nodes should decide to
-reject an `LightClientFinalityUpdate` in case it is not newer than the one they
-already have.
-For `FindContent` requests, a node will either know the last previous finalized
-slot, if it has been following the updates, or it will have to guess slots that
-are potentially finalized.
+> The `LightClientFinalityUpdate` objects are ephemeral and only the latest is of use to the node.
+>
+> The content key requires the `finalized_slot` to be provided so that this object can be more
+efficiently gossiped. Nodes should decide to reject an `LightClientFinalityUpdate` in case it is
+not newer than the one they already have.
+>
+> For `FindContent` requests, nodes SHOULD request `finalized_slot` that is one higher than the
+one they already have. If they were following the head of the chain, they should know if such
+content can exist. When responding to `FindContent` requests, nodes SHOULD respond with latest
+`LightClientFinalityUpdate` that they have. If then can't provide the requested or newer object,
+they MUST NOT reply with any content.
 
 #### LightClientOptimisticUpdate
 
@@ -201,17 +205,24 @@ content                              = ForkDigest + SSZ.serialize(light_client_o
 content_key                          = selector + SSZ.serialize(light_client_optimistic_update_key)
 ```
 
-> The `LightClientOptimisticUpdate` objects are ephemeral and only the latest is
-of use to the node. The content key requires the `optimistic_slot` (corresponding to
-the `signature_slot` in the the update) to be provided so that this
-object can be more efficiently gossiped. Nodes should decide to reject an
-`LightClientOptimisticUpdate` in case it is not newer than the one they already have.
-For `FindContent` requests, a node should compute the current slot based on its local clock
-and then use that slot as a starting point for retrieving the most recent update.
+> The `LightClientOptimisticUpdate` objects are ephemeral and only the latest is of use to the
+node.
+>
+> The content key requires the `optimistic_slot` (corresponding to the `signature_slot` in the
+update) to be provided so that this object can be more efficiently gossiped. Nodes should decide
+to reject an `LightClientOptimisticUpdate` in case it is not newer than the one they already have.
+>
+> For `FindContent` requests, nodes SHOULD request `optimistic_slot` that is one higher than the
+one they already have. When responding to `FindContent` requests, nodes SHOULD respond with latest
+`LightClientOptimisticUpdate` that they have. If then can't provide the requested or newer object,
+they MUST NOT reply with any content.
 
 #### HistoricalSummaries
 
-Latest `HistoricalSummariesWithProof` object is stored in the network every epoch, even though the `historical_summaries` only updates every period (8192 slots). This is done to have an up to date proof every epoch, which makes it easier to verify the `historical_summaries` when starting the beacon light client sync.
+Latest `HistoricalSummariesWithProof` object is stored in the network every epoch, even though the
+`historical_summaries` only updates every period (8192 slots). This is done to have an up to date
+proof every epoch, which makes it easier to verify the `historical_summaries` when starting the
+beacon light client sync.
 
 ```python
 
@@ -237,10 +248,15 @@ content                    = ForkDigest + SSZ.serialize(historical_summaries_wit
 content_key                = selector + SSZ.serialize(historical_summaries_key)
 ```
 
-> A node SHOULD return the latest `HistoricalSummariesWithProof` object it has in response to a `FindContent` request.
-> If a node cannot provide the requested or newer `HistoricalSummariesWithProof` object, it MUST NOT reply with any content.
-> A node MUST only store and gossip a `HistoricalSummariesWithProof` after it is verified with a finalized `BeaconState` root.
-> A bridge MUST only gossip a new `HistoricalSummariesWithProof` when it is part of a finalized `BeaconState`. On finalization, a bridge MUST gossip the `LightClientFinalityUpdate` before the `HistoricalSummariesWithProof` in order for receiving nodes to be able to verify the latter.
+> A node SHOULD return the latest `HistoricalSummariesWithProof` object it has in response to a
+`FindContent` request. If a node cannot provide the requested or newer
+`HistoricalSummariesWithProof` object, it MUST NOT reply with any content.
+>
+> A node MUST only store and gossip a `HistoricalSummariesWithProof` after it is verified with a
+finalized `BeaconState` root.
+>
+> A bridge MUST only gossip a new `HistoricalSummariesWithProof` when it is part of a finalized
+`BeaconState`. On finalization, a bridge MUST gossip the `LightClientFinalityUpdate` before the `HistoricalSummariesWithProof` in order for receiving nodes to be able to verify the latter.
 
 ### Algorithms
 
