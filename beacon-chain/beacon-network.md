@@ -214,7 +214,7 @@ to reject an `LightClientOptimisticUpdate` in case it is not newer than the one 
 >
 > For `FindContent` requests, nodes SHOULD request `optimistic_slot` that is one higher than the
 one they already have. When responding to `FindContent` requests, nodes SHOULD respond with latest
-`LightClientOptimisticUpdate` that they have. If then can't provide the requested or newer object,
+`LightClientOptimisticUpdate` that they have. If they can't provide the requested or newer object,
 they MUST NOT reply with any content.
 
 #### HistoricalSummaries
