@@ -429,6 +429,16 @@ The process above should quickly saturate the area of the DHT where the content 
 
 The node can use ACCEPT codes received in past responses to make more efficient choices on which neighbors to gossip to.
 
+#### Random Gossip
+
+We use the term *random gossip* to refer to the process through which content is disseminated to a random set DHT nodes.
+
+The process works as follows:
+- A DHT node is offered piece of content that is specified to be gossiped via
+random gossip.
+- The node selects a random node from a random bucket and does this for `n` nodes.
+- The node offers the content to the `n` selected nodes.
+
 ### POKE Mechanism
 
 When a node in the network is doing a content lookup, it will practically perform a recursive find using the `FindContent` and `Content` messages.
