@@ -85,6 +85,8 @@ A node is expected to maintain `radius` information for each node in its local n
 
 A node should track their own radius value and provide this value in all Ping or Pong messages it sends to other nodes.
 
+A node MUST use `radius` and [neighborhood gossip](../portal-wire-protocol.md#neighborhood-gossip) to gossip all non-ephemeral content. For gossiping the Ephemeral content, a node MUST use [random gossip](../portal-wire-protocol.md#random-gossip) instead.
+
 ### Data Types
 
 #### Constants
@@ -322,7 +324,7 @@ Bridges **MUST** send `Offer` messages that
 
 Details for clients
 * When offered ephemeral headers, clients should scan the content keys for a `block_hash` anchored via the external oracle. All headers preceding the anchored header in the content keys list **MUST** be treated as its direct ancestors in order of decreasing height.
-* The client accepting an Offer **MUST** neighborhood gossip the headers from the accepted anchored header to the end of the content keys list, even if the client only accepts a subset of the respective range.
+* The client accepting an Offer **MUST** random gossip the headers from the accepted anchored header to the end of the content keys list, even if the client only accepts a subset of the respective range.
 
 Validation Logic
 * When processing accepted headers, if the requested range cannot be validated by walking backward through the header's `parent_hash`'s, clients MAY penalize or descore the peer.

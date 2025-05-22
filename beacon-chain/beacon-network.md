@@ -100,8 +100,7 @@ When a node cannot fulfill a request for any of this data it SHOULD return an
 empty list of ENRs. It MAY return a list of ENRs of nodes that have provided
 this data in the past.
 
-When a node gossips any of this data, it MUST use [random gossip](./beacon-network.md/#random-gossip) instead of neighborhood gossip.
-
+When a node gossips any of this data, it MUST use [random gossip](../portal-wire-protocol.md#random-gossip) instead of neighborhood gossip.
 
 #### Data Radius
 
@@ -259,16 +258,6 @@ finalized `BeaconState` root.
 `BeaconState`. On finalization, a bridge MUST gossip the `LightClientFinalityUpdate` before the `HistoricalSummariesWithProof` in order for receiving nodes to be able to verify the latter.
 
 ### Algorithms
-
-#### Random Gossip
-
-We use the term *random gossip* to refer to the process through which content is disseminated to a random set DHT nodes.
-
-The process works as follows:
-- A DHT node is offered piece of content that is specified to be gossiped via
-random gossip.
-- The node selects a random node from a random bucket and does this for `n` nodes.
-- The node offers the content to the `n` selected nodes.
 
 #### Validation
 
