@@ -241,7 +241,7 @@
   },
   "PutContentResult": {
     "name": "PutContentResult",
-    "description": "Returns the number of peers that the content was gossiped to and a flag indicating whether the content was stored locally or not.",
+    "description": "Returns the number of peers that the content was offered to and a flag indicating whether the content was stored locally or not.",
     "schema": {
       "type": "object",
       "required": [
@@ -249,13 +249,37 @@
         "storedLocally"
       ],
       "properties": {
-        "peerCount": {
-          "description": "Indicates how many peers the content was gossiped to.",
-          "type": "number"
-        },
         "storedLocally": {
           "description": "Indicates whether the content was stored locally or not.",
           "type": "boolean"
+        },
+        "peerCount": {
+          "description": "Indicates how many peers the content was offered to.",
+          "type": "number"
+        },
+        "acceptedCount": {
+          "description": "Indicates how many peers accepted the offered content.",
+          "type": "number"
+        },
+        "genericDeclineCount": {
+          "description": "Indicates how many peers declined the offered content with no reason given.",
+          "type": "number"
+        },
+        "alreadyStoredCount": {
+          "description": "Indicates how many peers declined the offered content because they already have it stored.",
+          "type": "number"
+        },
+        "notWithinRadiusCount": {
+          "description": "Indicates how many peers declined the offered content because it is not within their radius.",
+          "type": "number"
+        },
+        "rateLimitedCount": {
+          "description": "Indicates how many peers declined the offered content due to a rate limit being reached.",
+          "type": "number"
+        },
+        "transferInProgressCount": {
+          "description": "Indicates how many peers declined the offered content due to having too many in progress transfers for the given content id.",
+          "type": "number"
         }
       }
     }
