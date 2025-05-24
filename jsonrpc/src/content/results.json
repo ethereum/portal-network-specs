@@ -241,7 +241,7 @@
   },
   "PutContentResult": {
     "name": "PutContentResult",
-    "description": "Returns the number of peers that the content was gossiped to and a flag indicating whether the content was stored locally or not.",
+    "description": "Returns the number of peers that the content was offered to and a flag indicating whether the content was stored locally or not.",
     "schema": {
       "type": "object",
       "required": [
@@ -249,13 +249,17 @@
         "storedLocally"
       ],
       "properties": {
-        "peerCount": {
-          "description": "Indicates how many peers the content was gossiped to.",
-          "type": "number"
-        },
         "storedLocally": {
           "description": "Indicates whether the content was stored locally or not.",
           "type": "boolean"
+        },
+        "peerCount": {
+          "description": "Indicates how many peers the content was offered to.",
+          "type": "number"
+        },
+        "acceptMetadata": {
+          "description": "Metadata which includes the count of each accept code received from peers when offering content.",
+          "$ref": "#/components/schemas/AcceptMetadata"
         }
       }
     }
