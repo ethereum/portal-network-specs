@@ -112,8 +112,8 @@
     "type": "object",
     "additionalProperties": true
   },
-  "AcceptCodesMetadata": {
-    "name": "AcceptCodesMetadata",
+  "AcceptMetadata": {
+    "name": "AcceptMetadata",
     "description": "Metadata containing counts of each accept code received from peers when offering content.",
     "schema": {
       "type": "object",

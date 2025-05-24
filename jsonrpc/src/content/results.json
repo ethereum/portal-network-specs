@@ -257,9 +257,9 @@
           "description": "Indicates how many peers the content was offered to.",
           "type": "number"
         },
-        "acceptCodesMetadata": {
+        "acceptMetadata": {
           "description": "Metadata which includes the count of each accept code received from peers when offering content.",
-          "$ref": "#/components/schemas/AcceptCodesMetadata"
+          "$ref": "#/components/schemas/AcceptMetadata"
         }
       }
     }
