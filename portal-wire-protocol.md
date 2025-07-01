@@ -31,7 +31,7 @@ Currently defined mainnet protocol identifiers:
 - Inclusive range of `0x5000` - `0x5008`: Reserved for future networks or network upgrades
 - `0x5009`: Execution Head-MPT State Network
 - `0x500A`: Execution State Network
-- `0x500B`: Execution History Network
+- `0x500B`: Execution Legacy History Network
 - `0x500C`: Beacon Chain Network
 - `0x500D`: Execution Canonical Transaction Index Network (planned but not implemented)
 - `0x500E`: Execution Verkle State Network (planned but not implemented)
@@ -45,7 +45,7 @@ Currently defined `angelfood` protocol identifiers:
 
 - `0x5049`: Execution Head-MPT State Network
 - `0x504A`: Execution State Network
-- `0x504B`: Execution History Network
+- `0x504B`: Execution Legacy History Network
 - `0x504C`: Beacon Chain Network
 - `0x504D`: Execution Canonical Transaction Index Network (planned but not implemented)
 - `0x504E`: Execution Verkle State Network (planned but not implemented)
@@ -56,7 +56,7 @@ Currently defined `angelfood` protocol identifiers:
 Currently defined `sepolia` protocol identifiers:
 
 - `0x505A`: Execution State Network
-- `0x505B`: Execution History Network
+- `0x505B`: Execution Legacy History Network
 - `0x505C`: Beacon Chain Network
 - `0x505D`: Execution Canonical Transaction Index Network (planned but not implemented)
 - `0x505E`: Execution Verkle State Network (planned but not implemented)

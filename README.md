@@ -28,8 +28,9 @@ The Discovery v5 protocol allows building custom sub-protocols via the use of th
 
 The Portal Network is divided into the following sub-protocols.
 
+- Execution Head-MPT State Network
 - Execution State Network
-- Execution History Network
+- Execution Legacy History Network
 - Beacon Chain Network
 - Execution Canonical Transaction Index Network (preliminary)
 - Execution Verkle State Network (preliminary)
@@ -138,9 +139,9 @@ The network will be dependent on receiving new and updated state for new blocks.
 Querying and reading data from the network should be fast enough for human-driven wallet operations, like estimating the gas for a transaction or reading state from a contract.
 
 
-### History Network: Headers, Blocks, and Receipts
+### Legacy History Network: Headers, Blocks, and Receipts
 
-The History Network facilitates on-demand retrieval of the history of the Ethereum chain.  This includes:
+The Legacy History Network facilitates on-demand retrieval of the history of the Ethereum chain.  This includes:
 
 - Headers
 - Block bodies
@@ -183,7 +184,7 @@ This network is a pure gossip network and does not implement any form of content
 - [uTP over DiscoveryV5](./utp/discv5-utp.md)
 - [State Network](./state/state-network.md)
     - Prior work: https://ethresear.ch/t/scalable-gossip-for-state-network/8958/4
-- [History Network](./history/history-network.md)
+- [History Network](./legacy_history/history-network.md)
     - Prior work: https://notes.ethereum.org/oUJE4ZX2Q6eMOgEMiQPkpQ?view
     - Prior Python proof-of-concept: https://github.com/ethereum/ddht/tree/341e84e9163338556cd48dd2fcfda9eedec3eb45
         - This POC should NOT be considered representative of the end goal.  It incorporates mechanisms that aren't likely to be apart of the actual implementation, specifically the "advertisement" system which proved to be a big bottleneck, as well as the SSZ merkle root system which was a workaround for large data transfer which we now intend to solve with uTP.
