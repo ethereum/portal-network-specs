@@ -46,7 +46,7 @@ $$C = c_0B_0 + c_1B_1 + ... + c_{255}B_{255}$$
 
 For optimization reasons, Portal Network splits branch node into 2-layer mini network in the following way:
 
-![Verkle Branch Node](./../assets/verkle_branch_node.png)
+![Verkle Branch Node](./../../assets/verkle_branch_node.png)
 
 Each of the `branch-fragment` node stores hash commitments of 16 children nodes. The commitment of those 16 children represents that fragment node and is stored inside `branch-bundle` node.
 
@@ -86,7 +86,7 @@ where:
 
 For optimization reasons, Portal Network splits leaf node into 2-layer mini network in the following way:
 
-![Verkle leaf node](./../assets/verkle_leaf_node.png)
+![Verkle leaf node](./../../assets/verkle_leaf_node.png)
 
 Each of the `leaf-fragment` nodes stores up to 16 values (32 bytes each).
 

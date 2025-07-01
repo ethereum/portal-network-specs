@@ -8,5 +8,5 @@ This is a list and short description of all the extensions
 |---|---|---|---|---|
 | [0](extensions/type-0.md)  | Client Info, Radius, and Capabilities | All  | Returns client info e.x. `trin/0.1.1-2b00d730/linux-x86_64/rustc1.81.0`, the nodes radius and a list of enabled extensions  |  Yes  |
 | [1](extensions/type-1.md)  |  Basic Radius Payload | State, Beacon | Provides the nodes Radius  |  No  |
-| [2](extensions/type-2.md)  | History Radius Payload  |  History | Provides the nodes radius and ephemeral header count  |  No  |
+| [2](extensions/type-2.md)  | History Radius Payload  |  Legacy History | Provides the nodes radius and ephemeral header count  |  No  |
 | [65535](extensions/type-65535.md)  | Error Response  |  All | Returns an error for respective ping message  |  Yes  |
