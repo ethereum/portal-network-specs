@@ -1,4 +1,4 @@
-# Execution Chain History Network
+# Execution Legacy History Network
 
 This document is the specification for the sub-protocol that supports on-demand availability of Ethereum execution chain history data.
 
