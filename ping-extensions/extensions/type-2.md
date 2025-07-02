@@ -1,6 +1,6 @@
 # History Radius Payload
 
-A specialized radius payload for the history network which contains field for how many ephemeral headers the node holds.
+A specialized radius payload for the legacy history network which contains field for how many ephemeral headers the node holds.
 
 Ping and Pong Payload
 ```python
