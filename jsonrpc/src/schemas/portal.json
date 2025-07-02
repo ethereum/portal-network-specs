@@ -111,5 +111,46 @@
     "description": "A placeholder for unknown or future payload types",
     "type": "object",
     "additionalProperties": true
+  },
+  "AcceptMetadata": {
+    "name": "AcceptMetadata",
+    "description": "Metadata containing counts of each accept code received from peers when offering content.",
+    "schema": {
+      "type": "object",
+      "required": [
+        "acceptedCount",
+        "genericDeclineCount",
+        "alreadyStoredCount",
+        "notWithinRadiusCount",
+        "rateLimitedCount",
+        "transferInProgressCount"
+      ],
+      "properties": {
+        "acceptedCount": {
+          "description": "Indicates how many peers accepted the offered content.",
+          "type": "number"
+        },
+        "genericDeclineCount": {
+          "description": "Indicates how many peers declined the offered content with no reason given.",
+          "type": "number"
+        },
+        "alreadyStoredCount": {
+          "description": "Indicates how many peers declined the offered content because they already have it stored.",
+          "type": "number"
+        },
+        "notWithinRadiusCount": {
+          "description": "Indicates how many peers declined the offered content because it is not within their radius.",
+          "type": "number"
+        },
+        "rateLimitedCount": {
+          "description": "Indicates how many peers declined the offered content due to a rate limit being reached.",
+          "type": "number"
+        },
+        "transferInProgressCount": {
+          "description": "Indicates how many peers declined the offered content due to having too many in progress transfers for the given content id.",
+          "type": "number"
+        }
+      }
+    }
   }
 }
