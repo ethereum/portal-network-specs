@@ -181,19 +181,20 @@ This network is a pure gossip network and does not implement any form of content
 
 - [Portal Wire Protocol](./portal-wire-protocol.md)
 - [uTP over DiscoveryV5](./utp/discv5-utp.md)
-- [State Network](./legacy/state/state-network.md)
-    - Prior work: https://ethresear.ch/t/scalable-gossip-for-state-network/8958/4
-- [Legacy History Network](./legacy/history/history-network.md)
-    - Prior work: https://notes.ethereum.org/oUJE4ZX2Q6eMOgEMiQPkpQ?view
-    - Prior Python proof-of-concept: https://github.com/ethereum/ddht/tree/341e84e9163338556cd48dd2fcfda9eedec3eb45
-        - This POC should NOT be considered representative of the end goal.  It incorporates mechanisms that aren't likely to be apart of the actual implementation, specifically the "advertisement" system which proved to be a big bottleneck, as well as the SSZ merkle root system which was a workaround for large data transfer which we now intend to solve with uTP.
-- [Beacon Chain Network](./legacy/beacon-chain/beacon-network.md)
-- [Canonical Transaction Index Network](./legacy/canonical-transaction-index/canonical-transaction-index-network.md)
-    - Spec is preliminary.
-    - Network design borrows heavily from history network
-- [Transaction Gossip Network](./legacy/transaction-gossip/transaction-gossip.md)
-    - Spec is preliminary
-    - Prior work: https://ethresear.ch/t/scalable-transaction-gossip/8660
-- [Verkle State Network](./legacy/verkle/verkle-state-network.md)
-    - Spec is preliminary
-    - Prior work: https://ethresear.ch/t/portal-network-verkle/19339
+- Legacy Networks
+    - [State Network](./legacy/state/state-network.md)
+        - Prior work: https://ethresear.ch/t/scalable-gossip-for-state-network/8958/4
+    - [Legacy History Network](./legacy/history/history-network.md)
+        - Prior work: https://notes.ethereum.org/oUJE4ZX2Q6eMOgEMiQPkpQ?view
+        - Prior Python proof-of-concept: https://github.com/ethereum/ddht/tree/341e84e9163338556cd48dd2fcfda9eedec3eb45
+            - This POC should NOT be considered representative of the end goal.  It incorporates mechanisms that aren't likely to be apart of the actual implementation, specifically the "advertisement" system which proved to be a big bottleneck, as well as the SSZ merkle root system which was a workaround for large data transfer which we now intend to solve with uTP.
+    - [Beacon Chain Network](./legacy/beacon-chain/beacon-network.md)
+    - [Canonical Transaction Index Network](./legacy/canonical-transaction-index/canonical-transaction-index-network.md)
+        - Spec is preliminary.
+        - Network design borrows heavily from history network
+    - [Transaction Gossip Network](./legacy/transaction-gossip/transaction-gossip.md)
+        - Spec is preliminary
+        - Prior work: https://ethresear.ch/t/scalable-transaction-gossip/8660
+    - [Verkle State Network](./legacy/verkle/verkle-state-network.md)
+        - Spec is preliminary
+        - Prior work: https://ethresear.ch/t/portal-network-verkle/19339
