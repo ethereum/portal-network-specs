@@ -28,6 +28,7 @@ The Discovery v5 protocol allows building custom sub-protocols via the use of th
 
 The Portal Network is divided into the following sub-protocols.
 
+- Execution History Network
 - Execution Head-MPT State Network
 - Execution State Network
 - Execution Legacy History Network
@@ -124,6 +125,14 @@ The planned architecture for bridge nodes is to pull data from the standard JSON
 
 ## Network Functionality
 
+### History Network
+
+The History Network facilitates on-demand retrieval of the history of the Ethereum chain. This includes block bodies and receipts.
+
+Participants of this network are assumed to be the Execution Layer clients that store all historical headers locally. Other clients will need a way to obtain block header for a given block number in order to verify the content.
+
+All data retrieval from the History Network is done by block number.
+
 ### State Network: Accounts and Contract Storage
 
 The State Network facilitates on-demand retrieval of the Ethereum "state" data.  This includes:
@@ -154,7 +163,6 @@ All data retrieved from the history network is addressed by block hash.  Headers
 
 All data retrieved from the history network can be immediately verified by the requesting node. For block headers, the requesting node always knows the expected hash of the requested data and can reject responses with an incorrect hash.  For block bodies and receipts, the requesting node is expected to have the corresponding header and can reject responses that do not validate against the corresponding header fields.
 
-
 ### Canonical Transaction Index Network: Transactions by Hash
 
 The Canonical Transaction Index Network facilitates retrieval of individual transactions by their hash.
@@ -181,6 +189,7 @@ This network is a pure gossip network and does not implement any form of content
 
 - [Portal Wire Protocol](./portal-wire-protocol.md)
 - [uTP over DiscoveryV5](./utp/discv5-utp.md)
+- [History Network](./history/history-network.md)
 - Legacy Networks
     - [State Network](./legacy/state/state-network.md)
         - Prior work: https://ethresear.ch/t/scalable-gossip-for-state-network/8958/4
