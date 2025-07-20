@@ -154,7 +154,7 @@ We achieve this by manupulating bits of `block_number (uint64)`:
 3. We append zeros to get a value from the domain space (`uint256`)
 4. Finally, the last byte is set to the content type in order to have unique content id for different types (i.e. body vs. receipts)
 
-The following [image](./../assets/range_content_id_derivation.png) shows this process for a block number `12'345'678` and block body content type:
+The following [image](./../assets/range_content_id_derivation.png) shows this process for a block number `12'345'678` and receipts content type:
 
 ![Content id derivation visualization](./../assets/range_content_id_derivation.png)
 
