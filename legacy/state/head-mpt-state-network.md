@@ -22,7 +22,7 @@ The Execution Head-MPT State Network is a
 Nodes are responsible for storing fixed state subtree, across all 256 recent blocks.
 
 Nodes are expected to have access to the latest 256 block headers, which they will use to validate
-content and handle re-orgs. The [History](../history/history-network.md) and
+content and handle re-orgs. The [Legacy History](../history/history-network.md) and
 [Beacon](../beacon-chain/beacon-network.md) networks can be used for this purpose, but
 implementations can use other out-of-protocol solutions as well.
 
