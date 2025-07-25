@@ -10,23 +10,40 @@ Sub-protocol using the wire protocol **MAY** choose to exclude certain message t
 
 Unsupported messages **SHOULD** receive a `TALKRESP` message with an empty payload.
 
+## ENR record
+
+Every peer **MUST** set field in the ENR record under the key `p` to announce its Portal related properties:
+
+- the minimum and maximum supported protocol version
+- the network chain id that it operates on
+
+```
+enr['p'] = rlp([pv_min, pv_max, chain_id])
+```
+
+We use `rlp` encoded list as it allows us to add more items at the end in the future upgrades. The implementation should take that into consideration.
+
 ## Protocol Version
 
-The portal wire protocol is versioned using unsigned integers.  The current version is `1`.
+The portal wire protocol is versioned using unsigned integers. The current version is `2`.
 
-Support for protocol versions is signaled through the ENR record under the key `pv`.  The value should be a serialized SSZ object with the schema `List[uint8, limit=8]` whos value are the list of supported protocol versions.  If this field is missing from the ENR it should be assumed that the client only supports version `0` of the protocol.
+Client **MUST** indicate their supported versions using ENR record (see section [above](#enr-record)).
 
-Clients should communicate with each other using the highest mutually supported protocol version.  Exchange of ENR records for negotiating protocol version is done using the base DiscoverV5 protocol.
+Clients **MUST** communicate with each other using the highest mutually supported protocol version. Exchange of ENR records for negotiating protocol version is done using the base DiscoverV5 protocol.
 
-Changes to the protocol that increment the version number should be recorded in the [Changelog](./protocol-version-changelog.md)
+Changes to the protocol that increment the version number should be recorded in the [Changelog](./protocol-version-changelog.md).
+
+## Chain id
+
+Each client operates only on one chain (e.g. Mainnet, Sepolia), against which it validates the content.
+
+The `chain-id` **MUST** be announced as part of the ENR record (see section [above](#enr-record)). Client **SHOULD NOT** communicate with the peer that doesn't operate on the same chain.
 
 ## Protocol identifiers
 
 All protocol identifiers consist of two bytes. The first byte is "`P`" (`0x50`), to indicate "the Portal network", the second byte is a specific network identifier.
 
-### Mainnet identifiers
-
-Currently defined mainnet protocol identifiers:
+Currently defined protocol identifiers:
 
 - Inclusive range of `0x5001` - `0x5008`: Reserved for future networks or network upgrades
 - `0x5000`: Execution History Network
@@ -38,38 +55,9 @@ Currently defined mainnet protocol identifiers:
 - `0x500E`: Execution Verkle State Network (legacy, not implemented)
 - `0x500F`: Execution Transaction Gossip Network (legacy, not implemented)
 
-### Angelfood identifiers (legacy, testnet)
-
-> Angelfood is the name for our current test network.
-
-Currently defined `angelfood` protocol identifiers:
-
-- `0x5040`: Execution History Network
-- `0x5049`: Execution Head-MPT State Network (legacy, not implemented)
-- `0x504A`: Execution State Network (legacy)
-- `0x504B`: Execution Legacy History Network (legacy)
-- `0x504C`: Beacon Chain Network (legacy)
-- `0x504D`: Execution Canonical Transaction Index Network (legacy, not implemented)
-- `0x504E`: Execution Verkle State Network (legacy, not implemented)
-- `0x504F`: Execution Transaction Gossip Network (legacy, not implemented)
-
-### Sepolia identifiers (testnet)
-
-Currently defined `sepolia` protocol identifiers:
-
-- `0x5050`: Execution History Network
-- `0x5059`: Execution Head-MPT State Network (legacy, not implemented)
-- `0x505A`: Execution State Network (legacy)
-- `0x505B`: Execution Legacy History Network (legacy)
-- `0x505C`: Beacon Chain Network (legacy)
-- `0x505D`: Execution Canonical Transaction Index Network (legacy, not implemented)
-- `0x505E`: Execution Verkle State Network (legacy, not implemented)
-- `0x505F`: Execution Transaction Gossip Network (legacy, not implemented)
-
 ## Nodes and Node IDs
 
 Nodes in the portal network are represented by their [EIP-778 Ethereum Node Record (ENR)](https://github.com/ethereum/EIPs/blob/master/EIPS/eip-778.md) from the Discovery v5 network. A node's `node-id` is derived according to the node's identity scheme, which is specified in the node's ENR. A node's `node-id` represents its address in the DHT.  Node IDs are interchangeable between 32 byte identifiers and 256 bit integers.
-
 
 ## Content Keys and Content IDs
 
@@ -339,7 +327,6 @@ logdistance(a: uint256, b: uint256) = log2(distance(a, b))
 ### Test Vectors
 
 A collection of test vectors for this specification can be found in the [Portal wire test vectors](./portal-wire-test-vectors.md) document.
-
 
 ## Routing Table
 
