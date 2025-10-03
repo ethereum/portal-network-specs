@@ -83,6 +83,44 @@ The transmission of data that is too large to fit a single packet is done using 
 
 > The Portal wire protocol currently implements uTP over the `TALKREQ/TALKRESP` messages.  Future plans are to move to the [sub-protocol data transmission](https://github.com/ethereum/devp2p/issues/229) in order to use a protocol native mechanism for establishing packet streams between clients.
 
+Currently, the standard is to switch to uTP when the payload exceeds 1177 bytes. This is the full encoded payload size that includes the message ID, etc. The max payload size may change over time, because it depends on a number of other variables. See an example derivation in python:
+```py
+# The maximum size of a Discv5 packet.
+MAX_DISCV5_PACKET_SIZE = 1280
+
+# Discv5 ordinary packet overhead
+DISCV5_PACKET_OVERHEAD = (  # sum: 87
+    # masking IV length
+    16 +
+    # static header (protocol ID || version || flag || nonce || authdata-size) length
+    23 +
+    # authdata length
+    32 +
+    # HMAC length
+    16
+)
+
+# Discv5 talk request overhead
+DISCV5_TALK_REQ_OVERHEAD = (  # sum: 16
+    # talkResp msg id
+    1 +
+    # rlp encoding outer list, max length will be encoded in 2 bytes
+    3 +
+    # request id (max = 8) + 1 byte from rlp encoding byte string
+    9 +
+    # rlp encoding response byte string, max length in 2 bytes
+    3
+)
+
+# The maximum size of a portal CONTENT payload. At the time of writing, this payload either
+# corresponds to a `connection_id`, `enrs`, or `content` payload.
+
+MAX_PORTAL_CONTENT_PAYLOAD_SIZE = (  # 1177
+    MAX_DISCV5_PACKET_SIZE
+    - DISCV5_PACKET_OVERHEAD
+    - DISCV5_TALK_REQ_OVERHEAD
+)
+```
 
 ## Request - Response Messages
 
