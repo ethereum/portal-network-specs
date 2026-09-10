@@ -142,7 +142,7 @@ MAX_EPHEMERAL_HEADER_PAYLOAD = 256
 # in a single request.
 
 MAX_HEADER_PROOF_LENGTH = 1024
-# Maximum length for header proof. This maximum works for the current 3 types of proof.
+# Maximum length for header proof. This maximum works for the current 4 types of proof.
 ```
 
 #### Encoding Content Values for Validation
@@ -169,8 +169,11 @@ BlockProofHistoricalHashesAccumulator = Vector[Bytes32, 15]
 # Proof that EL block_hash is in BeaconBlock -> BeaconBlockBody -> ExecutionPayload for Bellatrix until Deneb (exclusive)
 ExecutionBlockProofBellatrix = Vector[Bytes32, 11]
 
-# Proof that EL block_hash is in BeaconBlock -> BeaconBlockBody -> ExecutionPayload for Deneb and onwards
+# Proof that EL block_hash is in BeaconBlock -> BeaconBlockBody -> ExecutionPayload from Deneb until Gloas (exclusive)
 ExecutionBlockProofDeneb = Vector[Bytes32, 12]
+
+# Proof that EL block_hash is in BeaconBlock -> BeaconBlockBody -> SignedExecutionPayloadBid -> ExecutionPayloadBid -> parent_block_hash for Gloas and onwards
+ExecutionBlockProofGloas = Vector[Bytes32, 14]
 
 # Proof that BeaconBlock root is part of historical_roots and thus canonical
 # From TheMerge until Capella (exclusive)
@@ -196,11 +199,19 @@ BlockProofHistoricalSummariesCapella = Container[
     slot: Slot # Slot of BeaconBlock, used to calculate the historical_summaries index
 ]
 
-# Proof for EL BlockHeader for Deneb and onwards
+# Proof for EL BlockHeader from Deneb until Gloas (exclusive)
 BlockProofHistoricalSummariesDeneb = Container[
     beaconBlockProof: BeaconBlockProofHistoricalSummaries, # Proof that the BeaconBlock is part of the historical_summaries and thus part of the canonical chain
     beaconBlockRoot: Bytes32, # hash_tree_root of BeaconBlock used to verify the proofs
     executionBlockProof: ExecutionBlockProofDeneb, # Proof that EL BlockHash is part of the BeaconBlock
+    slot: Slot # Slot of BeaconBlock, used to calculate the historical_summaries index
+]
+
+# Proof for EL BlockHeader for Gloas and onwards
+BlockProofHistoricalSummariesGloas = Container[
+    beaconBlockProof: BeaconBlockProofHistoricalSummaries, # Proof that the BeaconBlock is part of the historical_summaries and thus part of the canonical chain
+    beaconBlockRoot: Bytes32, # hash_tree_root of BeaconBlock used to verify the proofs
+    executionBlockProof: ExecutionBlockProofGloas, # Proof that EL BlockHash is part of the BeaconBlock
     slot: Slot # Slot of BeaconBlock, used to calculate the historical_summaries index
 ]
 
@@ -210,11 +221,13 @@ BlockHeaderWithProof = Container(
 )
 ```
 
-The `BlockHeaderWithProof` contains the RLP encoded block header and an SSZ encoded proof for that header. The proof MUST be of the type `BlockProofHistoricalHashesAccumulator` `BlockProofHistoricalRoots`, `BlockProofHistoricalSummaries` depending on the hardfork, see the definitions above. The block header `timestamp` field can be used to select to which type to decode the proof.
+The `BlockHeaderWithProof` contains the RLP encoded block header and an SSZ encoded proof for that header. The proof MUST be of one of the proof types defined above, depending on the hardfork. The block header `timestamp` field can be used to select to which type to decode the proof.
 
 * For pre-merge headers, clients SHOULD only accept headers with `BlockProofHistoricalHashesAccumulator` proofs.
-* For post-merge until Capella headers, clients SHOULD only accept headers with `BlockProofHistoricalRoots` proofs.
-* For Capella and onwards headers, clients SHOULD only accept headers with `BlockProofHistoricalSummaries` proofs.
+* For post-merge until Capella (exclusive) headers, clients SHOULD only accept headers with `BlockProofHistoricalRoots` proofs.
+* For Capella until Deneb (exclusive) headers, clients SHOULD only accept headers with `BlockProofHistoricalSummariesCapella` proofs.
+* For Deneb until Gloas (exclusive) headers, clients SHOULD only accept headers with `BlockProofHistoricalSummariesDeneb` proofs.
+* For Gloas and onwards headers, clients SHOULD only accept headers with `BlockProofHistoricalSummariesGloas` proofs, see *BlockProofHistoricalSummaries from Gloas onwards*.
 * For headers that are not yet part of the last period, clients SHOULD accept offers for these headers if the client can prove that the headers are a valid child of the HEAD `block_hash` provided by their external oracle. See *Ephemeral Block Headers* for how to handle headers from the last period.
 
 ##### Block Header by Hash
@@ -571,3 +584,22 @@ flowchart LR
     ExecutionBlockProof --> Proof2([verify_merkle_multiproof])
     beaconBlockRoot --> Proof2 --> block_hash
 ```
+
+##### BlockProofHistoricalSummaries from Gloas onwards
+
+From Gloas onwards, the `ExecutionPayload` got moved out of the `BeaconBlockBody` and into a separate `ExecutionPayloadEnvelope` that is revealed by the builder. All that is left in the block is the `SignedExecutionPayloadBid`, and its `block_hash` is merely a commitment to a payload that may never be revealed: it becomes canonical only once a later block confirms it. A proof over that `block_hash` would also verify a block that never became part of the chain.
+
+The bid also holds a `parent_block_hash`, the block hash of the previous execution block. It is asserted to be equal to `state.latest_block_hash`, which only ever takes the block hash of a payload that was actually revealed and processed, see [`process_execution_payload_bid`](https://github.com/ethereum/consensus-specs/blob/v1.7.0-beta.0/specs/gloas/beacon-chain.md#execution-payload-bid). Proving it therefore proves that the execution block was confirmed.
+
+The proof is built from the `parent_block_hash` of the block that follows the one which committed to the payload. The rest of the proof is unchanged: `beaconBlockRoot` and `slot` are those of that next block, and it is proven to be part of the `historical_summaries` in the same way.
+
+The relationship of the beacon chain structures for `BlockProofHistoricalSummariesGloas`:
+
+```mermaid
+flowchart LR
+    BeaconBlock -- contains --> BeaconBlockBody -- contains --> SignedExecutionPayloadBid -- contains --> ExecutionPayloadBid -- contains --> parent_block_hash
+    state.block_roots -- hash_tree_root --> HistoricalSummary --> historical_summaries
+    BeaconBlock -- hash_tree_root --> state.block_roots
+```
+
+A verifier gets the EL block data together with the proof, so it can compare the proven `parent_block_hash` against the hash of that block. A payload that was never revealed cannot be proven.
