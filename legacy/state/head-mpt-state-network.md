@@ -16,7 +16,7 @@ While similar to the [Execution State network](state-network.md), it has some un
 
 The Execution Head-MPT State Network is a
 [Kademlia](https://pdos.csail.mit.edu/~petar/papers/maymounkov-kademlia-lncs.pdf) DHT that uses the
-[Portal Wire Protocol](../portal-wire-protocol.md) to establish an overlay network on top of the
+[Portal Wire Protocol](../../portal-wire-protocol.md) to establish an overlay network on top of the
 [Discovery v5](https://github.com/ethereum/devp2p/blob/master/discv5/discv5-wire.md) protocol.
 
 Nodes are responsible for storing fixed state subtree, across all 256 recent blocks.
@@ -58,7 +58,7 @@ nonce, bytecode, state root) and contract's storage is retrievable using single 
 ### Distance Function
 
 The network uses standard XOR distance metric, defined in the
-[portal wire protocol](../portal-wire-protocol.md#xor-distance-function) specification.
+[portal wire protocol](../../portal-wire-protocol.md#xor-distance-function) specification.
 
 The only difference is that arguments can have less than 256 bits, but both arguments must have the
 same length.
@@ -83,7 +83,7 @@ The derivation function is slightly different for different types and is defined
 
 #### Protocol Identifier
 
-As specified in the [Protocol identifiers](../portal-wire-protocol.md#protocol-identifiers) section
+As specified in the [Protocol identifiers](../../portal-wire-protocol.md#protocol-identifiers) section
 of the Portal wire protocol, the `protocol` field in the `TALKREQ` message **MUST** contain the
 value of `0x5009`.
 
@@ -99,11 +99,11 @@ The network supports the following protocol messages:
 #### `Ping.payload` & `Pong.payload`
 
 The pyload type of the first `Ping` message between nodes MUST be
-[Type 0: Client Info, Radius, and Capabilities Payload](../ping-extensions/extensions/type-0.md).
+[Type 0: Client Info, Radius, and Capabilities Payload](../../ping-extensions/extensions/type-0.md).
 Nodes then upgrade to the latest payload type supported by both of the clients.
 
 List of currently supported payloads, by latest to oldest.
--  [Type 1 Basic Radius Payload](../ping-extensions/extensions/type-1.md)
+-  [Type 1 Basic Radius Payload](../../ping-extensions/extensions/type-1.md)
 
 ### Routing Table 
 

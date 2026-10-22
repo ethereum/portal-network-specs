@@ -59,11 +59,11 @@ The beacon chain network uses the SHA256 Content ID derivation function from the
 
 ### Wire Protocol
 
-The [Portal wire protocol](../portal-wire-protocol.md) is used as the wire protocol for the Beacon Chain Light Client network.
+The [Portal wire protocol](../../portal-wire-protocol.md) is used as the wire protocol for the Beacon Chain Light Client network.
 
 #### Protocol Identifier
 
-As specified in the [Protocol identifiers](../portal-wire-protocol.md#protocol-identifiers) section of the Portal wire protocol, the `protocol` field in the `TALKREQ` message **MUST** contain the value of `0x501A`.
+As specified in the [Protocol identifiers](../../portal-wire-protocol.md#protocol-identifiers) section of the Portal wire protocol, the `protocol` field in the `TALKREQ` message **MUST** contain the value of `0x501A`.
 
 #### Supported Messages Types
 
@@ -76,10 +76,10 @@ The beacon chain network supports the following protocol messages:
 
 #### `Ping.payload` & `Pong.payload`
 
-In the beacon chain network the `payload` field of the `Ping` and `Pong` messages. The first packet between another client MUST be [Type 0: Client Info, Radius, and Capabilities Payload](../ping-extensions/extensions/type-0.md). Then upgraded to the latest payload supported by both of the clients.
+In the beacon chain network the `payload` field of the `Ping` and `Pong` messages. The first packet between another client MUST be [Type 0: Client Info, Radius, and Capabilities Payload](../../ping-extensions/extensions/type-0.md). Then upgraded to the latest payload supported by both of the clients.
 
 List of currently supported payloads, by latest to oldest.
--  [Type 1 Basic Radius Payload](../ping-extensions/extensions/type-1.md)
+-  [Type 1 Basic Radius Payload](../../ping-extensions/extensions/type-1.md)
 
 ### Routing Table
 
@@ -100,7 +100,7 @@ When a node cannot fulfill a request for any of this data it SHOULD return an
 empty list of ENRs. It MAY return a list of ENRs of nodes that have provided
 this data in the past.
 
-When a node gossips any of this data, it MUST use [random gossip](../portal-wire-protocol.md#random-gossip) instead of neighborhood gossip.
+When a node gossips any of this data, it MUST use [random gossip](../../portal-wire-protocol.md#random-gossip) instead of neighborhood gossip.
 
 #### Data Radius
 

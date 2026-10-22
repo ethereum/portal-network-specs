@@ -79,7 +79,7 @@ content_id = sha256(encoded_content_key)
 
 ## Transmission of data that exceeds the UDP packet limit
 
-The transmission of data that is too large to fit a single packet is done using [uTP](../assets/eip-7718/bep_0029-rst_post.pdf).
+The transmission of data that is too large to fit a single packet is done using [uTP](https://www.bittorrent.org/beps/bep_0029.html).
 
 > The Portal wire protocol currently implements uTP over the `TALKREQ/TALKRESP` messages.  Future plans are to move to the [sub-protocol data transmission](https://github.com/ethereum/devp2p/issues/229) in order to use a protocol native mechanism for establishing packet streams between clients.
 

@@ -5,7 +5,7 @@ This document is the specification for the sub-protocol that supports on-demand 
 
 ## Overview
 
-The canonical transaction index network is a [Kademlia](https://pdos.csail.mit.edu/~petar/papers/maymounkov-kademlia-lncs.pdf) DHT that uses the [Portal Wire Protocol](../portal-wire-protocol.md) to establish an overlay network on top of the [Discovery v5](https://github.com/ethereum/devp2p/blob/master/discv5/discv5-wire.md) protocol.
+The canonical transaction index network is a [Kademlia](https://pdos.csail.mit.edu/~petar/papers/maymounkov-kademlia-lncs.pdf) DHT that uses the [Portal Wire Protocol](../../portal-wire-protocol.md) to establish an overlay network on top of the [Discovery v5](https://github.com/ethereum/devp2p/blob/master/discv5/discv5-wire.md) protocol.
 
 The canonical transaction index consists of a mapping from transaction hash to the canonical block hash within which the transaction was included and the index of the transaction within the set of transactions executed within that block.
 
@@ -36,12 +36,12 @@ The canonical transaction index network uses the SHA256 Content ID derivation fu
 
 ### Wire Protocol
 
-The [Portal wire protocol](../portal-wire-protocol.md) is used as wire protocol for the canonical transaction index network.
+The [Portal wire protocol](../../portal-wire-protocol.md) is used as wire protocol for the canonical transaction index network.
 
 
 #### Protocol Identifier
 
-As specified in the [Protocol identifiers](../portal-wire-protocol.md#protocol-identifiers) section of the Portal wire protocol, the `protocol` field in the `TALKREQ` message **MUST** contain the value of `0x500D`.
+As specified in the [Protocol identifiers](../../portal-wire-protocol.md#protocol-identifiers) section of the Portal wire protocol, the `protocol` field in the `TALKREQ` message **MUST** contain the value of `0x500D`.
 
 
 #### Supported Message Types
@@ -56,10 +56,10 @@ The canonical transaction index network supports the following protocol messages
 
 #### `Ping.payload` & `Pong.payload`
 
-In the canonical transaction index network the `payload` field of the `Ping` and `Pong` messages. The first packet between another client MUST be [Type 0: Client Info, Radius, and Capabilities Payload](../ping-extensions/extensions/type-0.md). Then upgraded to the latest payload supported by both of the clients.
+In the canonical transaction index network the `payload` field of the `Ping` and `Pong` messages. The first packet between another client MUST be [Type 0: Client Info, Radius, and Capabilities Payload](../../ping-extensions/extensions/type-0.md). Then upgraded to the latest payload supported by both of the clients.
 
 List of currently supported payloads, by latest to oldest.
--  [Type 1 Basic Radius Payload](../ping-extensions/extensions/type-1.md)
+-  [Type 1 Basic Radius Payload](../../ping-extensions/extensions/type-1.md)
 
 
 ### Routing Table 
