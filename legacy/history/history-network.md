@@ -4,7 +4,7 @@ This document is the specification for the sub-protocol that supports on-demand 
 
 ## Overview
 
-The chain history network is a [Kademlia](https://pdos.csail.mit.edu/~petar/papers/maymounkov-kademlia-lncs.pdf) DHT that uses the [Portal Wire Protocol](../portal-wire-protocol.md) to establish an overlay network on top of the [Discovery v5](https://github.com/ethereum/devp2p/blob/master/discv5/discv5-wire.md) protocol.
+The chain history network is a [Kademlia](https://pdos.csail.mit.edu/~petar/papers/maymounkov-kademlia-lncs.pdf) DHT that uses the [Portal Wire Protocol](../../portal-wire-protocol.md) to establish an overlay network on top of the [Discovery v5](https://github.com/ethereum/devp2p/blob/master/discv5/discv5-wire.md) protocol.
 
 Execution chain history data consists of historical block headers, block bodies (transactions, ommers and withdrawals) and block receipts.
 
@@ -44,11 +44,11 @@ The history network uses the SHA256 Content ID derivation function from the port
 
 ### Wire Protocol
 
-The [Portal wire protocol](../portal-wire-protocol.md) is used as wire protocol for the history network.
+The [Portal wire protocol](../../portal-wire-protocol.md) is used as wire protocol for the history network.
 
 #### Protocol Identifier
 
-As specified in the [Protocol identifiers](../portal-wire-protocol.md#protocol-identifiers) section of the Portal wire protocol, the `protocol` field in the `TALKREQ` message **MUST** contain the value of `0x500B`.
+As specified in the [Protocol identifiers](../../portal-wire-protocol.md#protocol-identifiers) section of the Portal wire protocol, the `protocol` field in the `TALKREQ` message **MUST** contain the value of `0x500B`.
 
 #### Supported Message Types
 
@@ -61,10 +61,10 @@ The history network supports the following protocol messages:
 
 #### `Ping.payload` & `Pong.payload`
 
-In the history network the `payload` field of the `Ping` and `Pong` messages. The first packet between another client MUST be [Type 0: Client Info, Radius, and Capabilities Payload](../ping-extensions/extensions/type-0.md). Then upgraded to the latest payload supported by both of the clients.
+In the history network the `payload` field of the `Ping` and `Pong` messages. The first packet between another client MUST be [Type 0: Client Info, Radius, and Capabilities Payload](../../ping-extensions/extensions/type-0.md). Then upgraded to the latest payload supported by both of the clients.
 
 List of currently supported payloads, by latest to oldest.
--  [Type 2 History Radius Payload](../ping-extensions/extensions/type-2.md)
+-  [Type 2 History Radius Payload](../../ping-extensions/extensions/type-2.md)
 
 
 ### Routing Table
@@ -85,7 +85,7 @@ A node is expected to maintain `radius` information for each node in its local n
 
 A node should track their own radius value and provide this value in all Ping or Pong messages it sends to other nodes.
 
-A node MUST use `radius` and [neighborhood gossip](../portal-wire-protocol.md#neighborhood-gossip) to gossip all non-ephemeral content. For gossiping the Ephemeral content, a node MUST use [random gossip](../portal-wire-protocol.md#random-gossip) instead.
+A node MUST use `radius` and [neighborhood gossip](../../portal-wire-protocol.md#neighborhood-gossip) to gossip all non-ephemeral content. For gossiping the Ephemeral content, a node MUST use [random gossip](../../portal-wire-protocol.md#random-gossip) instead.
 
 ### Data Types
 

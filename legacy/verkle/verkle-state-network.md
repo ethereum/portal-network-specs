@@ -122,7 +122,7 @@ $$
 
 ### Protocol Identifier
 
-As specified in the [Protocol identifiers](./../portal-wire-protocol.md#protocol-identifiers) section of the Portal wire protocol, the `protocol` field in the `TALKREQ` message **MUST** contain the value of `0x500E`.
+As specified in the [Protocol identifiers](../../portal-wire-protocol.md#protocol-identifiers) section of the Portal wire protocol, the `protocol` field in the `TALKREQ` message **MUST** contain the value of `0x500E`.
 
 ### Helper Data Types
 
