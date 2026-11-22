@@ -27,7 +27,7 @@
   "hexString": {
     "title": "Hex string",
     "type": "string",
-    "pattern": "^0x[0-9a-f]$"
+    "pattern": "^0x[0-9a-f]*$"
   },
   "uint": {
     "title": "hex encoded unsigned integer",
@@ -37,6 +37,6 @@
   "uint256": {
     "title": "hex encoded 256 bit unsigned integer",
     "type": "string",
-    "pattern": "^0x([1-9a-f][0-9a-f]{0,63}|0$)"
+    "pattern": "^0x([1-9a-f][0-9a-f]{0,63}|0)$"
   }
 }
